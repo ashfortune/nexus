@@ -17,3 +17,4 @@ class PredictionResponse(BaseModel):
     open_date: str
     message: str
     threshold: float
+    factors: list[str]
