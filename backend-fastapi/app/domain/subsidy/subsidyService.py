@@ -215,7 +215,7 @@ async def fetch_subsidies_from_api():
     today = date.today().strftime("%Y%m%d")
     params = {
         "token": SMES_TOKEN,
-        "strDt": "20200101", #초기 DB 저장시에는 strDt: "20200101" 돌리고 이후에는 yesterday로 변경
+        "strDt": yesterday, #초기 DB 저장시에는 strDt: "20200101" 돌리고 이후에는 yesterday로 변경
         "endDt": today,
         "html": "no"
     }
