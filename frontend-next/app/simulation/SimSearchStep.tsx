@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Search, MapPin, Sparkles, ArrowRight, Store, Info, CheckCircle2 } from "lucide-react";
-import { SimIndustCatsDto, SimRegCodesDto } from "./types";
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Search, MapPin, Sparkles, ArrowRight, Store, Info, CheckCircle2 } from 'lucide-react';
+import { SimIndustCatsDto, SimRegCodesDto } from './types';
 
 interface Props {
   industList: SimIndustCatsDto[];
@@ -11,14 +11,9 @@ interface Props {
   loading: boolean;
 }
 
-export default function SimSearchStep({
-  industList,
-  regionList,
-  onSubmit,
-  loading,
-}: Props) {
-  const [industQuery, setIndustQuery] = useState("");
-  const [regionQuery, setRegionQuery] = useState("");
+export default function SimSearchStep({ industList, regionList, onSubmit, loading }: Props) {
+  const [industQuery, setIndustQuery] = useState('');
+  const [regionQuery, setRegionQuery] = useState('');
   const [selectedIndust, setSelectedIndust] = useState<SimIndustCatsDto | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<SimRegCodesDto | null>(null);
   const [showIndustDropdown, setShowIndustDropdown] = useState(false);
@@ -27,16 +22,16 @@ export default function SimSearchStep({
   const [industActiveIndex, setIndustActiveIndex] = useState(-1);
   const [regionActiveIndex, setRegionActiveIndex] = useState(-1);
 
-  const [industFilter, setIndustFilter] = useState("");
-  const [regionFilter, setRegionFilter] = useState("");
+  const [industFilter, setIndustFilter] = useState('');
+  const [regionFilter, setRegionFilter] = useState('');
 
   const industRef = useRef<HTMLDivElement>(null);
   const regionRef = useRef<HTMLDivElement>(null);
   const regionInputRef = useRef<HTMLInputElement>(null);
   const industInputRef = useRef<HTMLInputElement>(null);
 
-  const industOriginalQuery = useRef("");
-  const regionOriginalQuery = useRef("");
+  const industOriginalQuery = useRef('');
+  const regionOriginalQuery = useRef('');
 
   const regionListRef = useRef<HTMLUListElement>(null);
   const industListRef = useRef<HTMLUListElement>(null);
@@ -48,15 +43,15 @@ export default function SimSearchStep({
       if (regionRef.current && !regionRef.current.contains(e.target as Node))
         setShowRegionDropdown(false);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   // 자동 스크롤 포커싱 (지역 리스트)
   useEffect(() => {
     if (regionActiveIndex >= 0 && regionListRef.current) {
       const activeEl = regionListRef.current.children[regionActiveIndex] as HTMLElement;
-      if (activeEl) activeEl.scrollIntoView({ block: "nearest" });
+      if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
     }
   }, [regionActiveIndex]);
 
@@ -64,20 +59,28 @@ export default function SimSearchStep({
   useEffect(() => {
     if (industActiveIndex >= 0 && industListRef.current) {
       const activeEl = industListRef.current.children[industActiveIndex] as HTMLElement;
-      if (activeEl) activeEl.scrollIntoView({ block: "nearest" });
+      if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
     }
   }, [industActiveIndex]);
 
   // 필터링 초기화 로직 제거 (onChange에서 처리)
 
-  const filteredIndust = useMemo(() => industList.filter((i) =>
-    (i.industryName || "").toLowerCase().includes(industFilter.toLowerCase())
-  ), [industList, industFilter]);
+  const filteredIndust = useMemo(
+    () =>
+      industList.filter((i) =>
+        (i.industryName || '').toLowerCase().includes(industFilter.toLowerCase())
+      ),
+    [industList, industFilter]
+  );
 
-  const filteredRegion = useMemo(() => regionList.filter((r) => {
-    const full = `${r.cityName}${r.countyName ? ' ' + r.countyName : ''}`;
-    return full.toLowerCase().includes(regionFilter.toLowerCase());
-  }), [regionList, regionFilter]);
+  const filteredRegion = useMemo(
+    () =>
+      regionList.filter((r) => {
+        const full = `${r.cityName}${r.countyName ? ' ' + r.countyName : ''}`;
+        return full.toLowerCase().includes(regionFilter.toLowerCase());
+      }),
+    [regionList, regionFilter]
+  );
 
   const handleSelectIndust = (item: SimIndustCatsDto) => {
     setSelectedIndust(item);
@@ -104,22 +107,32 @@ export default function SimSearchStep({
   const handleIndustKeyDown = (e: React.KeyboardEvent) => {
     if (e.nativeEvent.isComposing) return;
     if (!showIndustDropdown) return;
-    if (e.key === "ArrowDown") {
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const nextIdx = industActiveIndex < filteredIndust.length - 1 ? industActiveIndex + 1 : industActiveIndex;
+      const nextIdx =
+        industActiveIndex < filteredIndust.length - 1 ? industActiveIndex + 1 : industActiveIndex;
       setIndustActiveIndex(nextIdx);
       const item = filteredIndust[nextIdx];
-      if (item) { setIndustQuery(item.industryName); setSelectedIndust(item); }
-    } else if (e.key === "ArrowUp") {
+      if (item) {
+        setIndustQuery(item.industryName);
+        setSelectedIndust(item);
+      }
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (industActiveIndex <= 0) { setIndustActiveIndex(-1); setIndustQuery(industOriginalQuery.current); setSelectedIndust(null); }
-      else {
+      if (industActiveIndex <= 0) {
+        setIndustActiveIndex(-1);
+        setIndustQuery(industOriginalQuery.current);
+        setSelectedIndust(null);
+      } else {
         const nextIdx = industActiveIndex - 1;
         setIndustActiveIndex(nextIdx);
         const item = filteredIndust[nextIdx];
-        if (item) { setIndustQuery(item.industryName); setSelectedIndust(item); }
+        if (item) {
+          setIndustQuery(item.industryName);
+          setSelectedIndust(item);
+        }
       }
-    } else if (e.key === "Enter" && industActiveIndex >= 0) {
+    } else if (e.key === 'Enter' && industActiveIndex >= 0) {
       handleSelectIndust(filteredIndust[industActiveIndex]);
     }
   };
@@ -127,25 +140,32 @@ export default function SimSearchStep({
   const handleRegionKeyDown = (e: React.KeyboardEvent) => {
     if (e.nativeEvent.isComposing) return;
     if (!showRegionDropdown) return;
-    if (e.key === "ArrowDown") {
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const nextIdx = regionActiveIndex < filteredRegion.length - 1 ? regionActiveIndex + 1 : regionActiveIndex;
+      const nextIdx =
+        regionActiveIndex < filteredRegion.length - 1 ? regionActiveIndex + 1 : regionActiveIndex;
       setRegionActiveIndex(nextIdx);
       const item = filteredRegion[nextIdx];
-      if (item) { setRegionQuery(`${item.cityName} ${item.countyName}`); setSelectedRegion(item); }
-    } else if (e.key === "ArrowUp") {
+      if (item) {
+        setRegionQuery(`${item.cityName} ${item.countyName}`);
+        setSelectedRegion(item);
+      }
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (regionActiveIndex <= 0) { setRegionActiveIndex(-1); setRegionQuery(regionOriginalQuery.current); setSelectedRegion(null); }
-      else {
+      if (regionActiveIndex <= 0) {
+        setRegionActiveIndex(-1);
+        setRegionQuery(regionOriginalQuery.current);
+        setSelectedRegion(null);
+      } else {
         const nextIdx = regionActiveIndex - 1;
         setRegionActiveIndex(nextIdx);
         const item = filteredRegion[nextIdx];
-        if (item) { 
-          setRegionQuery(`${item.cityName}${item.countyName ? ' ' + item.countyName : ''}`); 
-          setSelectedRegion(item); 
+        if (item) {
+          setRegionQuery(`${item.cityName}${item.countyName ? ' ' + item.countyName : ''}`);
+          setSelectedRegion(item);
         }
       }
-    } else if (e.key === "Enter" && regionActiveIndex >= 0) {
+    } else if (e.key === 'Enter' && regionActiveIndex >= 0) {
       handleSelectRegion(filteredRegion[regionActiveIndex]);
     }
   };
@@ -161,19 +181,20 @@ export default function SimSearchStep({
       {/* ─── 히어로 섹션 ─── */}
       <section className="relative pt-32 pb-16 px-6">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[var(--nexus-primary)] opacity-[0.03] rounded-full blur-[100px] pointer-events-none" />
-        
+
         <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-8">
           <div className="flex items-center gap-2 px-4 py-1.5 bg-[var(--nexus-surface-container)] rounded-full text-[var(--nexus-primary)] text-[10px] font-black tracking-[0.2em] uppercase">
             <Sparkles size={14} className="animate-pulse" />
             AI 기반 정밀 분석
           </div>
-          
+
           <h1 className="font-manrope text-4xl md:text-6xl font-extrabold tracking-tight text-[var(--nexus-primary)] leading-tight">
             창업 비용 <span className="text-[var(--nexus-secondary)]">시뮬레이션</span>
           </h1>
-          
+
           <p className="text-lg text-[var(--nexus-on-bg)] max-w-2xl font-medium leading-relaxed opacity-90">
-            업종과 지역을 선택하면 국토교통부 실거래가 데이터와 필수 설비 DB를<br className="hidden md:block" />
+            업종과 지역을 선택하면 국토교통부 실거래가 데이터와 필수 설비 DB를
+            <br className="hidden md:block" />
             실시간으로 매칭하여 당신만의 창업 리포트를 생성합니다.
           </p>
 
@@ -193,7 +214,7 @@ export default function SimSearchStep({
                     value={regionQuery}
                     onChange={(e) => {
                       setRegionQuery(e.target.value);
-                      setRegionFilter(e.target.value); 
+                      setRegionFilter(e.target.value);
                       regionOriginalQuery.current = e.target.value;
                       setShowRegionDropdown(true);
                       setRegionActiveIndex(-1);
@@ -215,13 +236,19 @@ export default function SimSearchStep({
                           <li
                             key={item.regionCode}
                             className={`px-5 py-3 cursor-pointer flex justify-between items-center transition-colors ${
-                              idx === regionActiveIndex ? "bg-[var(--nexus-surface-container)]" : "hover:bg-[var(--nexus-surface-container)]"
+                              idx === regionActiveIndex
+                                ? 'bg-[var(--nexus-surface-container)]'
+                                : 'hover:bg-[var(--nexus-surface-container)]'
                             }`}
                             onMouseDown={() => handleSelectRegion(item)}
                             onMouseEnter={() => setRegionActiveIndex(idx)}
                           >
-                            <span className="font-bold text-sm text-[var(--nexus-on-bg)]">{item.cityName} {item.countyName}</span>
-                            <span className="text-[10px] text-[var(--nexus-secondary)] font-mono font-bold">{item.regionCode}</span>
+                            <span className="font-bold text-sm text-[var(--nexus-on-bg)]">
+                              {item.cityName} {item.countyName}
+                            </span>
+                            <span className="text-[10px] text-[var(--nexus-secondary)] font-mono font-bold">
+                              {item.regionCode}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -239,11 +266,13 @@ export default function SimSearchStep({
                   <input
                     ref={industInputRef}
                     className="w-full bg-[var(--nexus-surface-low)] border-2 border-transparent focus:border-[var(--nexus-primary)] focus:bg-white px-5 py-4 rounded-2xl outline-none transition-all duration-300 font-medium"
-                    placeholder={selectedRegion ? "ex) 한식, 카페, 편의점..." : "지역을 먼저 선택하면 좋습니다"}
+                    placeholder={
+                      selectedRegion ? 'ex) 한식, 카페, 편의점...' : '지역을 먼저 선택하면 좋습니다'
+                    }
                     value={industQuery}
                     onChange={(e) => {
                       setIndustQuery(e.target.value);
-                      setIndustFilter(e.target.value); 
+                      setIndustFilter(e.target.value);
                       industOriginalQuery.current = e.target.value;
                       setShowIndustDropdown(true);
                       setIndustActiveIndex(-1);
@@ -265,13 +294,19 @@ export default function SimSearchStep({
                           <li
                             key={item.ksicCode}
                             className={`px-5 py-3 cursor-pointer flex justify-between items-center transition-colors ${
-                              idx === industActiveIndex ? "bg-[var(--nexus-surface-container)]" : "hover:bg-[var(--nexus-surface-container)]"
+                              idx === industActiveIndex
+                                ? 'bg-[var(--nexus-surface-container)]'
+                                : 'hover:bg-[var(--nexus-surface-container)]'
                             }`}
                             onMouseDown={() => handleSelectIndust(item)}
                             onMouseEnter={() => setIndustActiveIndex(idx)}
                           >
-                            <span className="font-bold text-sm text-[var(--nexus-on-bg)]">{item.industryName}</span>
-                            <span className="text-[10px] text-[var(--nexus-primary)] font-mono font-bold">{item.ksicCode}</span>
+                            <span className="font-bold text-sm text-[var(--nexus-on-bg)]">
+                              {item.industryName}
+                            </span>
+                            <span className="text-[10px] text-[var(--nexus-primary)] font-mono font-bold">
+                              {item.ksicCode}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -288,8 +323,8 @@ export default function SimSearchStep({
               disabled={!canSubmit}
               className={`w-full py-5 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 transition-all duration-300 ${
                 canSubmit
-                  ? "bg-[var(--nexus-primary)] text-white shadow-[0_20px_40px_-15px_rgba(11,26,125,0.3)] hover:scale-[1.02] active:scale-[0.98]"
-                  : "bg-[var(--nexus-surface-container)] text-[var(--nexus-primary)]/20 cursor-not-allowed"
+                  ? 'bg-[var(--nexus-primary)] text-white shadow-[0_20px_40px_-15px_rgba(11,26,125,0.3)] hover:scale-[1.02] active:scale-[0.98]'
+                  : 'bg-[var(--nexus-surface-container)] text-[var(--nexus-primary)]/20 cursor-not-allowed'
               }`}
             >
               {loading ? (
@@ -313,7 +348,9 @@ export default function SimSearchStep({
               <div className="inline-block px-3 py-1 bg-[var(--nexus-surface-container-high)] rounded-lg text-[var(--nexus-primary)] text-[10px] font-black uppercase tracking-widest">
                 PREVIEW
               </div>
-              <h2 className="font-manrope text-3xl md:text-4xl font-bold tracking-tight">넥서스가 제공하는 분석 결과</h2>
+              <h2 className="font-manrope text-3xl md:text-4xl font-bold tracking-tight">
+                넥서스가 제공하는 분석 결과
+              </h2>
             </div>
           </div>
 
@@ -322,12 +359,17 @@ export default function SimSearchStep({
               <div className="w-14 h-14 bg-[var(--nexus-surface-low)] rounded-2xl flex items-center justify-center mb-8 group-hover:bg-[var(--nexus-primary)] group-hover:text-white transition-colors">
                 <Search className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-[var(--nexus-primary)]">정밀 실거래가 분석</h3>
+              <h3 className="text-xl font-black mb-4 text-[var(--nexus-primary)]">
+                정밀 실거래가 분석
+              </h3>
               <p className="text-sm text-[var(--nexus-on-bg)] opacity-80 leading-relaxed mb-8 font-medium">
-                국토교통부 데이터를 기반으로 해당 지역의 평균 거래가, 평당 가격, 건물 연식을 정밀 분석합니다.
+                국토교통부 데이터를 기반으로 해당 지역의 평균 거래가, 평당 가격, 건물 연식을 정밀
+                분석합니다.
               </p>
               <div className="flex gap-2">
-                <span className="px-3 py-1 bg-[var(--nexus-surface-container)] rounded-full text-[10px] font-bold">LATEST DATA</span>
+                <span className="px-3 py-1 bg-[var(--nexus-surface-container)] rounded-full text-[10px] font-bold">
+                  LATEST DATA
+                </span>
               </div>
             </div>
 
@@ -335,12 +377,17 @@ export default function SimSearchStep({
               <div className="w-14 h-14 bg-[var(--nexus-surface-low)] rounded-2xl flex items-center justify-center mb-8 group-hover:bg-[var(--nexus-secondary)] group-hover:text-white transition-colors">
                 <Info className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-[var(--nexus-secondary)]">필수 설비 견적</h3>
+              <h3 className="text-xl font-black mb-4 text-[var(--nexus-secondary)]">
+                필수 설비 견적
+              </h3>
               <p className="text-sm text-[var(--nexus-on-bg)] opacity-80 leading-relaxed mb-8 font-medium">
-                업종별로 필요한 주방 설비, IT 기기 등을 실시간 쇼핑 데이터와 연동하여 최저가 견적을 산출합니다.
+                업종별로 필요한 주방 설비, IT 기기 등을 실시간 쇼핑 데이터와 연동하여 최저가 견적을
+                산출합니다.
               </p>
               <div className="flex gap-2">
-                <span className="px-3 py-1 bg-[var(--nexus-surface-container)] rounded-full text-[10px] font-bold">REAL-TIME</span>
+                <span className="px-3 py-1 bg-[var(--nexus-surface-container)] rounded-full text-[10px] font-bold">
+                  REAL-TIME
+                </span>
               </div>
             </div>
 
@@ -348,12 +395,17 @@ export default function SimSearchStep({
               <div className="w-14 h-14 bg-[var(--nexus-surface-low)] rounded-2xl flex items-center justify-center mb-8 group-hover:bg-[var(--nexus-primary)] group-hover:text-white transition-colors">
                 <CheckCircle2 className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-[var(--nexus-primary)]">통합 비용 리포트</h3>
+              <h3 className="text-xl font-black mb-4 text-[var(--nexus-primary)]">
+                통합 비용 리포트
+              </h3>
               <p className="text-sm text-[var(--nexus-on-bg)] opacity-80 leading-relaxed mb-8 font-medium">
-                부동산 매물과 설비 비용을 합산하여 최종 창업 예상 비용을 시각화된 리포트로 제공합니다.
+                부동산 매물과 설비 비용을 합산하여 최종 창업 예상 비용을 시각화된 리포트로
+                제공합니다.
               </p>
               <div className="flex gap-2">
-                <span className="px-3 py-1 bg-[var(--nexus-surface-container)] rounded-full text-[10px] font-bold">AI REPORT</span>
+                <span className="px-3 py-1 bg-[var(--nexus-surface-container)] rounded-full text-[10px] font-bold">
+                  AI REPORT
+                </span>
               </div>
             </div>
           </div>

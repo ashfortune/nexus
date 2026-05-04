@@ -31,10 +31,13 @@ const UploadPage = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_FASTAPI_URL + '/api/v1/ai/dashboard/upload-sales', {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_FASTAPI_URL + '/api/v1/ai/dashboard/upload-sales',
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         // 1. 서버가 왜 거절했는지 진짜 이유를 텍스트로 뽑아냅니다.
@@ -68,8 +71,8 @@ const UploadPage = () => {
             <h1 className="text-3xl font-bold tracking-tight">데이터 업로드</h1>
           </div>
           <p className="text-white/60 max-w-2xl text-lg">
-            과거 매출 내역이 담긴 CSV 파일을 업로드하여 데이터베이스에 저장하세요.
-            저장된 데이터는 분석 및 예측 시스템의 기초 자료로 활용됩니다.
+            과거 매출 내역이 담긴 CSV 파일을 업로드하여 데이터베이스에 저장하세요. 저장된 데이터는
+            분석 및 예측 시스템의 기초 자료로 활용됩니다.
           </p>
         </header>
 
@@ -80,7 +83,9 @@ const UploadPage = () => {
                 <>
                   <div className="mb-6">
                     <h2 className="text-xl font-semibold mb-2 text-indigo-400">CSV 파일 업로드</h2>
-                    <p className="text-white/40 text-sm">분석할 매출 내역이 담긴 CSV 파일을 드래그 앤 드롭 하세요.</p>
+                    <p className="text-white/40 text-sm">
+                      분석할 매출 내역이 담긴 CSV 파일을 드래그 앤 드롭 하세요.
+                    </p>
                   </div>
                   <DropZone onFilesSelected={handleFileUpload} isLoading={isLoading} />
                   {isLoading && (
@@ -134,12 +139,12 @@ const UploadPage = () => {
                 </h3>
                 <ul className="text-sm text-white/60 space-y-3">
                   <li className="flex gap-2">
-                    <span className="text-indigo-400">•</span>
-                    첫 번째 열은 '날짜'여야 합니다. (예: 2024-04-30)
+                    <span className="text-indigo-400">•</span>첫 번째 열은 '날짜'여야 합니다. (예:
+                    2024-04-30)
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-indigo-400">•</span>
-                    두 번째 열은 '매출액'이어야 합니다. (예: 500000)
+                    <span className="text-indigo-400">•</span>두 번째 열은 '매출액'이어야 합니다.
+                    (예: 500000)
                   </li>
                   <li className="flex gap-2">
                     <span className="text-indigo-400">•</span>

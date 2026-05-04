@@ -1,15 +1,34 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Sparkles, TrendingUp, TrendingDown, Calendar, MapPin, Store, Info, AlertCircle, CheckCircle2, ChevronRight } from "lucide-react";
+import { useState } from 'react';
+import {
+  Sparkles,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+  MapPin,
+  Store,
+  Info,
+  AlertCircle,
+  CheckCircle2,
+  ChevronRight,
+} from 'lucide-react';
 
-const FASTAPI_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
+const FASTAPI_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
 
-const INDUSTRIES = ["노래연습장업", "세탁업", "유흥주점영업", "의원", "인터넷컴퓨터게임시설제공업", "제과점영업", "체력단련장업"];
+const INDUSTRIES = [
+  '노래연습장업',
+  '세탁업',
+  '유흥주점영업',
+  '의원',
+  '인터넷컴퓨터게임시설제공업',
+  '제과점영업',
+  '체력단련장업',
+];
 
 interface PredictionResult {
   risk_score: number;
-  label: "stable" | "caution";
+  label: 'stable' | 'caution';
   label_kor: string;
   industry: string;
   dong: string;
@@ -21,17 +40,17 @@ interface PredictionResult {
 }
 
 export default function MarketPredSection({ storesData }: { storesData: any }) {
-  const [industry, setIndustry] = useState("");
-  const [admCd, setAdmCd] = useState("");
-  const openYear = "2024";
-  const [openMonth, setOpenMonth] = useState("5");
+  const [industry, setIndustry] = useState('');
+  const [admCd, setAdmCd] = useState('');
+  const openYear = '2024';
+  const [openMonth, setOpenMonth] = useState('5');
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showInfo, setShowInfo] = useState(false);
 
   const dongs = storesData?.storeByRegionDtoList ?? [];
-  const isSeoul = admCd ? admCd.startsWith("11") : true;
+  const isSeoul = admCd ? admCd.startsWith('11') : true;
   const canSubmit = industry && admCd && openYear && openMonth && !isLoading && isSeoul;
 
   const handlePredict = async () => {
@@ -41,12 +60,12 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
     setResult(null);
 
     // API용 날짜 문자열 생성 (YYYY-MM-01)
-    const openDate = `${openYear}-${openMonth.padStart(2, "0")}-01`;
+    const openDate = `${openYear}-${openMonth.padStart(2, '0')}-01`;
 
     try {
       const res = await fetch(`${FASTAPI_BASE_URL}/api/v1/ai/simulation/market-prediction`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           industry,
           adm_cd: admCd,
@@ -56,15 +75,15 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.detail ?? "예측 오류");
+        throw new Error(err.detail ?? '예측 오류');
       }
       // MarketPredSection.tsx handlePredict 안에 임시로 추가
-      console.log("adm_cd:", admCd);
-      console.log("dongs:", dongs);
+      console.log('adm_cd:', admCd);
+      console.log('dongs:', dongs);
 
       setResult(await res.json());
     } catch (e: any) {
-      setError(e.message ?? "서버 오류가 발생했습니다.");
+      setError(e.message ?? '서버 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -79,8 +98,12 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
             <Sparkles size={16} className="text-white" />
           </div>
           <div>
-            <h2 className="text-[13px] font-black text-slate-950 uppercase tracking-tight">AI 창업 생존 예측</h2>
-            <p className="text-[10px] font-bold text-indigo-600 italic">* 서울시 선택 시 AI 창업 생존 예측 가능</p>
+            <h2 className="text-[13px] font-black text-slate-950 uppercase tracking-tight">
+              AI 창업 생존 예측
+            </h2>
+            <p className="text-[10px] font-bold text-indigo-600 italic">
+              * 서울시 선택 시 AI 창업 생존 예측 가능
+            </p>
           </div>
         </div>
 
@@ -114,29 +137,31 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[10.5px] leading-relaxed text-indigo-900/80 font-medium">
             <div className="space-y-2">
               <p>
-                • <strong className="text-indigo-950">데이터 출처:</strong> 서울시 공공데이터 및 인허가 정보(CSV) 10년치 데이터를
-                학습했습니다.
+                • <strong className="text-indigo-950">데이터 출처:</strong> 서울시 공공데이터 및
+                인허가 정보(CSV) 10년치 데이터를 학습했습니다.
               </p>
               <p>
-                • <strong className="text-indigo-950">분석 기술:</strong> XGBoost 머신러닝 알고리즘을 사용하여 업종별/지역별 생존 패턴을
-                분석합니다.
+                • <strong className="text-indigo-950">분석 기술:</strong> XGBoost 머신러닝
+                알고리즘을 사용하여 업종별/지역별 생존 패턴을 분석합니다.
               </p>
             </div>
             <div className="space-y-2">
               <p>
-                • <strong className="text-indigo-950">예측 범위:</strong> 서울시 내 7대 주요 업종에 대해 최적화되어 있으며, 3년 이내 폐업
-                가능성을 예측합니다.
+                • <strong className="text-indigo-950">예측 범위:</strong> 서울시 내 7대 주요 업종에
+                대해 최적화되어 있으며, 3년 이내 폐업 가능성을 예측합니다.
               </p>
               <p>
-                • <strong className="text-indigo-950">참고 사항:</strong> 본 결과는 통계적 예측치이며, 실제 경영 성과는 개별 운영 역량에
-                따라 다를 수 있습니다.
+                • <strong className="text-indigo-950">참고 사항:</strong> 본 결과는 통계적
+                예측치이며, 실제 경영 성과는 개별 운영 역량에 따라 다를 수 있습니다.
               </p>
             </div>
           </div>
         </div>
       )}
 
-      <div className={`grid grid-cols-1 lg:grid-cols-12 gap-6 transition-all ${!storesData ? "opacity-40 pointer-events-none" : ""}`}>
+      <div
+        className={`grid grid-cols-1 lg:grid-cols-12 gap-6 transition-all ${!storesData ? 'opacity-40 pointer-events-none' : ''}`}
+      >
         {/* 입력 폼 (L:4) */}
         <div className="lg:col-span-4 space-y-4">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
@@ -215,7 +240,9 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
             </button>
 
             {error && (
-              <p className="text-[10px] font-bold text-red-500 text-center bg-red-50 py-2 rounded-lg border border-red-100">{error}</p>
+              <p className="text-[10px] font-bold text-red-500 text-center bg-red-50 py-2 rounded-lg border border-red-100">
+                {error}
+              </p>
             )}
           </div>
         </div>
@@ -243,7 +270,9 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                   <Sparkles size={24} className="text-indigo-900 animate-pulse" />
                 </div>
               </div>
-              <h3 className="text-[15px] font-black text-slate-950 mb-2">데이터 분석 모델 가동 중</h3>
+              <h3 className="text-[15px] font-black text-slate-950 mb-2">
+                데이터 분석 모델 가동 중
+              </h3>
               <p className="text-[11px] font-bold text-slate-500 text-center animate-pulse">
                 서울시 인허가 데이터와 현재 상권 지표를 결합하여
                 <br />
@@ -254,24 +283,34 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
 
           {result && (
             <div
-              className={`h-full border animate-in zoom-in-95 duration-500 rounded-3xl overflow-hidden bg-white shadow-xl shadow-slate-200/50 ${result.label === "caution" ? "border-red-100" : "border-emerald-100"
-                }`}
+              className={`h-full border animate-in zoom-in-95 duration-500 rounded-3xl overflow-hidden bg-white shadow-xl shadow-slate-200/50 ${
+                result.label === 'caution' ? 'border-red-100' : 'border-emerald-100'
+              }`}
             >
               {/* 상단 컬러 바 */}
-              <div className={`h-2 w-full ${result.label === "caution" ? "bg-red-500" : "bg-emerald-500"}`} />
+              <div
+                className={`h-2 w-full ${result.label === 'caution' ? 'bg-red-500' : 'bg-emerald-500'}`}
+              />
 
               <div className="p-8">
                 <div className="flex flex-col md:flex-row gap-8 items-center">
                   {/* 점수 게이지 */}
                   <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
                     <svg className="w-full h-full -rotate-90">
-                      <circle cx="64" cy="64" r="58" fill="none" stroke="#f1f5f9" strokeWidth="10" />
                       <circle
                         cx="64"
                         cy="64"
                         r="58"
                         fill="none"
-                        stroke={result.label === "caution" ? "#ef4444" : "#10b981"}
+                        stroke="#f1f5f9"
+                        strokeWidth="10"
+                      />
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="58"
+                        fill="none"
+                        stroke={result.label === 'caution' ? '#ef4444' : '#10b981'}
                         strokeWidth="10"
                         strokeDasharray={364}
                         strokeDashoffset={364 - (364 * result.risk_score) / 100}
@@ -281,11 +320,13 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span
-                        className={`text-3xl font-black leading-none ${result.label === "caution" ? "text-red-600" : "text-emerald-600"}`}
+                        className={`text-3xl font-black leading-none ${result.label === 'caution' ? 'text-red-600' : 'text-emerald-600'}`}
                       >
                         {Math.round(result.risk_score)}
                       </span>
-                      <span className="text-[10px] font-black text-slate-400 mt-1 uppercase">Risk %</span>
+                      <span className="text-[10px] font-black text-slate-400 mt-1 uppercase">
+                        Risk %
+                      </span>
                     </div>
                   </div>
 
@@ -294,8 +335,11 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                     <div>
                       <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
                         <span
-                          className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${result.label === "caution" ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"
-                            }`}
+                          className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${
+                            result.label === 'caution'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-emerald-100 text-emerald-700'
+                          }`}
                         >
                           {result.label_kor} 상태
                         </span>
@@ -306,15 +350,18 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                           </span>
                           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-slate-900 text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-xl">
                             <p className="font-black mb-1">위험 임계치란?</p>
-                            AI가 폐업 위험이 높다고 판단하는 기준점입니다. 예측 점수가 이 수치를 넘으면 '주의' 상태가 됩니다.
+                            AI가 폐업 위험이 높다고 판단하는 기준점입니다. 예측 점수가 이 수치를
+                            넘으면 '주의' 상태가 됩니다.
                           </div>
                         </div>
                       </div>
-                      <h3 className="text-[18px] font-black text-slate-950 leading-tight">{result.message}</h3>
+                      <h3 className="text-[18px] font-black text-slate-950 leading-tight">
+                        {result.message}
+                      </h3>
                       <p className="text-[12px] font-bold text-indigo-600 mt-2">
-                        {result.label === "caution"
-                          ? "⚠️ 통계적 폐업 위험군에 속하므로 입지 선정에 신중한 검토가 필요합니다."
-                          : "✅ 현재 조건에서 창업 시 타 사례 대비 높은 생존 확률이 예상됩니다."}
+                        {result.label === 'caution'
+                          ? '⚠️ 통계적 폐업 위험군에 속하므로 입지 선정에 신중한 검토가 필요합니다.'
+                          : '✅ 현재 조건에서 창업 시 타 사례 대비 높은 생존 확률이 예상됩니다.'}
                       </p>
                     </div>
 
@@ -325,7 +372,10 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                       </p>
                       <ul className="space-y-1.5">
                         {result.factors?.map((factor, i) => (
-                          <li key={i} className="text-[11px] font-bold text-slate-600 flex items-start gap-2">
+                          <li
+                            key={i}
+                            className="text-[11px] font-bold text-slate-600 flex items-start gap-2"
+                          >
                             <ChevronRight size={12} className="shrink-0 mt-0.5 text-indigo-400" />
                             {factor}
                           </li>
@@ -342,10 +392,13 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                       </div>
                       <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden relative border border-slate-200/50">
                         <div
-                          className={`h-full transition-all duration-1000 ease-out ${result.label === "caution" ? "bg-red-500" : "bg-emerald-500"}`}
+                          className={`h-full transition-all duration-1000 ease-out ${result.label === 'caution' ? 'bg-red-500' : 'bg-emerald-500'}`}
                           style={{ width: `${result.risk_score}%` }}
                         />
-                        <div className="absolute top-0 bottom-0 w-0.5 bg-slate-950/20" style={{ left: `${result.threshold * 100}%` }} />
+                        <div
+                          className="absolute top-0 bottom-0 w-0.5 bg-slate-950/20"
+                          style={{ left: `${result.threshold * 100}%` }}
+                        />
                       </div>
                     </div>
 
@@ -364,7 +417,9 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                       </div>
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 group hover:border-indigo-200 transition-colors">
                         <p className="text-[9px] font-black text-slate-400 mb-1">오픈 예정 월</p>
-                        <p className="text-[11px] font-black text-slate-900">{parseInt(result.open_date.split("-")[1])}월</p>
+                        <p className="text-[11px] font-black text-slate-900">
+                          {parseInt(result.open_date.split('-')[1])}월
+                        </p>
                       </div>
                     </div>
                   </div>

@@ -53,11 +53,17 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
             {isPositive ? <TrendingUp size={80} /> : <TrendingDown size={80} />}
           </div>
           <p className="text-white/60 text-sm font-medium mb-1">평균 수익률(성장률)</p>
-          <h3 className={`text-3xl font-bold mb-2 ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+          <h3
+            className={`text-3xl font-bold mb-2 ${isPositive ? 'text-green-400' : 'text-red-400'}`}
+          >
             {data.returnRate.toFixed(2)}%
           </h3>
           <div className="flex items-center gap-1 text-xs">
-            {isPositive ? <TrendingUp size={14} className="text-green-400" /> : <TrendingDown size={14} className="text-red-400" />}
+            {isPositive ? (
+              <TrendingUp size={14} className="text-green-400" />
+            ) : (
+              <TrendingDown size={14} className="text-red-400" />
+            )}
             <span className={isPositive ? 'text-green-400' : 'text-red-400'}>
               전일 대비 변화 분석
             </span>
@@ -88,10 +94,11 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
           AI 분석 코멘트
         </h4>
         <p className="text-white/80 text-sm leading-relaxed">
-          최근 7일 이동평균이 {data.movingAverage > data.analysisData[0].actual ? '상승' : '하향'} 곡선을 그리고 있습니다. 
-          평균 수익률은 {data.returnRate.toFixed(2)}%로 측정되었으며, 내일은 오늘보다 약 
-          {Math.abs(data.predictedSales - latestData.actual).toLocaleString()}원 정도 
-          {data.predictedSales > latestData.actual ? '높은' : '낮은'} 매출이 발생할 것으로 예측됩니다.
+          최근 7일 이동평균이 {data.movingAverage > data.analysisData[0].actual ? '상승' : '하향'}{' '}
+          곡선을 그리고 있습니다. 평균 수익률은 {data.returnRate.toFixed(2)}%로 측정되었으며, 내일은
+          오늘보다 약{Math.abs(data.predictedSales - latestData.actual).toLocaleString()}원 정도
+          {data.predictedSales > latestData.actual ? '높은' : '낮은'} 매출이 발생할 것으로
+          예측됩니다.
         </p>
       </div>
     </div>

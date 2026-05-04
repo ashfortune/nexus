@@ -59,9 +59,9 @@ export class ChatService {
         message: message,
         type: type,
         fileUrl: fileUrl,
-        fileName: fileName
+        fileName: fileName,
       };
-      
+
       this.client.publish({
         destination: '/app/chat/send',
         body: JSON.stringify(payload),
