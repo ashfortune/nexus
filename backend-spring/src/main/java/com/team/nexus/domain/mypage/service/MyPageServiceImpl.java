@@ -1,8 +1,8 @@
 package com.team.nexus.domain.mypage.service;
 
 import com.team.nexus.domain.auth.repository.UserRepository;
-import com.team.nexus.domain.community.repository.BoardRepository;
-import com.team.nexus.domain.community.repository.CommentRepository;
+import com.team.nexus.domain.board.repository.BoardRepository;
+import com.team.nexus.domain.comment.repository.CommentRepository;
 import com.team.nexus.domain.grouppurchase.repository.GroupOrderRepository;
 import com.team.nexus.domain.mypage.dto.MyPageResponseDto;
 import com.team.nexus.global.entity.User;

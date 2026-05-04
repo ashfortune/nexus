@@ -1,6 +1,5 @@
 package com.team.nexus.domain.grouppurchase.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -10,10 +9,9 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ExternalApiServiceImpl implements ExternalApiService {
 
-    private final RestTemplate restTemplate;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
     public <T> T post(String url, Object body, Map<String, String> headers, Class<T> responseType) {

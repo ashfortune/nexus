@@ -2,7 +2,7 @@ package com.team.nexus.domain.simulation.service;
 
 import com.team.nexus.domain.simulation.dto.EquipPriceResponseDto;
 import com.team.nexus.domain.simulation.repository.EquipPriceRepository;
-import com.team.nexus.domain.simulation.repository.IndustryCategoryQueryRepository;
+import com.team.nexus.domain.board.repository.IndustryCategoryRepository;
 import com.team.nexus.global.entity.EquipmentPrice;
 import com.team.nexus.global.entity.IndustryCategory;
 import jakarta.transaction.Transactional;
@@ -15,12 +15,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EquipPriceServiceImpl implements EquipPriceService {
         private final EquipPriceRepository equipPriceRepository;
-        private final IndustryCategoryQueryRepository industryCategoryQueryRepository;
+        private final IndustryCategoryRepository industryCategoryRepository;
 
         @Override
         @Transactional
         public EquipPriceResponseDto getEquipPriceList(String ksicCode) {
-                IndustryCategory industryCategory = industryCategoryQueryRepository.findFirstByKsicCode(ksicCode)
+                IndustryCategory industryCategory = industryCategoryRepository.findFirstByKsicCode(ksicCode)
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Industry Category not found for ksicCode: " + ksicCode));
 

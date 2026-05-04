@@ -2,8 +2,8 @@ package com.team.nexus.domain.mypage.admin.service;
 
 import com.team.nexus.domain.mypage.admin.dto.AdminDashboardDto;
 import com.team.nexus.domain.auth.repository.UserRepository;
-import com.team.nexus.domain.community.repository.BoardRepository;
-import com.team.nexus.domain.community.repository.CommentRepository;
+import com.team.nexus.domain.board.repository.BoardRepository;
+import com.team.nexus.domain.comment.repository.CommentRepository;
 import com.team.nexus.domain.grouppurchase.repository.GroupPurchaseRepository;
 import com.team.nexus.domain.chat.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
