@@ -27,6 +27,7 @@ public class User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @Column(name = "passwd", nullable = false)
     private String passwd;
 
@@ -42,11 +43,16 @@ public class User {
     @Column(name = "login_type")
     private Integer loginType;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "profile_image")
+    private String profileImage;
+
+    @Column(name = "created_at", insertable = false, updatable = false)
     private java.time.LocalDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = java.time.LocalDateTime.now();
-    }
+    @Column(name = "deleted_at")
+    private java.time.LocalDateTime deletedAt;
+
+    @Builder.Default
+    @Column(name = "is_suspended")
+    private Boolean isSuspended = false;
 }
