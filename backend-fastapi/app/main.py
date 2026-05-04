@@ -20,6 +20,7 @@ from contextlib import asynccontextmanager
 from app.domain.subsidy import subsidyRouter as subsidy
 from app.domain.subsidy.subsidyRouter import start_scheduler as subsidy_start_scheduler
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 서버 시작 시 실행될 로직
@@ -46,10 +47,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS 설정 추가
+# CORS 설정 (운영 환경에 맞춰 허용 도메인 지정)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # 실 운영 시에는 특정 도메인으로 제한 권장
+    allow_origins=[
+        "http://localhost:3000",
+        "https://nexus-sigma-gilt.vercel.app",
+        "https://nexus-g3li.onrender.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -68,8 +73,8 @@ app.mount("/static/candidates", StaticFiles(directory=static_candidates_path), n
 app.mount("/static/final_logos", StaticFiles(directory=static_final_logos_path), name="final_logos")
 app.mount("/static/assets", StaticFiles(directory=static_assets_path), name="assets")
 
-# Spring Boot 서버 주소 (8080)
-SPRING_BOOT_URL = "http://localhost:8080"
+# Spring Boot 서버 주소 (배포 환경에서는 환경변수 SPRING_BOOT_URL 사용)
+SPRING_BOOT_URL = os.getenv("SPRING_BOOT_URL", "http://localhost:8080")
 
 # 도메인별 라우터 등록
 app.include_router(auth.router, prefix="/api/v1/ai/auth", tags=["Authentication"])

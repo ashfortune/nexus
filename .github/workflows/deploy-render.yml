@@ -1,0 +1,15 @@
+name: Deploy Spring Boot to Render
+
+on:
+  push:
+    branches: ["test/deploy"]
+    paths:
+      - 'backend-spring/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy
+        # GitHub Secrets에 RENDER_DEPLOY_HOOK_URL을 등록하세요.
+        run: curl -X GET ${{ secrets.RENDER_DEPLOY_HOOK_URL }}

@@ -18,7 +18,7 @@ export default function PaymentSuccessPage() {
       const userId = localStorage.getItem('userId') || 'd38bc69d-9660-4e11-a50d-9ee90ff38673';
       
       try {
-        const response = await fetch(`http://localhost:8080/api/v1/group-purchases/${params.id}/confirm-payment?userId=${userId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/group-purchases/${params.id}/confirm-payment?userId=${userId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

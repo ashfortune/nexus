@@ -34,8 +34,8 @@ interface BrandDetail {
   identities: BrandIdentity[];
 }
 
-const API_BASE_URL = "http://localhost:8080/api/v1";
-const FASTAPI_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL + "/api/v1";
+const FASTAPI_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL + "";
 
 export default function BrandDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

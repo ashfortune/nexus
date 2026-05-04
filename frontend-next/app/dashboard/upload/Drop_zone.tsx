@@ -82,7 +82,7 @@ const DropZone: React.FC<DropZoneProps> = ({ onUploadComplete }) => {
         formData.append('file', file);
 
         try {
-            const response = await fetch('http://localhost:8000/api/v1/ai/dashboard/upload-receipt', {
+            const response = await fetch(process.env.NEXT_PUBLIC_FASTAPI_URL + '/api/v1/ai/dashboard/upload-receipt', {
                 method: 'POST',
                 body: formData,
             });

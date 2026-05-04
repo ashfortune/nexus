@@ -11,9 +11,9 @@ public class FastApiClient {
 
     private final WebClient webClient;
 
-    public FastApiClient(WebClient.Builder webClientBuilder) {
-        // FastAPI 서버 주소 (8000)
-        this.webClient = webClientBuilder.baseUrl("http://localhost:8000").build();
+    public FastApiClient(WebClient.Builder webClientBuilder, 
+                         @org.springframework.beans.factory.annotation.Value("${fastapi.url:http://localhost:8000}") String fastApiUrl) {
+        this.webClient = webClientBuilder.baseUrl(fastApiUrl).build();
     }
 
     /**

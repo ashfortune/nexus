@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   });
 
   const queryString = queryParams.toString();
-  const backendUrl = `http://localhost:8080${path}${queryString ? `?${queryString}` : ""}`;
+  const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}${path}${queryString ? `?${queryString}` : ""}`;
 
   try {
     const response = await fetch(backendUrl, {

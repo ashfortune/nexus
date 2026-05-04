@@ -125,7 +125,7 @@ const ChatComponent = () => {
   // 2. 초기 데이터 로드 (내 채팅방 목록)
   const fetchMyRooms = async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/chat/rooms/mine?userId=${userId}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/mine?userId=${userId}`);
       if (response.ok) {
         const data = await response.json();
         setRooms(data);
@@ -141,7 +141,7 @@ const ChatComponent = () => {
 
   const fetchAllRooms = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/chat/rooms`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms`);
       if (response.ok) {
         const data = await response.json();
         setAllRooms(data);
@@ -161,7 +161,7 @@ const ChatComponent = () => {
     
     try {
       const passwordParam = joinPassword ? `&password=${joinPassword}` : '';
-      const response = await fetch(`http://localhost:8080/api/v1/chat/rooms/${joiningRoom.id}/join?userId=${currentUserId}${passwordParam}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/${joiningRoom.id}/join?userId=${currentUserId}${passwordParam}`, {
         method: 'POST'
       });
       if (response.ok) {
@@ -190,7 +190,7 @@ const ChatComponent = () => {
     if (!activeRoomId || !currentUserId) return;
     
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/chat/rooms/${activeRoomId}/leave?userId=${currentUserId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/${activeRoomId}/leave?userId=${currentUserId}`, {
         method: 'POST'
       });
       if (response.ok) {
@@ -258,7 +258,7 @@ const ChatComponent = () => {
   const fetchMessages = async (roomId: string) => {
     if (!currentUserId) return;
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/chat/rooms/${roomId}/messages?userId=${currentUserId}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/${roomId}/messages?userId=${currentUserId}`);
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
@@ -309,7 +309,7 @@ const ChatComponent = () => {
         }
       }
 
-      const response = await fetch('http://localhost:8080/api/v1/chat/rooms', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/chat/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -347,7 +347,7 @@ const ChatComponent = () => {
   const fetchInviteCandidates = async () => {
     if (!activeRoomId) return;
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/chat/rooms/${activeRoomId}/invite-candidates`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/${activeRoomId}/invite-candidates`);
       if (response.ok) {
         const data = await response.json();
         setInviteCandidates(data);
@@ -363,7 +363,7 @@ const ChatComponent = () => {
     
     setIsInviting(true);
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/chat/rooms/${activeRoomId}/invite`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/${activeRoomId}/invite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(selectedUserIds),
@@ -413,7 +413,7 @@ const ChatComponent = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:8080/api/v1/chat/files/upload?category=chat-rooms', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/chat/files/upload?category=chat-rooms', {
         method: 'POST',
         body: formData,
       });
@@ -443,7 +443,7 @@ const ChatComponent = () => {
 
     try {
       console.log("Uploading file...");
-      const response = await fetch('http://localhost:8080/api/v1/chat/files/upload?category=chat-messages', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/chat/files/upload?category=chat-messages', {
         method: 'POST',
         body: formData,
       });

@@ -43,7 +43,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const response = await fetch("http://localhost:8080/api/v1/auth/login", {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/v1/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -191,14 +191,14 @@ export default function LoginPage() {
             {/* Social Login Buttons */}
             <div className="grid grid-cols-2 gap-3 mt-6">
               <a
-                href="http://localhost:8080/oauth2/authorization/google"
+                href={process.env.NEXT_PUBLIC_API_URL + "/oauth2/authorization/google"}
                 className="h-12 flex items-center justify-center gap-2 border border-zinc-200 rounded-2xl hover:bg-zinc-50 transition-all active:scale-[0.98] group"
               >
                 <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
                 <span className="text-sm font-bold text-zinc-700 group-hover:text-black">Google</span>
               </a>
               <a
-                href="http://localhost:8080/oauth2/authorization/kakao"
+                href={process.env.NEXT_PUBLIC_API_URL + "/oauth2/authorization/kakao"}
                 className="h-12 flex items-center justify-center gap-2 bg-[#FEE500] rounded-2xl hover:bg-[#FDD835] transition-all active:scale-[0.98] group"
               >
                 <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">

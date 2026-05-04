@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const API_BASE_URL = "http://localhost:8000/api/v1/ai/branding";
+const API_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL + "/api/v1/ai/branding";
 
 interface Logo {
   id: string;
@@ -45,7 +45,7 @@ export default function LogoGenerationSection({
           id: l.tempId,
           url: l.imageUrl.startsWith("http") || l.imageUrl.startsWith("data:")
             ? l.imageUrl
-            : `http://localhost:8000${l.imageUrl}`,
+            : `${process.env.NEXT_PUBLIC_FASTAPI_URL}${l.imageUrl}`,
         }));
         setLogos(newLogos);
         if (newLogos.length > 0) setSelectedLogoId(newLogos[0].id);
@@ -70,7 +70,7 @@ export default function LogoGenerationSection({
       // Base64 데이터인 경우 그대로 전송, 일반 URL인 경우 상대 경로 추출
       const sendUrl = selected.url.startsWith("data:image") 
         ? selected.url 
-        : selected.url.replace("http://localhost:8000", "");
+        : selected.url.replace(process.env.NEXT_PUBLIC_FASTAPI_URL + "", "");
 
       const response = await fetch(`${API_BASE_URL}/identity/${targetId}/logo/finalize`, {
         method: "POST",

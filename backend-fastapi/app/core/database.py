@@ -14,7 +14,11 @@ if not DATABASE_URL:
     raise ValueError("DATABASE_URL이 설정되지 않았습니다. .env 파일을 확인해주세요.")
 
 # 비동기 엔진 생성
-engine = create_async_engine(DATABASE_URL, echo=True)
+engine = create_async_engine(
+    DATABASE_URL, 
+    echo=True,
+    connect_args={"statement_cache_size": 0}
+)
 
 # 비동기 세션 메이커
 AsyncSessionLocal = async_sessionmaker(

@@ -23,7 +23,7 @@ interface Brand {
   logoUrl?: string;
 }
 
-const API_BASE_URL = "http://localhost:8080/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL + "/api/v1";
 
 export default function BrandListPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -159,7 +159,7 @@ export default function BrandListPage() {
                     <div className="mb-8 transform transition-transform group-hover:scale-110 duration-700 w-36 h-36 flex items-center justify-center bg-[var(--nexus-surface-low)] rounded-[2.5rem] p-6 border border-[var(--nexus-outline-variant)]/30">
                       {brand.logoUrl ? (
                         <img 
-                          src={brand.logoUrl.startsWith('http') || brand.logoUrl.startsWith('data:') ? brand.logoUrl : `http://localhost:8000${brand.logoUrl}`} 
+                          src={brand.logoUrl.startsWith('http') || brand.logoUrl.startsWith('data:') ? brand.logoUrl : `${process.env.NEXT_PUBLIC_FASTAPI_URL}${brand.logoUrl}`} 
                           alt={brand.title} 
                           className="max-w-full max-h-full object-contain"
                         />
@@ -195,7 +195,7 @@ export default function BrandListPage() {
                       <div className="w-24 h-24 bg-[var(--nexus-surface-low)] rounded-[2rem] flex items-center justify-center p-4 overflow-hidden border border-[var(--nexus-outline-variant)]/30">
                         {selectedBrand.logoUrl ? (
                           <img 
-                            src={selectedBrand.logoUrl.startsWith('http') || selectedBrand.logoUrl.startsWith('data:') ? selectedBrand.logoUrl : `http://localhost:8000${selectedBrand.logoUrl}`} 
+                            src={selectedBrand.logoUrl.startsWith('http') || selectedBrand.logoUrl.startsWith('data:') ? selectedBrand.logoUrl : `${process.env.NEXT_PUBLIC_FASTAPI_URL}${selectedBrand.logoUrl}`} 
                             alt={selectedBrand.title} 
                             className="max-w-full max-h-full object-contain"
                           />

@@ -82,7 +82,7 @@ export default function GroupBuyCreatePage() {
         uploadFormData.append('file', selectedFile);
         uploadFormData.append('category', 'product-images');
 
-        const uploadRes = await fetch('http://localhost:8080/api/v1/group-purchases/files/upload', {
+        const uploadRes = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/group-purchases/files/upload', {
           method: 'POST',
           body: uploadFormData,
         });
@@ -95,7 +95,7 @@ export default function GroupBuyCreatePage() {
 
       const userId = localStorage.getItem('userId') || 'd38bc69d-9660-4e11-a50d-9ee90ff38673';
 
-      const response = await fetch(`http://localhost:8080/api/v1/group-purchases?userId=${userId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/group-purchases?userId=${userId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -41,8 +41,8 @@ export default function GroupBuyListPage() {
     if (selectedRegion && selectedRegion !== '전체') params.append('region', selectedRegion);
 
     const url = params.toString() 
-      ? `http://localhost:8080/api/v1/group-purchases/search?${params.toString()}`
-      : 'http://localhost:8080/api/v1/group-purchases';
+      ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/group-purchases/search?${params.toString()}`
+      : process.env.NEXT_PUBLIC_API_URL + '/api/v1/group-purchases';
 
     fetch(url)
       .then(res => res.json())
