@@ -17,6 +17,8 @@ import {
   Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function BoardEditPage() {
   const params = useParams();
@@ -37,9 +39,8 @@ export default function BoardEditPage() {
   }, [params.id]);
 
   const fetchPostDetail = async () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/board/${params.id}`);
+      const response = await api.get(`/api/v1/board/${params.id}`);
       const result = await response.json();
       if (result.status === "success") {
         setTitle(result.data.title);
@@ -83,42 +84,32 @@ export default function BoardEditPage() {
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) return;
+      const { isAuthenticated } = useAuthStore.getState();
+      if (!isAuthenticated) {
+        alert("로그인이 필요합니다.");
+        router.push("/auth/login");
+        return;
+      }
 
       let finalImageUrls = [...imageUrls];
       if (newImages.length > 0) {
         const formData = new FormData();
         newImages.forEach(file => formData.append("files", file));
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-        const uploadResponse = await fetch(`${apiUrl}/api/v1/upload/free`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
-          body: formData,
-        });
+        
+        const uploadResponse = await api.post("/api/v1/upload/free", formData);
         const uploadResult = await uploadResponse.json();
         if (uploadResult.status === "success") {
           finalImageUrls = [...finalImageUrls, ...uploadResult.urls];
         }
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const response = await fetch(`${apiUrl}/api/v1/board/${params.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title,
-          content,
-          isAnonymous,
-          imageUrls: finalImageUrls,
-          regionName: null,
-          categoryName: "FREE"
-        })
+      const response = await api.put(`/api/v1/board/${params.id}`, {
+        title,
+        content,
+        isAnonymous,
+        imageUrls: finalImageUrls,
+        regionName: null,
+        categoryName: "FREE"
       });
 
       const result = await response.json();

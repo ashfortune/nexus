@@ -16,6 +16,8 @@ import {
   Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function BoardCreatePage() {
   const router = useRouter();
@@ -54,44 +56,29 @@ export default function BoardCreatePage() {
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
+      const { isAuthenticated } = useAuthStore.getState();
+      if (!isAuthenticated) {
         alert("로그인이 필요합니다.");
         router.push("/auth/login");
         return;
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
       let imageUrls: string[] = [];
       if (images.length > 0) {
         const formData = new FormData();
         images.forEach(file => formData.append("files", file));
-        const uploadResponse = await fetch(`${apiUrl}/api/v1/upload`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
-          body: formData,
-        });
+        const uploadResponse = await api.post("/api/v1/upload", formData);
         const uploadResult = await uploadResponse.json();
         if (uploadResult.status === "success") imageUrls = uploadResult.urls;
       }
 
-      const response = await fetch(`${apiUrl}/api/v1/board`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title,
-          content,
-          isAnonymous,
-          imageUrls,
-          regionName: null,
-          categoryName: "FREE"
-        })
+      const response = await api.post("/api/v1/board", {
+        title,
+        content,
+        isAnonymous,
+        imageUrls,
+        regionName: null,
+        categoryName: "FREE"
       });
 
       const result = await response.json();

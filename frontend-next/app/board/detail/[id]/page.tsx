@@ -28,6 +28,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 interface Post {
   id: string;
@@ -95,10 +96,9 @@ export default function BoardDetailPage() {
   }, [params.id, currentPage]);
 
   const fetchPostDetail = async (id: string, silent: boolean = false) => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     if (!silent) setIsLoading(true);
     try {
-      const response = await fetch(`${apiUrl}/api/v1/board/${id}${silent ? "?silent=true" : ""}`);
+      const response = await api.get(`/api/v1/board/${id}${silent ? "?silent=true" : ""}`);
       if (!response.ok) throw new Error(`Server returned ${response.status}`);
       const result = await response.json();
       
@@ -115,9 +115,8 @@ export default function BoardDetailPage() {
   };
 
   const fetchPosts = async (page: number) => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/board?page=${page}&size=10`);
+      const response = await api.get(`/api/v1/board`, { params: { page: String(page), size: "10" } });
       const result = await response.json();
       if (result.status === "success") {
         setPosts(result.data);
@@ -130,9 +129,8 @@ export default function BoardDetailPage() {
   };
 
   const fetchComments = async (id: string = params.id as string) => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/comments/${id}`);
+      const response = await api.get(`/api/v1/comments/${id}`);
       if (!response.ok) return;
       const result = await response.json();
       if (result.status === "success") {
@@ -144,13 +142,9 @@ export default function BoardDetailPage() {
   };
   
   const fetchLikeStatus = async (id: string) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/board/like/${id}/status`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/v1/board/like/${id}/status`);
+      if (!response.ok) return;
       const result = await response.json();
       if (result.status === "success") setIsLiked(result.isLiked);
     } catch (error) {
@@ -167,12 +161,8 @@ export default function BoardDetailPage() {
     }
     if (isLikeLoading) return;
     setIsLikeLoading(true);
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/board/like/${params.id}`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
+      const response = await api.post(`/api/v1/board/like/${params.id}`);
       const result = await response.json();
       if (result.status === "success") {
         setIsLiked(result.isLiked);
@@ -195,16 +185,8 @@ export default function BoardDetailPage() {
     const content = parentId ? replyContent : commentContent;
     if (!content.trim()) return;
     setIsSubmitting(true);
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/comments/${params.id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ content, parentId })
-      });
+      const response = await api.post(`/api/v1/comments/${params.id}`, { content, parentId });
       const result = await response.json();
       if (result.status === "success") {
         setCommentContent("");
@@ -221,16 +203,8 @@ export default function BoardDetailPage() {
 
   const handleUpdateComment = async (commentId: string) => {
     if (!editCommentContent.trim()) return;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/comments/${commentId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
-        },
-        body: JSON.stringify({ content: editCommentContent })
-      });
+      const response = await api.put(`/api/v1/comments/${commentId}`, { content: editCommentContent });
       const result = await response.json();
       if (result.status === "success") {
         setEditingCommentId(null);
@@ -243,12 +217,8 @@ export default function BoardDetailPage() {
 
   const handleDeleteComment = async (commentId: string) => {
     if (!confirm("정말 댓글을 삭제하시겠습니까?")) return;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/comments/${commentId}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
-      });
+      const response = await api.delete(`/api/v1/comments/${commentId}`);
       const result = await response.json();
       if (result.status === "success") fetchComments();
     } catch (error) {
@@ -258,12 +228,8 @@ export default function BoardDetailPage() {
 
   const handleReportComment = async (commentId: string) => {
     if (!confirm("이 댓글을 신고하시겠습니까?")) return;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/comments/report/${commentId}`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
-      });
+      const response = await api.post(`/api/v1/comments/report/${commentId}`);
       const result = await response.json();
       if (result.status === "success") alert("신고가 접수되었습니다.");
     } catch (error) {
@@ -273,12 +239,8 @@ export default function BoardDetailPage() {
 
   const handleDeletePost = async () => {
     if (!confirm("정말 게시글을 삭제하시겠습니까?")) return;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/board/${params.id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
-      });
+      const response = await api.delete(`/api/v1/board/${params.id}`);
       if (response.ok) {
         alert("게시글이 삭제되었습니다.");
         router.push("/board");
@@ -291,21 +253,13 @@ export default function BoardDetailPage() {
   const handleUpdatePost = async () => {
     if (!editTitle.trim() || !editContent.trim()) return;
     setIsSubmitting(true);
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/board/${params.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
-        },
-        body: JSON.stringify({
-          title: editTitle,
-          content: editContent,
-          categoryName: "FREE",
-          isAnonymous: post?.author === "익명",
-          imageUrls: post?.imageUrls
-        })
+      const response = await api.put(`/api/v1/board/${params.id}`, {
+        title: editTitle,
+        content: editContent,
+        categoryName: "FREE",
+        isAnonymous: post?.author === "익명",
+        imageUrls: post?.imageUrls
       });
       const result = await response.json();
       if (result.status === "success") {

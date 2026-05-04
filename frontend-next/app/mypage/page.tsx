@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface MyPageData {
   email: string;
@@ -25,20 +27,18 @@ export default function MyPage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', next: '', confirm: '' });
 
+  const { user, isAuthenticated } = useAuthStore();
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const userId = localStorage.getItem('userId');
+    const userId = user?.id;
     const formData = new FormData();
     formData.append('file', file);
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/mypage/profile-image/${userId}`, {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await api.post(`/api/v1/mypage/profile-image/${userId}`, formData);
       const result = await response.json();
       if (result.status === 'success') {
         alert('프로필 이미지가 변경되었습니다.');
@@ -71,20 +71,12 @@ export default function MyPage() {
       return alert('새 비밀번호가 일치하지 않습니다.');
     }
 
-    const userId = localStorage.getItem('userId');
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const userId = user?.id;
     try {
-      const response = await fetch(
-        `${apiUrl}/api/v1/mypage/change-password/${userId}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            currentPassword: passwords.current,
-            newPassword: passwords.next,
-          }),
-        }
-      );
+      const response = await api.patch(`/api/v1/mypage/change-password/${userId}`, {
+        currentPassword: passwords.current,
+        newPassword: passwords.next,
+      });
       const result = await response.json();
       if (result.status === 'success') {
         alert('비밀번호가 변경되었습니다.');
@@ -99,22 +91,18 @@ export default function MyPage() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const userId = localStorage.getItem('userId');
-
-    if (!token || !userId) {
+    if (!isAuthenticated || !user?.id) {
       alert('로그인이 필요한 서비스입니다.');
       router.push('/auth/login');
       return;
     }
 
-    fetchData(userId);
-  }, [router]);
+    fetchData(user.id);
+  }, [isAuthenticated, user, router]);
 
   const fetchData = async (userId: string) => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`${apiUrl}/api/v1/mypage/me/${userId}`);
+      const response = await api.get(`/api/v1/mypage/me/${userId}`);
       const result = await response.json();
       if (result.status === 'success') {
         setData(result.data);
@@ -130,14 +118,9 @@ export default function MyPage() {
 
   const handleUpgrade = async () => {
     if (!bizNo) return alert('사업자 등록번호를 입력해주세요.');
-    const userId = localStorage.getItem('userId');
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const userId = user?.id;
     try {
-      const response = await fetch(`${apiUrl}/api/v1/mypage/upgrade/${userId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bizNo }),
-      });
+      const response = await api.patch(`/api/v1/mypage/upgrade/${userId}`, { bizNo });
       const result = await response.json();
       if (result.status === 'success') {
         alert('사업자 회원으로 전환되었습니다.');
@@ -150,16 +133,13 @@ export default function MyPage() {
 
   const handleUnregister = async () => {
     if (!confirm('정말로 탈퇴하시겠습니까? 탈퇴 후 7일간은 데이터 복구가 불가능합니다.')) return;
-    const userId = localStorage.getItem('userId');
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const userId = user?.id;
     try {
-      const response = await fetch(`${apiUrl}/api/v1/mypage/unregister/${userId}`, {
-        method: 'DELETE',
-      });
+      const response = await api.delete(`/api/v1/mypage/unregister/${userId}`);
       const result = await response.json();
       if (result.status === 'success') {
         alert('탈퇴 처리가 완료되었습니다. 이용해주셔서 감사합니다.');
-        localStorage.clear();
+        useAuthStore.getState().clearAuth();
         router.push('/');
       }
     } catch (error) {
@@ -217,13 +197,12 @@ export default function MyPage() {
                     회원 등급
                   </span>
                   <span
-                    className={`px-3 py-1 rounded-full text-[10px] font-black ${
-                      data.userType === 2
-                        ? 'bg-[var(--nexus-error)]/10 text-[var(--nexus-error)]'
-                        : data.userType === 1
-                          ? 'bg-[var(--nexus-tertiary-fixed)]/20 text-[var(--nexus-tertiary-container)]'
-                          : 'bg-[var(--nexus-primary)]/10 text-[var(--nexus-primary)]'
-                    }`}
+                    className={`px-3 py-1 rounded-full text-[10px] font-black ${data.userType === 2
+                      ? 'bg-[var(--nexus-error)]/10 text-[var(--nexus-error)]'
+                      : data.userType === 1
+                        ? 'bg-[var(--nexus-tertiary-fixed)]/20 text-[var(--nexus-tertiary-container)]'
+                        : 'bg-[var(--nexus-primary)]/10 text-[var(--nexus-primary)]'
+                      }`}
                   >
                     {data.userType === 2
                       ? '관리자'
@@ -340,11 +319,10 @@ export default function MyPage() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`flex-1 py-5 text-sm font-black transition-all ${
-                      activeTab === tab
-                        ? 'text-[var(--nexus-primary)] bg-[var(--nexus-surface-lowest)] border-b-2 border-[var(--nexus-primary)]'
-                        : 'text-[var(--nexus-outline)] hover:text-[var(--nexus-on-bg)] hover:bg-[var(--nexus-surface-low)]'
-                    }`}
+                    className={`flex-1 py-5 text-sm font-black transition-all ${activeTab === tab
+                      ? 'text-[var(--nexus-primary)] bg-[var(--nexus-surface-lowest)] border-b-2 border-[var(--nexus-primary)]'
+                      : 'text-[var(--nexus-outline)] hover:text-[var(--nexus-on-bg)] hover:bg-[var(--nexus-surface-low)]'
+                      }`}
                   >
                     {tab === 'posts'
                       ? '내 게시글'

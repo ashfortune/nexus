@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useAuthStore } from '@/store/useAuthStore';
+import { api } from '@/lib/api';
 
 interface AdminData {
   users: Array<{
@@ -49,12 +50,7 @@ export default function AdminPage() {
 
   const fetchAdminData = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const response = await fetch(`${apiUrl}/api/v1/mypage/admin/dashboard`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get("/api/v1/mypage/admin/dashboard");
       const result = await response.json();
       if (result.status === 'success') {
         setData(result.data);
@@ -68,14 +64,8 @@ export default function AdminPage() {
 
   const handleDeleteBoard = async (id: string) => {
     if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const res = await fetch(`${apiUrl}/api/v1/mypage/admin/boards/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.delete(`/api/v1/mypage/admin/boards/${id}`);
       if (res.ok) {
         alert('삭제되었습니다.');
         fetchAdminData();
@@ -87,14 +77,8 @@ export default function AdminPage() {
 
   const handleDeleteComment = async (id: string) => {
     if (!confirm('정말 이 댓글을 삭제하시겠습니까?')) return;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const res = await fetch(`${apiUrl}/api/v1/mypage/admin/comments/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.delete(`/api/v1/mypage/admin/comments/${id}`);
       if (res.ok) {
         alert('삭제되었습니다.');
         fetchAdminData();
@@ -107,14 +91,8 @@ export default function AdminPage() {
   const handleToggleSuspension = async (id: string, currentStatus: boolean) => {
     const action = currentStatus ? '해제' : '정지';
     if (!confirm(`정말 이 회원을 ${action}하시겠습니까?`)) return;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const res = await fetch(`${apiUrl}/api/v1/mypage/admin/users/${id}/suspend`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.patch(`/api/v1/mypage/admin/users/${id}/suspend`);
       if (res.ok) {
         alert(`${action}되었습니다.`);
         fetchAdminData();
