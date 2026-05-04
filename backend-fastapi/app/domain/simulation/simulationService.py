@@ -12,26 +12,65 @@ import pandas as pd
 import unicodedata
 from app.models import AdministrativeBoundary, RegionCode
 
-REPO_ID = os.environ.get("HF_REPO_ID")
-TOKEN   = os.environ.get("HF_TOKEN")
+# 모델 로드 관련 전역 변수
+_bundle = None
+_model = None
+_freq_map = None
+_industry_map = None
+_industry_columns = None
+_best_model_name = None
+FEATURE_ORDER = None
+_industry_list = None
 
-_bundle           = joblib.load(hf_hub_download(repo_id=REPO_ID, filename="best_model_v7_metadata.joblib", token=TOKEN))
-_freq_map         = _bundle["freq_map"]
-_industry_map     = _bundle["업종_매핑"]
-_industry_columns = _bundle["업종_columns"]
-_best_model_name  = _bundle["best_model_name"]
-FEATURE_ORDER     = _bundle["feature_names"]
+def _get_model_file(filename: str):
+    """로컬 디렉토리(app/pd_models)에 파일이 있으면 사용하고, 없으면 HuggingFace에서 다운로드합니다."""
+    REPO_ID = os.environ.get("HF_REPO_ID")
+    TOKEN   = os.environ.get("HF_TOKEN")
+    
+    # 프로젝트 내 로컬 모델 경로 확인
+    local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../pd_models", filename)
+    if os.path.exists(local_path):
+        # print(f"📂 [Simulation] 로컬 모델 파일 사용: {filename}")
+        return local_path
+    
+    # 로컬에 없으면 HuggingFace에서 다운로드
+    return hf_hub_download(repo_id=REPO_ID, filename=filename, token=TOKEN)
 
-_model_path = hf_hub_download(repo_id=REPO_ID, filename=_bundle["core_model_path"], token=TOKEN)
-if _best_model_name == "XGBoost":
-    _model = XGBClassifier()
-    _model.load_model(_model_path)
-    _model.n_classes_ = 2
-else:
-    _model = joblib.load(_model_path)
+def _load_model():
+    """모델과 메타데이터를 지연 로딩(Lazy Loading) 방식으로 불러옵니다."""
+    global _bundle, _model, _freq_map, _industry_map, _industry_columns, _best_model_name, FEATURE_ORDER, _industry_list
+    if _model is not None:
+        return
+
+    try:
+        # 1. 메타데이터 로드
+        meta_path = _get_model_file("best_model_v7_metadata.joblib")
+        _bundle = joblib.load(meta_path)
+        
+        _freq_map         = _bundle["freq_map"]
+        _industry_map     = _bundle["업종_매핑"]
+        _industry_columns = _bundle["업종_columns"]
+        _best_model_name  = _bundle["best_model_name"]
+        FEATURE_ORDER     = _bundle["feature_names"]
+        _industry_list    = [v.replace("업종_", "") for v in set(_industry_map.values())]
+
+        # 2. 핵심 모델 로드
+        core_filename = _bundle["core_model_path"]
+        model_path = _get_model_file(core_filename)
+        
+        if _best_model_name == "XGBoost":
+            _model = XGBClassifier()
+            _model.load_model(model_path)
+            _model.n_classes_ = 2
+        else:
+            _model = joblib.load(model_path)
+        
+        print(f"✅ [Simulation] AI 시뮬레이션 모델 로드 완료 (Source: {'Local' if 'pd_models' in model_path else 'HuggingFace'})")
+    except Exception as e:
+        print(f"❌ [Simulation] 모델 로드 실패: {e}")
+        raise e
 
 THRESHOLD = 0.35
-_industry_list = [v.replace("업종_", "") for v in set(_industry_map.values())]
 
 GU_CACHE = {"map": {}, "initialized": False}
 
@@ -87,6 +126,7 @@ def _build_features(cx: float, cy: float, gu: str, dong: str, industry: str, ope
 
 
 async def predict_survival(db: AsyncSession, request: PredictionRequest) -> PredictionResponse:
+    _load_model()
     if request.industry not in _industry_list:
         raise HTTPException(status_code=400, detail=f"지원하지 않는 업종입니다. 가능 업종: {_industry_list}")
 
