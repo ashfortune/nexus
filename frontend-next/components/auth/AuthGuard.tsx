@@ -11,10 +11,13 @@ interface AuthGuardProps {
 
 export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, _hasHydrated } = useAuthStore();
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
+    // 하이드레이션 완료 전까지는 체크를 유보함
+    if (!_hasHydrated) return;
+
     // 1. 로그인 여부 확인
     if (!isAuthenticated) {
       alert('로그인이 필요한 서비스입니다.');

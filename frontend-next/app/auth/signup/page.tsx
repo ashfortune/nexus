@@ -17,6 +17,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useAuthStore } from '@/store/useAuthStore';
 import DaumPostcode from 'react-daum-postcode';
 
 import { cn } from '@/lib/utils';
@@ -62,11 +63,18 @@ export default function SignupPage() {
   const [selectedType, setSelectedType] = useState<number | null>(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [agreedPolicies, setAgreedPolicies] = useState<number[]>([]);
+  const { isAuthenticated, _hasHydrated } = useAuthStore();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (_hasHydrated && isAuthenticated) {
+      router.push('/');
+    }
+  }, [_hasHydrated, isAuthenticated, router]);
 
   const {
     register,
