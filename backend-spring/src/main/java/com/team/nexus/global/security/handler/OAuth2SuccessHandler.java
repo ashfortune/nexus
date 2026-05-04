@@ -25,7 +25,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final com.team.nexus.domain.auth.repository.UserRepository userRepository;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+            Authentication authentication) throws IOException,
+            ServletException {
         try {
             OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
             Map<String, Object> attributes = oAuth2User.getAttributes();
@@ -41,12 +43,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             // 실제 유저 정보 조회
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new ServletException("사용자를 찾을 수 없습니다."));
-
             String token = jwtTokenProvider.createToken(email, user.getId(), user.getUserType());
-
             String provider = ((org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken) authentication)
                     .getAuthorizedClientRegistrationId();
-            
             log.info("OAuth2 Login Success: {} (ID: {}), Provider: {}", email, user.getId(), provider);
 
             // 닉네임 한글 인코딩 및 URL 생성
@@ -58,14 +57,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .build()
                     .encode(java.nio.charset.StandardCharsets.UTF_8) // 명시적 인코딩 추가
                     .toUriString();
-
             log.info("Redirecting to: {}", targetUrl);
-            
             // 디버깅을 위한 파일 로그 (콘솔 확인이 어려울 때 사용)
             try (java.io.FileWriter fw = new java.io.FileWriter("C:/nexus/oauth_debug.log", true)) {
                 fw.write(new java.util.Date() + " - Redirecting to: " + targetUrl + "\n");
             }
-
             getRedirectStrategy().sendRedirect(request, response, targetUrl);
         } catch (Exception e) {
             log.error("OAuth2 Success Handler Error: ", e);

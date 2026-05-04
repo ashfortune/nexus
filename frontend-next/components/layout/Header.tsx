@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -6,25 +6,35 @@ import { usePathname } from 'next/navigation';
 
 const MENU_DATA = [
   {
-    id: 'analysis', title: '창업 분석', hasSub: true,
-    subMenu: [{ name: '창업 비용 시뮬레이션', href: '/simulation' },
-    { name: '상권 분석 지도', href: '/store-map' }]
+    id: 'analysis',
+    title: '창업 분석',
+    hasSub: true,
+    subMenu: [
+      { name: '창업 비용 시뮬레이션', href: '/simulation' },
+      { name: '상권 분석 지도', href: '/store-map' },
+    ],
   },
-  { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/' },
+  { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/subsidy' },
   { id: 'creative', title: 'AI 브랜딩', hasSub: false, href: '/branding' },
   {
-    id: 'compliance', title: '창업 가이드', hasSub: true,
-    subMenu: [{ name: '서류 가이드', href: '/' },
-    { name: '고용 가이드', href: '/' }]
+    id: 'compliance',
+    title: '창업 가이드',
+    hasSub: true,
+    subMenu: [
+      { name: '서류 가이드', href: '/license' },
+      { name: '고용 가이드', href: '/worker' },
+    ],
   },
   {
-    id: 'community', title: '커뮤니티', hasSub: true,
+    id: 'community',
+    title: '커뮤니티',
+    hasSub: true,
     subMenu: [
-      { name: '자유 게시판', href: '/board' },
-      { name: '지역별게시판', href: '/region-board' },
-      { name: '업종별게시판', href: '/industry-board' },
-      { name: '공동구매', href: '/purchase' }
-    ]
+      { name: '자유 게시판', href: '/' },
+      { name: '지역별 게시판', href: '/' },
+      { name: '업종별 게시판', href: '/' },
+      { name: '전문가 매칭', href: '/' },
+    ],
   },
   { id: 'group-purchases', title: '공동구매', hasSub: false, href: '/group-purchases' },
 ];
@@ -85,13 +95,13 @@ export default function Header() {
         setIsProfileOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
       window.removeEventListener('storage', checkLoginStatus);
       window.removeEventListener('login-status-change', checkLoginStatus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [checkLoginStatus]);
 
@@ -127,9 +137,11 @@ export default function Header() {
   return (
     <header className="relative w-full bg-[var(--nexus-surface-lowest)] border-b border-[var(--nexus-outline-variant)] z-[100]">
       <div className="max-w-[1440px] mx-auto h-20 px-6 md:px-8 flex items-center justify-between">
-
         <div className="w-[100px] lg:w-[160px] shrink-0">
-          <Link href="/" className="text-xl md:text-2xl font-black tracking-tighter text-[var(--nexus-primary)]">
+          <Link
+            href="/"
+            className="text-xl md:text-2xl font-black tracking-tighter text-[var(--nexus-primary)]"
+          >
             NEXUS
           </Link>
         </div>
@@ -149,7 +161,9 @@ export default function Header() {
                   >
                     {menu.title}
                   </Link>
-                  {activeMenu === menu.id && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-[3px] bg-[var(--nexus-primary)]" />}
+                  {activeMenu === menu.id && (
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-[3px] bg-[var(--nexus-primary)]" />
+                  )}
                 </li>
               ))}
             </ul>
@@ -158,7 +172,10 @@ export default function Header() {
           )}
         </nav>
 
-        <div className="w-[100px] lg:w-[160px] shrink-0 flex items-center justify-end gap-3" ref={profileRef}>
+        <div
+          className="w-[100px] lg:w-[160px] shrink-0 flex items-center justify-end gap-3"
+          ref={profileRef}
+        >
           {mounted ? (
             <>
               {!isLoggedIn ? (
@@ -170,7 +187,10 @@ export default function Header() {
                 </Link>
               ) : (
                 <div className="relative flex items-center">
-                  <button onClick={toggleProfile} className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-[var(--nexus-outline-variant)] overflow-hidden bg-white flex items-center justify-center shadow-sm">
+                  <button
+                    onClick={toggleProfile}
+                    className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-[var(--nexus-outline-variant)] overflow-hidden bg-white flex items-center justify-center shadow-sm"
+                  >
                     {profileImage ? (
                       <img
                         src={`http://localhost:8080${profileImage}`}
@@ -178,25 +198,43 @@ export default function Header() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="text-xs font-black text-[var(--nexus-primary)]">{nickname[0] || 'P'}</span>
+                      <span className="text-xs font-black text-[var(--nexus-primary)]">
+                        {nickname[0] || 'P'}
+                      </span>
                     )}
                   </button>
                   {isProfileOpen && (
                     <div className="absolute right-0 top-14 w-52 bg-white border border-[var(--nexus-outline-variant)] shadow-xl rounded-md overflow-hidden z-[110]">
                       <div className="px-5 py-3.5 text-sm text-gray-400 border-b border-gray-100 bg-gray-50/50">
-                        <span className="font-bold text-[var(--nexus-primary)]">{nickname}</span>님 환영합니다
+                        <span className="font-bold text-[var(--nexus-primary)]">{nickname}</span>님
+                        환영합니다
                       </div>
                       <Link
-                        href={userType === '2' ? "/mypage/admin" : "/mypage"}
+                        href={userType === '2' ? '/mypage/admin' : '/mypage'}
                         className="block px-5 py-3.5 text-sm hover:bg-gray-50 border-b border-gray-100"
                       >
-                        {userType === '2' ? "⚙️ 관리자 콘솔" : "ℹ️ 프로필"}
+                        {userType === '2' ? '⚙️ 관리자 콘솔' : 'ℹ️ 프로필'}
                       </Link>
                       {userType === '2' && (
-                        <Link href="/mypage" className="block px-5 py-3.5 text-sm hover:bg-gray-50 border-b border-gray-100 text-gray-500">ℹ️ 프로필</Link>
+                        <Link
+                          href="/mypage"
+                          className="block px-5 py-3.5 text-sm hover:bg-gray-50 border-b border-gray-100 text-gray-500"
+                        >
+                          ℹ️ 프로필
+                        </Link>
                       )}
-                      <Link href="/chat" className="block px-5 py-3.5 text-sm hover:bg-gray-50 border-b border-gray-100">💬 채팅하기</Link>
-                      <button onClick={handleLogout} className="w-full text-left px-5 py-3.5 text-sm text-red-500 hover:bg-red-50 font-semibold">🚣 로그아웃</button>
+                      <Link
+                        href="/chat"
+                        className="block px-5 py-3.5 text-sm hover:bg-gray-50 border-b border-gray-100"
+                      >
+                        💬 채팅하기
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-5 py-3.5 text-sm text-red-500 hover:bg-red-50 font-semibold"
+                      >
+                        🚣 로그아웃
+                      </button>
                     </div>
                   )}
                 </div>
@@ -229,7 +267,10 @@ export default function Header() {
                     <ul className="flex flex-col gap-4 text-center">
                       {menu.subMenu?.map((sub, sIdx) => (
                         <li key={sIdx}>
-                          <Link href={sub.href} className="text-[14px] text-gray-500 hover:text-[var(--nexus-primary)] hover:underline underline-offset-4 font-medium whitespace-nowrap">
+                          <Link
+                            href={sub.href}
+                            className="text-[14px] text-gray-500 hover:text-[var(--nexus-primary)] hover:underline underline-offset-4 font-medium whitespace-nowrap"
+                          >
                             {sub.name}
                           </Link>
                         </li>
@@ -254,8 +295,13 @@ export default function Header() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 h-20 border-b border-[var(--nexus-outline-variant)]">
-              <span className="text-xl font-black tracking-tighter text-[var(--nexus-primary)]">NEXUS</span>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-[var(--nexus-on-bg)]">
+              <span className="text-xl font-black tracking-tighter text-[var(--nexus-primary)]">
+                NEXUS
+              </span>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 text-[var(--nexus-on-bg)]"
+              >
                 <span className="text-2xl leading-none">✕</span>
               </button>
             </div>
@@ -264,7 +310,9 @@ export default function Header() {
                 <div key={menu.id} className="border-b border-[var(--nexus-outline-variant)]/30">
                   {menu.hasSub ? (
                     <>
-                      <div className="px-6 py-4 text-[15px] font-bold text-[var(--nexus-on-bg)]">{menu.title}</div>
+                      <div className="px-6 py-4 text-[15px] font-bold text-[var(--nexus-on-bg)]">
+                        {menu.title}
+                      </div>
                       {menu.subMenu?.map((sub, sIdx) => (
                         <Link
                           key={sIdx}
@@ -299,7 +347,10 @@ export default function Header() {
                 </Link>
               ) : (
                 <button
-                  onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
                   className="w-full py-3 text-sm font-bold text-red-500 border border-red-200 rounded-lg hover:bg-red-50"
                 >
                   🚣 로그아웃

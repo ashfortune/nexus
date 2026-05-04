@@ -32,6 +32,7 @@ class IndustryCategory(Base):
     equipment_prices: Mapped[List["EquipmentPrice"]] = relationship(back_populates="industry_category")
     brandings: Mapped[List["Branding"]] = relationship(back_populates="industry_category")
     license_mappings: Mapped[List["LicenseIndustryMapping"]] = relationship(back_populates="category")
+    boards: Mapped[List["Board"]] = relationship(back_populates="industry_category")
 
 class EquipmentPrice(Base):
     __tablename__ = "equipment_prices"
@@ -71,13 +72,12 @@ class User(Base):
     ai_reports: Mapped[List["AIReport"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     boards: Mapped[List["Board"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     comments: Mapped[List["Comment"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    board_likes: Mapped[List["BoardLike"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     group_purchases: Mapped[List["GroupPurchase"]] = relationship(back_populates="user")
     group_orders: Mapped[List["GroupOrder"]] = relationship(back_populates="user")
     chat_participants: Mapped[List["ChatParticipant"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     chat_messages: Mapped[List["ChatMessage"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     labor_contracts: Mapped[List["LaborContract"]] = relationship(back_populates="user")
-
-# Import types for relationship resolution at the end of the file or use string references
 
 class Branding(Base):
     __tablename__ = "brandings"
@@ -332,6 +332,7 @@ class Board(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    industry_category_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("industry_categories.id"))
     title: Mapped[str] = mapped_column(String(100), nullable=False)
     content: Mapped[Optional[str]] = mapped_column(Text)
     region_name: Mapped[Optional[str]] = mapped_column(String(20))
@@ -344,8 +345,10 @@ class Board(Base):
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="boards")
+    industry_category: Mapped[Optional["IndustryCategory"]] = relationship(back_populates="boards")
     comments: Mapped[List["Comment"]] = relationship(back_populates="board", cascade="all, delete-orphan")
     images: Mapped[List["BoardImage"]] = relationship(back_populates="board", cascade="all, delete-orphan")
+    likes: Mapped[List["BoardLike"]] = relationship(back_populates="board", cascade="all, delete-orphan")
 
 class BoardImage(Base):
     __tablename__ = "board_images"
@@ -358,6 +361,18 @@ class BoardImage(Base):
     # Relationships
     board: Mapped["Board"] = relationship(back_populates="images")
 
+class BoardLike(Base):
+    __tablename__ = "board_likes"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    board_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("boards.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+
+    # Relationships
+    board: Mapped["Board"] = relationship(back_populates="likes")
+    user: Mapped["User"] = relationship(back_populates="board_likes")
+
 class Comment(Base):
     __tablename__ = "comments"
 
@@ -366,6 +381,7 @@ class Comment(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     parent_comment_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("comments.id", ondelete="CASCADE"))
+    report_count: Mapped[Optional[int]] = mapped_column(Integer, server_default=text("0"))
     created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
 
     # Relationships
@@ -446,4 +462,3 @@ class ChatMessage(Base):
     # Relationships
     chat_room: Mapped["ChatRoom"] = relationship(back_populates="messages")
     user: Mapped["User"] = relationship(back_populates="chat_messages")
-

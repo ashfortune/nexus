@@ -38,6 +38,6 @@ public class BrandIdentity {
     private Boolean isSelected;
 
     // Vector type (embedding) is skipped for now or mapping to native if needed
-    @Column(name = "embedding", columnDefinition = "vector")
+    @Column(name = "embedding", columnDefinition = "vector(768)")
     private double[] embedding; 
 }

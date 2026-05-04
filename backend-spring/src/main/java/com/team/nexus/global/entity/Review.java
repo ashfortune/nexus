@@ -36,4 +36,12 @@ public class Review {
 
     @Column(name = "sentiment_label", length = 20)
     private String sentimentLabel;
+
+    @Column(name = "created_at", updatable = false)
+    private java.time.LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = java.time.LocalDateTime.now();
+    }
 }

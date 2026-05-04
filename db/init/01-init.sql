@@ -242,6 +242,7 @@ CREATE TABLE labor_contracts (
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    industry_category_id UUID REFERENCES industry_categories(id),
     title VARCHAR(100) NOT NULL,
     content TEXT,
     region_name VARCHAR(20),
@@ -258,6 +259,13 @@ CREATE TABLE board_images (
     board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
     image_url TEXT NOT NULL,
     sort_order INT DEFAULT 0
+);
+
+CREATE TABLE board_likes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE comments (
