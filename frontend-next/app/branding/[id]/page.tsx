@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { Rocket, Palette, CheckCircle2, Layers, Share2, Calendar, Download } from 'lucide-react';
@@ -27,8 +28,7 @@ interface BrandDetail {
   identities: BrandIdentity[];
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL + '/api/v1';
-const FASTAPI_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL + '';
+const FASTAPI_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
 
 export default function BrandDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -39,10 +39,7 @@ export default function BrandDetailPage({ params }: { params: Promise<{ id: stri
     const fetchBrandDetail = async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem('accessToken');
-        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await fetch(`${API_BASE_URL}/branding/${id}`, { headers });
-        if (!res.ok) throw new Error('Failed to fetch brand detail');
+        const res = await api.get(`/api/v1/branding/${id}`);
         const data = await res.json();
         setBrand(data);
       } catch (error) {
@@ -57,7 +54,7 @@ export default function BrandDetailPage({ params }: { params: Promise<{ id: stri
 
   const handleDownload = async (url: string, filename: string) => {
     try {
-      const response = await fetch(url);
+      const response = await api.get(url);
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');

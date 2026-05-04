@@ -1,5 +1,7 @@
 'use client';
 
+import { api } from '@/lib/api';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -23,31 +25,25 @@ interface Brand {
   logoUrl?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL + '/api/v1';
-
 export default function BrandListPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const { user } = useAuthStore.getState();
+
   useEffect(() => {
     const fetchBrands = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       try {
-        const token = localStorage.getItem('accessToken');
-        const userId = localStorage.getItem('userId');
-
-        if (!userId) {
-          console.warn('User ID not found in localStorage');
-          setIsLoading(false);
-          return;
-        }
-
-        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await fetch(`${API_BASE_URL}/branding?userId=${userId}`, {
-          headers,
+        const res = await api.get('/api/v1/branding', {
+          params: { userId: user.id }
         });
-        if (!res.ok) throw new Error('Failed to fetch brands');
         const data = await res.json();
         setBrands(data);
       } catch (error) {
@@ -58,7 +54,7 @@ export default function BrandListPage() {
     };
 
     fetchBrands();
-  }, []);
+  }, [user?.id]);
 
   const selectedBrand = brands.find((b) => b.id === selectedBrandId);
 
@@ -66,9 +62,7 @@ export default function BrandListPage() {
     if (!selectedBrandId) return;
     if (confirm('정말 이 브랜드를 삭제하시겠습니까?')) {
       try {
-        const res = await fetch(`${API_BASE_URL}/branding/${selectedBrandId}`, {
-          method: 'DELETE',
-        });
+        const res = await api.delete(`/api/v1/branding/${selectedBrandId}`);
         if (res.ok) {
           setBrands(brands.filter((b) => b.id !== selectedBrandId));
           setSelectedBrandId(null);

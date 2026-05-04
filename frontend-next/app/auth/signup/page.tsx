@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -133,20 +134,13 @@ export default function SignupPage() {
 
   const onSignupSubmit = async (data: SignupFormValues) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const response = await fetch(apiUrl + '/api/v1/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          nickname: data.nickname,
-          address: data.address,
-          userType: data.userType,
-          bizNo: data.bizNo,
-        }),
+      const response = await api.post('/api/v1/auth/signup', {
+        email: data.email,
+        password: data.password,
+        nickname: data.nickname,
+        address: data.address,
+        userType: data.userType,
+        bizNo: data.bizNo,
       });
 
       const result = await response.json();

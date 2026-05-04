@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import React, { useState } from 'react';
 import DropZone from '../components/upload/Drop_zone';
 import InfoCard from '../components/upload/Infocard';
@@ -13,6 +14,7 @@ const UploadPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
 
   const handleFileUpload = async (files: File[]) => {
     if (files.length === 0) return;
@@ -31,19 +33,16 @@ const UploadPage = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_FASTAPI_URL + '/api/v1/ai/dashboard/upload-sales',
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
+      const response = await api.post('/api/v1/ai/dashboard/upload-sales', formData, {
+        baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000',
+        headers: {} // Let browser handle boundary
+      });
 
       if (!response.ok) {
         // 1. 서버가 왜 거절했는지 진짜 이유를 텍스트로 뽑아냅니다.
         const errorDetail = await response.text();
 
-        // 2. 개발자 도구 콘솔에 빨간 글씨로 출력합니다. (여기에 진짜 범인이 있습니다!)
+        // 2. 개발자 도구 콘솔에 빨간 글씨로 출력합니다.
         console.error(`백엔드 거절 사유 (상태코드: ${response.status}):`, errorDetail);
 
         // 3. 에러를 던집니다.
