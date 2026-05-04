@@ -5,7 +5,7 @@ import type {
 } from "./subsidyTypes";
 
 const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+    process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
 
 export async function fetchSubsidies(payload: SubsidyFilterRequest) {
     const res = await fetch(`${API_BASE_URL}/api/v1/ai/subsidy/recommend`, {
