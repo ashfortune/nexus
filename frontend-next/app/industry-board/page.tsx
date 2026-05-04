@@ -18,6 +18,9 @@ import {
   Briefcase
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface Post {
   id: string;
@@ -64,7 +67,7 @@ export default function IndustryBoardPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/v1/industry-categories/main");
+      const response = await api.get("/api/v1/industry-categories/main");
       const result = await response.json();
       if (result.status === "success") {
         setCategories(result.data);
@@ -77,20 +80,16 @@ export default function IndustryBoardPage() {
     }
   };
 
-  const fetchPosts = async (page: number, tab: 'all' | 'popular' = 'all', keyword: string = "", type: string = "all", categoryId: string) => {
+  const fetchPosts = async (page: number, tab: 'all' | 'popular' = 'all', keyword: string = "", type: string = "all", categoryId: string = "all") => {
     setIsLoading(true);
     try {
-      const baseUrl = `http://localhost:8080/api/v1/industry-board/${categoryId}`;
-      
-      const params = new URLSearchParams();
-      params.append("page", page.toString());
-      params.append("size", "10");
-      if (keyword) {
-        params.append("keyword", keyword);
-        params.append("type", type);
-      }
-
-      const response = await fetch(`${baseUrl}?${params.toString()}`);
+      const response = await api.get(`/api/v1/industry-board/${categoryId}`, {
+        params: {
+          page: String(page),
+          size: "10",
+          ...(keyword && { keyword, type })
+        }
+      });
       const result = await response.json();
       
       if (result.status === "success") {
@@ -115,8 +114,8 @@ export default function IndustryBoardPage() {
   };
 
   const handleCreatePost = () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
+    const { isAuthenticated } = useAuthStore.getState();
+    if (!isAuthenticated) {
       alert("로그인이 필요한 서비스입니다. 로그인 페이지로 이동합니다.");
       router.push("/auth/login");
       return;

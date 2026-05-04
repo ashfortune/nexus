@@ -1,4 +1,4 @@
-package com.team.nexus.config;
+package com.team.nexus.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

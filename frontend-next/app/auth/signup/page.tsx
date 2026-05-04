@@ -125,7 +125,8 @@ export default function SignupPage() {
 
   const onSignupSubmit = async (data: SignupFormValues) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/auth/signup', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const response = await fetch(apiUrl + '/api/v1/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

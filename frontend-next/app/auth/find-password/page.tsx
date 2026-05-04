@@ -36,8 +36,9 @@ export default function FindPasswordPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
       const response = await fetch(
-        process.env.NEXT_PUBLIC_API_URL + '/api/v1/auth/reset-password',
+        apiUrl + '/api/v1/auth/reset-password',
         {
           method: 'POST',
           headers: {
