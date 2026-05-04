@@ -1,11 +1,9 @@
 package com.team.nexus.global.entity;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "group_orders")

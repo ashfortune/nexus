@@ -1,13 +1,5 @@
 package com.team.nexus.domain.branding.service;
 
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.team.nexus.domain.branding.dto.BrandIdentityDto;
 import com.team.nexus.domain.branding.dto.BrandingDetailDto;
 import com.team.nexus.domain.branding.dto.BrandingListDto;
@@ -16,11 +8,16 @@ import com.team.nexus.domain.branding.repository.BrandIdentityRepository;
 import com.team.nexus.domain.branding.repository.BrandingRepository;
 import com.team.nexus.domain.branding.repository.LogoAssetRepository;
 import com.team.nexus.domain.branding.repository.MarketingAssetRepository;
-import com.team.nexus.global.entity.BrandIdentity;
 import com.team.nexus.global.entity.Branding;
 import com.team.nexus.global.entity.LogoAsset;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

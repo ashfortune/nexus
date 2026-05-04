@@ -1,6 +1,7 @@
 package com.team.nexus.domain.mypage.service;
 
 import com.team.nexus.domain.mypage.dto.MyPageResponseDto;
+
 import java.util.UUID;
 
 public interface MyPageService {
