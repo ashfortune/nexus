@@ -61,11 +61,13 @@ export default function BoardCreatePage() {
         return;
       }
 
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
       let imageUrls: string[] = [];
       if (images.length > 0) {
         const formData = new FormData();
         images.forEach(file => formData.append("files", file));
-        const uploadResponse = await fetch("http://localhost:8080/api/v1/upload/free", {
+        const uploadResponse = await fetch(`${apiUrl}/api/v1/upload`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`
@@ -76,7 +78,7 @@ export default function BoardCreatePage() {
         if (uploadResult.status === "success") imageUrls = uploadResult.urls;
       }
 
-      const response = await fetch("http://localhost:8080/api/v1/board", {
+      const response = await fetch(`${apiUrl}/api/v1/board`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

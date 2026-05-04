@@ -51,8 +51,9 @@ export default function BoardPage() {
 
   const fetchPosts = async (page: number, tab: 'all' | 'popular' = 'all', keyword: string = "", type: string = "all") => {
     setIsLoading(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const baseUrl = "http://localhost:8080/api/v1/board";
+      const baseUrl = `${apiUrl}/api/v1/board`;
       let url = tab === "popular" ? `${baseUrl}/popular` : baseUrl;
       
       const params = new URLSearchParams();

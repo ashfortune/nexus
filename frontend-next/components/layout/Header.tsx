@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const MENU_DATA = [
   {
@@ -40,55 +41,17 @@ const MENU_DATA = [
 ];
 
 export default function Header() {
+  const { user, isAuthenticated, clearAuth } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [nickname, setNickname] = useState('');
-  const [userType, setUserType] = useState<string | null>(null);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
   const pathname = usePathname();
 
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // 1. 로그인 상태를 체크하는 함수를 별도로 분리합니다.
-  const checkLoginStatus = useCallback(() => {
-    const token = localStorage.getItem('accessToken');
-    const savedNickname = localStorage.getItem('nickname');
-    const savedUserType = localStorage.getItem('userType');
-    const savedProfileImage = localStorage.getItem('profileImage');
-
-    if (token) {
-      setIsLoggedIn(true);
-      setNickname(savedNickname || 'User');
-      setUserType(savedUserType);
-      setProfileImage(savedProfileImage);
-    } else {
-      setIsLoggedIn(false);
-      setNickname('');
-      setUserType(null);
-      setProfileImage(null);
-    }
-  }, []);
-
   useEffect(() => {
     setMounted(true);
-
-    // 처음 로드될 때 체크
-    checkLoginStatus();
-
-    // 다른 탭에서의 변화나 커스텀 이벤트를 감지합니다.
-    window.addEventListener('storage', checkLoginStatus); // 다른 탭의 로컬스토리지 변경 감지
-    window.addEventListener('login-status-change', checkLoginStatus); // 커스텀 이벤트 감지
-
-    // 탭 포커스 복귀 시에도 로그인 상태를 재확인합니다.
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        checkLoginStatus();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
@@ -98,19 +61,9 @@ export default function Header() {
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
-      window.removeEventListener('storage', checkLoginStatus);
-      window.removeEventListener('login-status-change', checkLoginStatus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [checkLoginStatus]);
-
-  // 경로 변경 시마다 로그인 상태를 재확인합니다.
-  // (Next.js의 SPA 내비게이션은 컴포넌트를 리마운트하지 않으므로
-  //  router.push 후에도 위의 useEffect가 다시 실행되지 않습니다.)
-  useEffect(() => {
-    checkLoginStatus();
-  }, [pathname, checkLoginStatus]);
+  }, []);
 
   const handleMenuHover = (menuId: string | null, hasSub: boolean) => {
     if (hasSub) {
@@ -127,10 +80,9 @@ export default function Header() {
     if (nextState) setActiveMenu(null);
   };
 
-  // 로그아웃 시에도 이벤트를 발생시켜 UI를 즉시 갱신합니다.
   const handleLogout = () => {
     localStorage.clear();
-    checkLoginStatus(); // 현재 컴포넌트 상태 갱신
+    clearAuth();
     window.location.href = '/';
   };
 
@@ -178,7 +130,7 @@ export default function Header() {
         >
           {mounted ? (
             <>
-              {!isLoggedIn ? (
+              {!isAuthenticated ? (
                 <Link
                   href="/auth/login"
                   className="whitespace-nowrap text-sm font-bold text-[var(--nexus-primary)] px-4 py-2 border border-[var(--nexus-primary)] rounded hover:bg-[var(--nexus-primary)] hover:text-white transition-colors"
@@ -191,31 +143,31 @@ export default function Header() {
                     onClick={toggleProfile}
                     className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-[var(--nexus-outline-variant)] overflow-hidden bg-white flex items-center justify-center shadow-sm"
                   >
-                    {profileImage ? (
+                    {user?.profileImage ? (
                       <img
-                        src={`http://localhost:8080${profileImage}`}
+                        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${user.profileImage}`}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <span className="text-xs font-black text-[var(--nexus-primary)]">
-                        {nickname[0] || 'P'}
+                        {user?.nickname?.[0] || 'P'}
                       </span>
                     )}
                   </button>
                   {isProfileOpen && (
                     <div className="absolute right-0 top-14 w-52 bg-white border border-[var(--nexus-outline-variant)] shadow-xl rounded-md overflow-hidden z-[110]">
                       <div className="px-5 py-3.5 text-sm text-gray-400 border-b border-gray-100 bg-gray-50/50">
-                        <span className="font-bold text-[var(--nexus-primary)]">{nickname}</span>님
+                        <span className="font-bold text-[var(--nexus-primary)]">{user?.nickname}</span>님
                         환영합니다
                       </div>
                       <Link
-                        href={userType === '2' ? '/mypage/admin' : '/mypage'}
+                        href={user?.userType === 2 ? '/mypage/admin' : '/mypage'}
                         className="block px-5 py-3.5 text-sm hover:bg-gray-50 border-b border-gray-100"
                       >
-                        {userType === '2' ? '⚙️ 관리자 콘솔' : 'ℹ️ 프로필'}
+                        {user?.userType === 2 ? '⚙️ 관리자 콘솔' : 'ℹ️ 프로필'}
                       </Link>
-                      {userType === '2' && (
+                      {user?.userType === 2 && (
                         <Link
                           href="/mypage"
                           className="block px-5 py-3.5 text-sm hover:bg-gray-50 border-b border-gray-100 text-gray-500"
@@ -337,7 +289,7 @@ export default function Header() {
               ))}
             </nav>
             <div className="px-6 py-6 border-t border-[var(--nexus-outline-variant)]">
-              {!isLoggedIn ? (
+              {!isAuthenticated ? (
                 <Link
                   href="/auth/login"
                   className="block w-full text-center py-3 text-sm font-bold text-[var(--nexus-primary)] border border-[var(--nexus-primary)] rounded-lg hover:bg-[var(--nexus-primary)] hover:text-white transition-colors"

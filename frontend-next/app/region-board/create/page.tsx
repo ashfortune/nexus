@@ -87,7 +87,8 @@ export default function BoardCreatePage() {
           formData.append("files", file);
         });
 
-        const uploadResponse = await fetch("http://localhost:8080/api/v1/upload/region", {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+        const uploadResponse = await fetch(`${apiUrl}/api/v1/upload/region`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`
@@ -100,7 +101,8 @@ export default function BoardCreatePage() {
         }
       }
 
-      const response = await fetch("http://localhost:8080/api/v1/board", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const response = await fetch(`${apiUrl}/api/v1/board`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

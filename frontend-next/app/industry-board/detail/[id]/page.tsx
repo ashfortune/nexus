@@ -94,9 +94,10 @@ export default function IndustryBoardDetailPage() {
   }, [params.id, currentPage, post?.industryCategoryId]);
 
   const fetchPostDetail = async (id: string, silent: boolean = false) => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     if (!silent) setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/board/${id}${silent ? "?silent=true" : ""}`);
+      const response = await fetch(`${apiUrl}/api/v1/board/${id}${silent ? "?silent=true" : ""}`);
       const result = await response.json();
       
       if (result.status === "success") {
@@ -112,9 +113,10 @@ export default function IndustryBoardDetailPage() {
   };
 
   const fetchPosts = async (page: number) => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     if (!post?.industryCategoryId) return;
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/industry-board/${post.industryCategoryId}?page=${page}&size=10`);
+      const response = await fetch(`${apiUrl}/api/v1/industry-board/${post.industryCategoryId}?page=${page}&size=10`);
       const result = await response.json();
       if (result.status === "success") {
         setPosts(result.data);
@@ -127,8 +129,9 @@ export default function IndustryBoardDetailPage() {
   };
 
   const fetchComments = async (id: string = params.id as string) => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/comments/${id}`);
+      const response = await fetch(`${apiUrl}/api/v1/comments/${id}`);
       const result = await response.json();
       if (result.status === "success") {
         setComments(result.data);
@@ -141,8 +144,9 @@ export default function IndustryBoardDetailPage() {
   const fetchLikeStatus = async (id: string) => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/board/like/${id}/status`, {
+      const response = await fetch(`${apiUrl}/api/v1/board/like/${id}/status`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       const result = await response.json();
@@ -161,8 +165,9 @@ export default function IndustryBoardDetailPage() {
     }
     if (isLikeLoading) return;
     setIsLikeLoading(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/board/like/${params.id}`, {
+      const response = await fetch(`${apiUrl}/api/v1/board/like/${params.id}`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -188,8 +193,9 @@ export default function IndustryBoardDetailPage() {
     const content = parentId ? replyContent : commentContent;
     if (!content.trim()) return;
     setIsSubmitting(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/comments/${params.id}`, {
+      const response = await fetch(`${apiUrl}/api/v1/comments/${params.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -213,8 +219,9 @@ export default function IndustryBoardDetailPage() {
 
   const handleUpdateComment = async (commentId: string) => {
     if (!editCommentContent.trim()) return;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/comments/${commentId}`, {
+      const response = await fetch(`${apiUrl}/api/v1/comments/${commentId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -234,8 +241,9 @@ export default function IndustryBoardDetailPage() {
 
   const handleDeleteComment = async (commentId: string) => {
     if (!confirm("정말 댓글을 삭제하시겠습니까?")) return;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/comments/${commentId}`, {
+      const response = await fetch(`${apiUrl}/api/v1/comments/${commentId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
       });
@@ -248,8 +256,9 @@ export default function IndustryBoardDetailPage() {
 
   const handleReportComment = async (commentId: string) => {
     if (!confirm("이 댓글을 신고하시겠습니까?")) return;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/comments/report/${commentId}`, {
+      const response = await fetch(`${apiUrl}/api/v1/comments/report/${commentId}`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
       });
@@ -262,8 +271,9 @@ export default function IndustryBoardDetailPage() {
 
   const handleDeletePost = async () => {
     if (!confirm("정말 게시글을 삭제하시겠습니까?")) return;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/board/${params.id}`, {
+      const response = await fetch(`${apiUrl}/api/v1/board/${params.id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
       });
@@ -279,8 +289,9 @@ export default function IndustryBoardDetailPage() {
   const handleUpdatePost = async () => {
     if (!editTitle.trim() || !editContent.trim()) return;
     setIsSubmitting(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/board/${params.id}`, {
+      const response = await fetch(`${apiUrl}/api/v1/board/${params.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -435,7 +446,7 @@ export default function IndustryBoardDetailPage() {
                   {post.imageUrls.map((url, idx) => (
                     <div key={idx} className="rounded-[3rem] overflow-hidden shadow-2xl shadow-black/5 ring-8 ring-zinc-50">
                       <img 
-                        src={url.startsWith('http') ? url : `http://localhost:8080${url}`} 
+                        src={url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${url}`} 
                         alt={`Post ${idx}`} 
                         className="w-full h-auto object-cover" 
                       />

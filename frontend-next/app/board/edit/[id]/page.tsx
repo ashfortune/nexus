@@ -37,8 +37,9 @@ export default function BoardEditPage() {
   }, [params.id]);
 
   const fetchPostDetail = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/board/${params.id}`);
+      const response = await fetch(`${apiUrl}/api/v1/board/${params.id}`);
       const result = await response.json();
       if (result.status === "success") {
         setTitle(result.data.title);
@@ -89,7 +90,8 @@ export default function BoardEditPage() {
       if (newImages.length > 0) {
         const formData = new FormData();
         newImages.forEach(file => formData.append("files", file));
-        const uploadResponse = await fetch("http://localhost:8080/api/v1/upload/free", {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+        const uploadResponse = await fetch(`${apiUrl}/api/v1/upload/free`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`
@@ -102,7 +104,8 @@ export default function BoardEditPage() {
         }
       }
 
-      const response = await fetch(`http://localhost:8080/api/v1/board/${params.id}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const response = await fetch(`${apiUrl}/api/v1/board/${params.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -183,7 +186,11 @@ export default function BoardEditPage() {
                   {/* Existing */}
                   {imageUrls.map((url, index) => (
                     <div key={`ex-${index}`} className="relative aspect-square rounded-3xl overflow-hidden group shadow-lg shadow-black/5 border border-zinc-50">
-                      <img src={url} alt={`Existing ${index}`} className="w-full h-full object-cover" />
+                      <img 
+                        src={url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${url}`} 
+                        alt={`Existing ${index}`} 
+                        className="w-full h-full object-cover" 
+                      />
                       <button 
                         type="button"
                         onClick={() => removeExistingImage(index)}

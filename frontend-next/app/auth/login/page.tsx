@@ -9,6 +9,7 @@ import * as z from 'zod';
 
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useAuthStore } from '@/store/useAuthStore';
 
 // --- Validation Schema ---
 const loginSchema = z.object({
@@ -20,6 +21,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setAuth } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -36,7 +38,8 @@ export default function LoginPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/auth/login', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const response = await fetch(apiUrl + '/api/v1/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,15 +60,17 @@ export default function LoginPage() {
           console.error('User ID is missing in the response:', data);
         }
 
-        // 로컬 스토리지에 토큰 및 권한 정보 저장
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('nickname', nickname);
-        localStorage.setItem('userType', data.userType.toString());
-        localStorage.setItem('profileImage', data.profileImage || '');
-        if (userId) localStorage.setItem('userId', userId);
+        // Zustand 스토어에 인증 정보 저장 (localStorage 저장은 persist 미들웨어가 자동 처리)
+        setAuth({
+          id: userId,
+          email: data.email || '',
+          nickname: nickname,
+          userType: Number(data.userType),
+          profileImage: data.profileImage || ''
+        }, accessToken);
 
-        // 헤더에 로그인 상태 변경 이벤트 알림 (수정된 Header.tsx 반영)
-        window.dispatchEvent(new Event('login-status-change'));
+        // 기존의 수동 localStorage 저장 로직 제거
+        localStorage.setItem('accessToken', accessToken); // 기존 호환성을 위해 토큰만 유지 (필요 시)
 
         // 페이지 이동
         router.push('/');
@@ -197,7 +202,7 @@ export default function LoginPage() {
             {/* Social Login Buttons */}
             <div className="grid grid-cols-2 gap-3 mt-6">
               <a
-                href={process.env.NEXT_PUBLIC_API_URL + '/oauth2/authorization/google'}
+                href={(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') + '/oauth2/authorization/google'}
                 className="h-12 flex items-center justify-center gap-2 border border-zinc-200 rounded-2xl hover:bg-zinc-50 transition-all active:scale-[0.98] group"
               >
                 <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
@@ -206,7 +211,7 @@ export default function LoginPage() {
                 </span>
               </a>
               <a
-                href={process.env.NEXT_PUBLIC_API_URL + '/oauth2/authorization/kakao'}
+                href={(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') + '/oauth2/authorization/kakao'}
                 className="h-12 flex items-center justify-center gap-2 bg-[#FEE500] rounded-2xl hover:bg-[#FDD835] transition-all active:scale-[0.98] group"
               >
                 <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">

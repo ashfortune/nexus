@@ -40,9 +40,9 @@ export default function IndustryBoardCreatePage() {
     fetchCategories();
   }, []);
 
-  const fetchCategories = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch("http://localhost:8080/api/v1/industry-categories/main");
+      const response = await fetch(`${apiUrl}/api/v1/industry-categories/main`);
       const result = await response.json();
       if (result.status === "success") {
         setCategories(result.data);
@@ -101,21 +101,23 @@ export default function IndustryBoardCreatePage() {
         const formData = new FormData();
         imageFiles.forEach(file => formData.append("files", file));
         
-        const uploadRes = await fetch("http://localhost:8080/api/v1/upload/industry", {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+        const uploadResponse = await fetch(`${apiUrl}/api/v1/upload/industry`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`
           },
           body: formData
         });
-        const uploadData = await uploadRes.json();
+        const uploadData = await uploadResponse.json();
         if (uploadData.status === "success") {
           uploadedUrls = uploadData.urls;
         }
       }
 
       // 2. Create Post in Spring Boot
-      const response = await fetch("http://localhost:8080/api/v1/board", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const response = await fetch(`${apiUrl}/api/v1/board`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

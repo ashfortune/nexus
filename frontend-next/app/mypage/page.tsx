@@ -33,8 +33,9 @@ export default function MyPage() {
     const formData = new FormData();
     formData.append('file', file);
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/mypage/profile-image/${userId}`, {
+      const response = await fetch(`${apiUrl}/api/v1/mypage/profile-image/${userId}`, {
         method: 'POST',
         body: formData,
       });
@@ -71,9 +72,10 @@ export default function MyPage() {
     }
 
     const userId = localStorage.getItem('userId');
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
       const response = await fetch(
-        `http://localhost:8080/api/v1/mypage/change-password/${userId}`,
+        `${apiUrl}/api/v1/mypage/change-password/${userId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -110,8 +112,9 @@ export default function MyPage() {
   }, [router]);
 
   const fetchData = async (userId: string) => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/mypage/me/${userId}`);
+      const response = await fetch(`${apiUrl}/api/v1/mypage/me/${userId}`);
       const result = await response.json();
       if (result.status === 'success') {
         setData(result.data);
@@ -128,8 +131,9 @@ export default function MyPage() {
   const handleUpgrade = async () => {
     if (!bizNo) return alert('사업자 등록번호를 입력해주세요.');
     const userId = localStorage.getItem('userId');
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/mypage/upgrade/${userId}`, {
+      const response = await fetch(`${apiUrl}/api/v1/mypage/upgrade/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bizNo }),
@@ -147,8 +151,9 @@ export default function MyPage() {
   const handleUnregister = async () => {
     if (!confirm('정말로 탈퇴하시겠습니까? 탈퇴 후 7일간은 데이터 복구가 불가능합니다.')) return;
     const userId = localStorage.getItem('userId');
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/mypage/unregister/${userId}`, {
+      const response = await fetch(`${apiUrl}/api/v1/mypage/unregister/${userId}`, {
         method: 'DELETE',
       });
       const result = await response.json();
@@ -181,7 +186,7 @@ export default function MyPage() {
                 <div className="w-full h-full bg-[var(--nexus-surface-container)] rounded-3xl flex items-center justify-center overflow-hidden shadow-inner border-2 border-white">
                   {data.profileImage ? (
                     <img
-                      src={`http://localhost:8080${data.profileImage}`}
+                      src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${data.profileImage}`}
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />

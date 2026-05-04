@@ -62,9 +62,9 @@ export default function IndustryBoardPage() {
     }
   }, [currentPage, activeTab, searchQuery, searchType, selectedCategoryId]);
 
-  const fetchCategories = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const response = await fetch("http://localhost:8080/api/v1/industry-categories/main");
+      const response = await fetch(`${apiUrl}/api/v1/industry-categories/main`);
       const result = await response.json();
       if (result.status === "success") {
         setCategories(result.data);
@@ -77,10 +77,11 @@ export default function IndustryBoardPage() {
     }
   };
 
-  const fetchPosts = async (page: number, tab: 'all' | 'popular' = 'all', keyword: string = "", type: string = "all", categoryId: string) => {
+  const fetchPosts = async (page: number, tab: 'all' | 'popular' = 'all', keyword: string = "", type: string = "all", categoryId: string = "all") => {
     setIsLoading(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const baseUrl = `http://localhost:8080/api/v1/industry-board/${categoryId}`;
+      const baseUrl = `${apiUrl}/api/v1/industry-board/${categoryId}`;
       
       const params = new URLSearchParams();
       params.append("page", page.toString());
