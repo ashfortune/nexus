@@ -12,5 +12,5 @@ COPY --from=build /home/gradle/src/build/libs/*.jar app.jar
 # Koyeb 및 일반적인 컨테이너 환경용 포트 설정
 EXPOSE 8080
 
-# 운영 환경 프로파일 활성화 및 메모리 최적화 (-Xmx350M)
-ENTRYPOINT ["java", "-Xmx350M", "-Xms350M", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
+# 운영 환경 프로파일 활성화
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]

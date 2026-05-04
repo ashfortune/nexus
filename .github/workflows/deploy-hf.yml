@@ -3,7 +3,7 @@ name: Deploy FastAPI to Hugging Face
 on:
   push:
     branches:
-      - "test/deploy"
+      - "main"
     # [최적화 1] AI 백엔드 코드가 수정되었을 때만 이 액션이 실행되도록 제한합니다.
     paths:
       - 'backend-fastapi/**' 

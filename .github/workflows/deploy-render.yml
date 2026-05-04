@@ -2,7 +2,7 @@ name: Deploy Spring Boot to Render
 
 on:
   push:
-    branches: ["test/deploy"]
+    branches: ["main"]
     paths:
       - 'backend-spring/**'
 
