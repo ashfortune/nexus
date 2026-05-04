@@ -8,7 +8,8 @@ import {
   CheckCircle2,
   Layers,
   Share2,
-  Calendar
+  Calendar,
+  Download
 } from "lucide-react";
 
 interface BrandIdentity {
@@ -61,6 +62,24 @@ export default function BrandDetailPage({ params }: { params: Promise<{ id: stri
 
     fetchBrandDetail();
   }, [id]);
+
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename.endsWith('.png') ? filename : `${filename}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("다운로드에 실패했습니다. CORS 설정을 확인해주세요.");
+    }
+  };
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!brand) return <div className="min-h-screen flex items-center justify-center">Brand not found</div>;
@@ -157,7 +176,17 @@ export default function BrandDetailPage({ params }: { params: Promise<{ id: stri
                             className="max-w-full max-h-full object-contain filter drop-shadow-sm"
                           />
                         </div>
-                        <button className="text-[10px] font-black text-[var(--nexus-primary)] uppercase tracking-widest hover:underline pt-2">Download Vector</button>
+                        <button 
+                          onClick={() => {
+                            const url = identity.logoUrl?.startsWith('http') || identity.logoUrl?.startsWith('data:') 
+                              ? identity.logoUrl 
+                              : `${FASTAPI_BASE_URL}${identity.logoUrl}`;
+                            handleDownload(url!, `${identity.brandName}_logo`);
+                          }}
+                          className="text-[10px] font-black text-[var(--nexus-primary)] uppercase tracking-widest hover:underline pt-2"
+                        >
+                          Download PNG
+                        </button>
                       </div>
                     </div>
                   )}
@@ -198,11 +227,23 @@ export default function BrandDetailPage({ params }: { params: Promise<{ id: stri
                     <h4 className="text-[10px] font-black text-[var(--nexus-secondary)] uppercase tracking-[0.3em]">
                       {asset.type.replace('_', ' ')}
                     </h4>
-                    <p className="text-lg font-black text-[var(--nexus-on-bg)] mt-2">
-                      {asset.type === 'BUSINESS_CARD' ? 'Premium Business Card' : 
-                       asset.type === 'MENU' ? 'Strategic Menu Layout' : 
-                       asset.type === 'POSTER' ? 'Visual Communication Poster' : 'Marketing Material'}
-                    </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-lg font-black text-[var(--nexus-on-bg)]">
+                          {asset.type === 'BUSINESS_CARD' ? 'Premium Business Card' : 
+                           asset.type === 'MENU' ? 'Strategic Menu Layout' : 
+                           asset.type === 'POSTER' ? 'Visual Communication Poster' : 'Marketing Material'}
+                        </p>
+                        <button 
+                          onClick={() => {
+                            const url = asset.fileUrl.startsWith('http') ? asset.fileUrl : `${FASTAPI_BASE_URL}${asset.fileUrl}`;
+                            handleDownload(url, `${brand.title}_${asset.type}`);
+                          }}
+                          className="w-8 h-8 rounded-full bg-[var(--nexus-surface-low)] flex items-center justify-center text-[var(--nexus-primary)] hover:bg-[var(--nexus-primary)] hover:text-white transition-all shadow-sm"
+                          title="Download PNG"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                      </div>
                   </div>
                 </div>
               ))
