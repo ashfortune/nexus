@@ -1,23 +1,30 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, func, and_
-from sqlalchemy.orm import load_only
-from app.models import Branding, BrandIdentity, LogoAsset, IndustryCategory, MarketingAsset
-from app.domain.branding.brandingSchema import BrandingCreateRequest, BrandingInterviewRequest, ChatRequest
-from app.core.ai_client import get_ai_client
-from app.core.storage import get_storage_client
+import base64
 import json
 import os
 import uuid
-import base64
+
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import load_only
+
+from app.core.ai_client import get_ai_client
+from app.core.storage import get_storage_client
+from app.domain.branding.brandingSchema import (
+    BrandingCreateRequest,
+    BrandingInterviewRequest,
+    ChatRequest,
+)
+from app.models import BrandIdentity, Branding, IndustryCategory, LogoAsset, MarketingAsset
 
 # 테스트용 기본 유저 ID (요청에 없을 경우 대비)
 DEFAULT_USER_ID = uuid.UUID("a248bb6e-7302-4b48-9375-c23ee477ea45")
 
 # [최적화] 업종 데이터 인메모리 캐시
 INDUSTRY_CACHE = {
-    "map": {},        # ID -> IndustryCategory (이름, 부모ID 등 포함)
-    "initialized": False
+    "map": {},  # ID -> IndustryCategory (이름, 부모ID 등 포함)
+    "initialized": False,
 }
+
 
 async def initialize_industry_cache(db: AsyncSession):
     """서버 시작 시 4,000여 개의 업종 데이터를 메모리에 로드하며, 기본 ID가 없을 경우 생성합니다."""
@@ -35,45 +42,47 @@ async def initialize_industry_cache(db: AsyncSession):
 
     print("🧠 [Cache] 업종 카테고리 데이터를 메모리에 로딩 중...")
     # 임베딩 제외, 경로 계산에 필요한 필드만 가볍게 조회
-    stmt = select(IndustryCategory).options(load_only(
-        IndustryCategory.id, 
-        IndustryCategory.name, 
-        IndustryCategory.parent_id
-    ))
+    stmt = select(IndustryCategory).options(
+        load_only(IndustryCategory.id, IndustryCategory.name, IndustryCategory.parent_id)
+    )
     result = await db.execute(stmt)
     industries = result.scalars().all()
-    
+
     INDUSTRY_CACHE["map"] = {ind.id: ind for ind in industries}
     INDUSTRY_CACHE["initialized"] = True
     print(f"✅ [Cache] {len(INDUSTRY_CACHE['map'])}개의 업종 데이터 로딩 완료!")
 
     # [백그라운드] 비어있는 임베딩 자동 채우기 시작
     import asyncio
+
     asyncio.create_task(auto_sync_missing_embeddings())
+
 
 async def auto_sync_missing_embeddings():
     """임베딩이 없는 업종을 찾아 백그라운드에서 자동으로 채웁니다."""
     from app.core.database import AsyncSessionLocal
-    
+
     async with AsyncSessionLocal() as db:
         # 임베딩이 없는 데이터 조회
         stmt = select(IndustryCategory).where(IndustryCategory.embedding == None)
         result = await db.execute(stmt)
         targets = result.scalars().all()
-        
+
         if not targets:
             return
 
-        print(f"⚙️ [Background] {len(targets)}개의 누락된 임베딩을 발견했습니다. 동기화를 시작합니다.")
+        print(
+            f"⚙️ [Background] {len(targets)}개의 누락된 임베딩을 발견했습니다. 동기화를 시작합니다."
+        )
         ai_client = get_ai_client("gemini")
-        
+
         count = 0
         for ind in targets:
             try:
                 vector = await ai_client.embed_text(ind.name)
                 ind.embedding = vector
                 count += 1
-                
+
                 # 50개 단위로 커밋하여 안정성 확보
                 if count % 50 == 0:
                     await db.commit()
@@ -81,16 +90,17 @@ async def auto_sync_missing_embeddings():
             except Exception as e:
                 print(f"⚠️ [Background] '{ind.name}' 임베딩 생성 실패: {e}")
                 continue
-        
+
         await db.commit()
         print(f"✨ [Background] 총 {count}개의 업종 임베딩 동기화가 완료되었습니다.")
+
 
 def get_full_path(ind):
     """캐시된 데이터를 사용하여 업종의 전체 경로를 즉시 반환합니다."""
     path = [ind.name]
     curr = ind
     ind_map = INDUSTRY_CACHE["map"]
-    
+
     # 무한 루프 방지 및 캐시 활용
     depth = 0
     while curr.parent_id and curr.parent_id in ind_map and depth < 10:
@@ -99,7 +109,8 @@ def get_full_path(ind):
         depth += 1
     return " > ".join(path)
 
-async def create_new_branding(db: AsyncSession, request: BrandingCreateRequest) :
+
+async def create_new_branding(db: AsyncSession, request: BrandingCreateRequest):
     """새로운 브랜딩 프로젝트를 생성하고 DB에 저장합니다."""
     try:
         new_branding = Branding(
@@ -107,7 +118,7 @@ async def create_new_branding(db: AsyncSession, request: BrandingCreateRequest) 
             user_id=request.userId or DEFAULT_USER_ID,
             industry_category_id=request.industryId,
             title=request.title or "새 브랜딩 프로젝트",
-            current_step="INTERVIEW"
+            current_step="INTERVIEW",
         )
         db.add(new_branding)
         await db.commit()
@@ -118,21 +129,22 @@ async def create_new_branding(db: AsyncSession, request: BrandingCreateRequest) 
         print(f"❌ [create_new_branding 에러 상세]: {str(e)}")
         raise e
 
-async def update_branding_interview(db: AsyncSession, branding_id: uuid.UUID, request: BrandingInterviewRequest):
+
+async def update_branding_interview(
+    db: AsyncSession, branding_id: uuid.UUID, request: BrandingInterviewRequest
+):
     """인터뷰 답변을 저장하고 단계를 업데이트합니다."""
     result = await db.execute(select(Branding).where(Branding.id == branding_id))
     branding = result.scalar_one_or_none()
     if not branding:
         return None
-    updated_data = {
-        "keywords": request.keywords,
-        "interview_data": request.interviewData
-    }
+    updated_data = {"keywords": request.keywords, "interview_data": request.interviewData}
     branding.keywords = updated_data
     branding.current_step = "NAMING_READY"
     await db.commit()
     await db.refresh(branding)
     return branding
+
 
 INTERVIEW_SYSTEM_PROMPT_TEMPLATE = """
 당신은 대표님의 성공적인 창업을 돕는 전문 컨설턴트 'Nexus AI'입니다. 
@@ -165,24 +177,25 @@ INTERVIEW_SYSTEM_PROMPT_TEMPLATE = """
 }}
 """
 
+
 async def chat_with_ai(db: AsyncSession, branding_id: uuid.UUID, request: ChatRequest):
     """AI와 대화를 나누고 상태를 분석하며 데이터를 실시간으로 DB에 동기화합니다."""
     try:
         ai_client = get_ai_client("gemini")
-        
+
         # 1. 브랜딩 프로젝트 정보 우선 조회 (현재 단계 확인용)
         stmt = select(Branding).where(Branding.id == branding_id)
         db_result = await db.execute(stmt)
         branding = db_result.scalar_one_or_none()
-        
+
         industry_list_str = "N/A"
-        
+
         # 2. [최적화] 인터뷰 단계에서만 벡터 검색(업종 추천) 수행
         # 대표님 요청 사항: 불필요한 단계에서 벡터 로그가 남지 않도록 조건부 실행
         if branding and branding.current_step == "INTERVIEW":
             # 사용자의 현재 메시지를 벡터화하여 유사 업종 검색
             user_vector = await ai_client.embed_text(request.message)
-            
+
             # HNSW 인덱스를 활용한 고속 유사도 검색
             stmt_ind = (
                 select(IndustryCategory)
@@ -191,28 +204,33 @@ async def chat_with_ai(db: AsyncSession, branding_id: uuid.UUID, request: ChatRe
             )
             industry_result = await db.execute(stmt_ind)
             industries = industry_result.scalars().all()
-            
+
             # 캐시를 사용하여 업종 목록 문자열 생성
             if not INDUSTRY_CACHE["initialized"]:
                 await initialize_industry_cache(db)
-            industry_list_str = "\n".join([f"- {get_full_path(ind)} (ID: {ind.id})" for ind in industries])
+            industry_list_str = "\n".join(
+                [f"- {get_full_path(ind)} (ID: {ind.id})" for ind in industries]
+            )
         else:
             # 인터뷰 단계가 아니거나 업종이 이미 확정된 경우 벡터 검색 생략
             industry_list_str = "업종이 이미 확정되었거나 인터뷰 단계가 아닙니다."
 
         # 3. 프롬프트 완성
-        system_prompt = INTERVIEW_SYSTEM_PROMPT_TEMPLATE.replace("{industry_list}", industry_list_str)
+        system_prompt = INTERVIEW_SYSTEM_PROMPT_TEMPLATE.replace(
+            "{industry_list}", industry_list_str
+        )
 
         history = [{"role": m.role, "content": m.content} for m in request.history[-6:]]
         history.append({"role": "user", "content": request.message})
-        
+
         # 재시도 로직이 적용된 AI 호출
         raw_response = await ai_client.generate_response(system_prompt, history)
     except Exception as e:
         import traceback
+
         print("❌ [chat_with_ai 에러 발생]")
         traceback.print_exc()
-        raise e # 에러를 다시 던져서 500 에러 상태는 유지
+        raise e  # 에러를 다시 던져서 500 에러 상태는 유지
     try:
         if "---" in raw_response:
             parts = raw_response.split("---")
@@ -226,35 +244,34 @@ async def chat_with_ai(db: AsyncSession, branding_id: uuid.UUID, request: ChatRe
                         branding.industry_category_id = uuid.UUID(str(industry_id))
                     except (ValueError, TypeError):
                         print(f"Invalid UUID received from AI: {industry_id}")
-                        
-                branding.keywords = {
-                    "extracted_keywords": result.get("keywords", [])
-                }
-                
+
+                branding.keywords = {"extracted_keywords": result.get("keywords", [])}
+
                 # 대화 내역(Chat History) 저장: 기존 history + 이번 대화
                 full_history = [{"role": m.role, "content": m.content} for m in request.history] + [
                     {"role": "user", "content": request.message},
-                    {"role": "assistant", "content": result.get("msg", "")}
+                    {"role": "assistant", "content": result.get("msg", "")},
                 ]
                 branding.chat_history = full_history
-                
+
                 await db.commit()
-            
+
             return {
                 "aiResponse": result.get("msg", "네, 알겠습니다. 계속해서 말씀을 나눠볼까요?"),
                 "isFinished": result.get("is_finished", False),
                 "extractedData": {
                     "keywords": result.get("keywords", []),
-                    "industryId": result.get("industry_id")
-                }
+                    "industryId": result.get("industry_id"),
+                },
             }
     except Exception as e:
         print(f"Chat Logic Error: {e}")
     return {
         "aiResponse": raw_response.split("---")[0].strip(),
         "isFinished": False,
-        "extractedData": {"keywords": []}
+        "extractedData": {"keywords": []},
     }
+
 
 NAMING_SYSTEM_PROMPT = """
 당신은 최고의 브랜드 네이밍 전문가입니다. 
@@ -281,6 +298,7 @@ NAMING_SYSTEM_PROMPT = """
 ]
 """
 
+
 async def generate_brand_names(db: AsyncSession, branding_id: uuid.UUID):
     """
     AI를 호출하여 브랜드 명을 생성하고 KIPRIS API로 실시간 검증합니다.
@@ -293,6 +311,7 @@ async def generate_brand_names(db: AsyncSession, branding_id: uuid.UUID):
 
     ai_client = get_ai_client("gemini")
     from app.core.kipris_client import get_kipris_client
+
     kipris_client = get_kipris_client()
 
     final_results = []
@@ -306,44 +325,50 @@ async def generate_brand_names(db: AsyncSession, branding_id: uuid.UUID):
     while len(final_results) < 3 and retry_count < max_retries:
         retry_count += 1
         print(f"🔄 [Naming Loop] {retry_count}회차 생성 및 검증 시도 중...")
-        
+
         # 제외할 이름 목록 추가
-        avoid_msg = f"\n다음 이름들은 상표권 중복으로 인해 제외해야 합니다: {', '.join(avoid_names)}" if avoid_names else ""
+        avoid_msg = (
+            f"\n다음 이름들은 상표권 중복으로 인해 제외해야 합니다: {', '.join(avoid_names)}"
+            if avoid_names
+            else ""
+        )
         context = context_base + avoid_msg
-        
-        raw_response = await ai_client.generate_response(NAMING_SYSTEM_PROMPT, [{"role": "user", "content": context}])
-        
+
+        raw_response = await ai_client.generate_response(
+            NAMING_SYSTEM_PROMPT, [{"role": "user", "content": context}]
+        )
+
         try:
             clean_json = raw_response.strip()
             if "```json" in clean_json:
                 clean_json = clean_json.split("```json")[1].split("```")[0].strip()
             elif "```" in clean_json:
                 clean_json = clean_json.split("```")[1].split("```")[0].strip()
-            
+
             candidates = json.loads(clean_json)
-            
+
             for opt in candidates:
                 if len(final_results) >= 3:
                     break
-                    
+
                 brand_name = opt["brand_name"]
                 if brand_name in avoid_names:
                     continue
 
                 # KIPRIS 실시간 검증
                 ip_result = await kipris_client.check_trademark(brand_name)
-                
+
                 if ip_result.get("status") == "DANGER":
                     print(f"⚠️ [DANGER] '{brand_name}'은(는) 상표권 중복으로 제외됩니다.")
                     avoid_names.append(brand_name)
-                    continue # DANGER는 사용자에게 보여주지 않고 버림
-                
+                    continue  # DANGER는 사용자에게 보여주지 않고 버림
+
                 # SAFE 또는 WARNING인 경우만 채택
-                
+
                 # 브랜드 정체성 텍스트 임베딩 생성 (명칭 + 슬로건 + 스토리)
                 full_identity_text = f"{brand_name} {opt.get('slogan', '')} {opt.get('story', '')}"
                 identity_vector = await ai_client.embed_text(full_identity_text)
-                
+
                 identity = BrandIdentity(
                     id=uuid.uuid4(),
                     branding_id=branding_id,
@@ -351,15 +376,12 @@ async def generate_brand_names(db: AsyncSession, branding_id: uuid.UUID):
                     slogan=opt.get("slogan"),
                     brand_story=opt.get("story"),
                     is_selected=False,
-                    embedding=identity_vector # 임베딩 값 저장
+                    embedding=identity_vector,  # 임베딩 값 저장
                 )
                 db.add(identity)
-                
-                final_results.append({
-                    "identity": identity,
-                    "ip_result": ip_result
-                })
-                
+
+                final_results.append({"identity": identity, "ip_result": ip_result})
+
         except Exception as e:
             print(f"Naming Parsing Error at attempt {retry_count}: {str(e)}")
             if retry_count >= max_retries:
@@ -390,27 +412,33 @@ LOGO_PROMPT_MAKER = """
 [프롬프트 3]
 """
 
+
 async def generate_brand_logo(db: AsyncSession, identity_id: uuid.UUID):
     """AI를 통해 3가지 스타일의 로고 파일만 생성하고 URL을 반환합니다. (DB 저장 X)"""
-    
+
     # 1. 브랜드 아이덴티티 조회
     # (제목 자동 업데이트를 위해 Branding 엔티티를 조인하여 가져옵니다)
     from sqlalchemy.orm import joinedload
-    stmt = select(BrandIdentity).options(joinedload(BrandIdentity.branding)).where(BrandIdentity.id == identity_id)
+
+    stmt = (
+        select(BrandIdentity)
+        .options(joinedload(BrandIdentity.branding))
+        .where(BrandIdentity.id == identity_id)
+    )
     result = await db.execute(stmt)
     identity = result.scalar_one_or_none()
-    
+
     if not identity:
         return None
-        
+
     if identity.branding:
         # [대표님 요청] 최종 브랜드 이름이 결정되었으므로 Branding 프로젝트의 제목을 업데이트합니다.
         if identity.branding.title != identity.brand_name:
             identity.branding.title = identity.brand_name
-        
+
         # current_step도 업데이트 (인터뷰 -> 로고 생성 단계로)
         identity.branding.current_step = "LOGO_GENERATION"
-        
+
         # [상태 반영] 선택된 아이덴티티의 is_selected를 True로, 나머지는 False로 설정
         await db.execute(
             update(BrandIdentity)
@@ -418,67 +446,72 @@ async def generate_brand_logo(db: AsyncSession, identity_id: uuid.UUID):
             .values(is_selected=False)
         )
         identity.is_selected = True
-        
+
         await db.commit()
-        
+
     # 2. 로고용 시각화 프롬프트 3종 생성
-    ai_llm_client = get_ai_client("gemini") 
+    ai_llm_client = get_ai_client("gemini")
     context = f"브랜드명: {identity.brand_name}, 슬로건: {identity.slogan}, 스토리: {identity.brand_story}"
-    raw_response = await ai_llm_client.generate_response(LOGO_PROMPT_MAKER, [{"role": "user", "content": context}])
-    
+    raw_response = await ai_llm_client.generate_response(
+        LOGO_PROMPT_MAKER, [{"role": "user", "content": context}]
+    )
+
     # 3개 후보군 추출 (최소 1개는 보장)
-    prompts = [p.strip() for p in raw_response.split('---') if p.strip()]
+    prompts = [p.strip() for p in raw_response.split("---") if p.strip()]
     if not prompts:
         prompts = [raw_response.strip() or "A professional modern logo design for a brand"]
-    
+
     # 3개가 안되면 보충
     while len(prompts) < 3:
         prompts.append(prompts[0] + f" style variant {len(prompts)}")
-    
+
     prompts = prompts[:3]
-    
+
     # 3. 이미지 생성 (Stability API - Base64 반환)
     ai_image_client = get_ai_client("stability")
-    
+
     import asyncio
+
     async def create_logo_base64(visual_prompt: str, idx: int):
         try:
             # 파일 저장 없이 Base64 문자열 반환
             base64_data = await ai_image_client.generate_image_base64(visual_prompt)
             return {
                 "tempId": f"temp_{idx}_{uuid.uuid4().hex[:4]}",
-                "imageUrl": base64_data # 데이터 URI 직접 전달
+                "imageUrl": base64_data,  # 데이터 URI 직접 전달
             }
-        except Exception as e:
+        except Exception:
             import traceback
+
             print(f"Logo Generation Error (Index {idx}):\n{traceback.format_exc()}")
             return None
 
     tasks = [create_logo_base64(p, i) for i, p in enumerate(prompts)]
     results = await asyncio.gather(*tasks)
-    
+
     # --- Alignment Score 계산 및 품질 로깅 ---
     try:
         from app.core.ai_client import calculate_alignment_score
-        
+
         valid_results = [r for r in results if r is not None]
-        
+
         if valid_results:
             print(f"\n🎯 [AI Quality Log] 브랜드명: {identity.brand_name}")
             print("-" * 50)
-            
+
             # 모든 로고에 대해 병렬로 점수 계산 (context는 텍스트, r["imageUrl"]은 Base64)
             score_tasks = [calculate_alignment_score(context, r["imageUrl"]) for r in valid_results]
             scores = await asyncio.gather(*score_tasks)
-            
+
             for i, score in enumerate(scores):
-                print(f"▶ {i+1}번 로고 - 정렬 점수(Alignment Score): {score:.1f}%")
+                print(f"▶ {i + 1}번 로고 - 정렬 점수(Alignment Score): {score:.1f}%")
             print("-" * 50 + "\n")
-            
+
         return valid_results
     except Exception as e:
         print(f"⚠️ Alignment Score 로깅 중 에러 발생: {e}")
         return [r for r in results if r is not None]
+
 
 # [추가] 마케팅 에셋(목업) 생성 프롬프트 메이커
 MOCKUP_PROMPT_MAKER = """
@@ -508,50 +541,60 @@ Description: [한 줄 설명]
 Prompt: [영어 프롬프트]
 """
 
+
 async def generate_marketing_assets(db: AsyncSession, identity_id: uuid.UUID):
     """최종 선정된 로고를 바탕으로 명함, 메뉴판 등의 마케팅 에셋 목업 이미지를 생성합니다."""
     try:
         # 1. 브랜드 아이덴티티, 로고 정보, 그리고 부모 객체인 branding 정보까지 한 번에 Eager Loading 조회
         from sqlalchemy.orm import joinedload
-        stmt = select(BrandIdentity).options(
-            joinedload(BrandIdentity.logo_assets),
-            joinedload(BrandIdentity.branding)
-        ).where(BrandIdentity.id == identity_id)
+
+        stmt = (
+            select(BrandIdentity)
+            .options(joinedload(BrandIdentity.logo_assets), joinedload(BrandIdentity.branding))
+            .where(BrandIdentity.id == identity_id)
+        )
         result = await db.execute(stmt)
         identity = result.unique().scalar_one_or_none()
-        
+
         if not identity or not identity.logo_assets:
             print(f"DEBUG: Identity or LogoAssets not found for {identity_id}")
             return None
-            
+
         # 가장 최근에 확정된 로고 사용
-        final_logo = identity.logo_assets[-1] 
-        
+        final_logo = identity.logo_assets[-1]
+
         # 2. 에셋용 시각화 프롬프트 3종 생성 (LLM 활용)
         ai_llm_client = get_ai_client("gemini")
         context = f"브랜드명: {identity.brand_name}, 슬로건: {identity.slogan}, 스토리: {identity.brand_story}, 확정된로고특징: {final_logo.image_url}"
-        raw_response = await ai_llm_client.generate_response(MOCKUP_PROMPT_MAKER, [{"role": "user", "content": context}])
-        
+        raw_response = await ai_llm_client.generate_response(
+            MOCKUP_PROMPT_MAKER, [{"role": "user", "content": context}]
+        )
+
         # 3. 응답 파싱
-        asset_blocks = [block.strip() for block in raw_response.split('---') if block.strip()]
+        asset_blocks = [block.strip() for block in raw_response.split("---") if block.strip()]
         assets_data = []
-        
+
         ai_image_client = get_ai_client("stability")
         storage_client = get_storage_client()
-        
+
         # 임시 디렉토리 사용 (업로드 후 삭제 예정이거나 캐시용)
         temp_dir = "app/static/temp"
         os.makedirs(temp_dir, exist_ok=True)
-        
+
         import asyncio
+
         async def create_asset_file(block, idx):
-            lines = block.split('\n')
+            lines = block.split("\n")
             asset_info = {}
             for line in lines:
-                if line.startswith("Type:"): asset_info["type"] = line.replace("Type:", "").strip()
-                if line.startswith("Title:"): asset_info["title"] = line.replace("Title:", "").strip()
-                if line.startswith("Description:"): asset_info["description"] = line.replace("Description:", "").strip()
-                if line.startswith("Prompt:"): asset_info["prompt"] = line.replace("Prompt:", "").strip()
+                if line.startswith("Type:"):
+                    asset_info["type"] = line.replace("Type:", "").strip()
+                if line.startswith("Title:"):
+                    asset_info["title"] = line.replace("Title:", "").strip()
+                if line.startswith("Description:"):
+                    asset_info["description"] = line.replace("Description:", "").strip()
+                if line.startswith("Prompt:"):
+                    asset_info["prompt"] = line.replace("Prompt:", "").strip()
             prompt = asset_info.get("prompt", "").strip()
             if not prompt:
                 prompt = f"A professional {asset_info.get('type', 'marketing asset')} mockup showing the brand logo"
@@ -559,24 +602,24 @@ async def generate_marketing_assets(db: AsyncSession, identity_id: uuid.UUID):
             file_name = f"asset_{identity_id}_{uuid.uuid4().hex[:8]}_{idx}.png"
             temp_file_path = os.path.join(temp_dir, file_name)
             destination_path = f"assets/{file_name}"
-            
+
             try:
                 # 1. AI 이미지 생성 (로컬 임시 저장)
                 await ai_image_client.generate_image(prompt, temp_file_path)
-                
+
                 # 2. 저장소(Supabase 등)에 업로드
                 public_url = await storage_client.upload_file(temp_file_path, destination_path)
-                
+
                 # 3. 임시 파일 삭제 (클라우드 사용 시)
                 if os.path.exists(temp_file_path) and os.getenv("STORAGE_TYPE") == "SUPABASE":
                     os.remove(temp_file_path)
-                    
+
                 return {
                     "id": str(uuid.uuid4()),
                     "type": asset_info.get("type", "Marketing Asset"),
                     "title": asset_info.get("title", "Marketing Asset"),
                     "description": asset_info.get("description", ""),
-                    "imageUrl": public_url
+                    "imageUrl": public_url,
                 }
             except Exception as e:
                 print(f"Asset generation error: {str(e)}")
@@ -584,34 +627,36 @@ async def generate_marketing_assets(db: AsyncSession, identity_id: uuid.UUID):
 
         tasks = [create_asset_file(b, i) for i, b in enumerate(asset_blocks[:3])]
         results = await asyncio.gather(*tasks)
-        
+
         # [DB 저장] 생성된 에셋 정보를 marketing_assets 테이블에 저장
         final_results = []
         for r in results:
             if r:
                 # Type 정규화 (Business Card -> BUSINESS_CARD 등)
                 raw_type = r.get("type", "Marketing Asset").upper().replace(" ", "_")
-                
+
                 new_asset = MarketingAsset(
                     id=uuid.UUID(r["id"]),
                     identity_id=identity_id,
                     type=raw_type,
-                    file_url=r["imageUrl"]
+                    file_url=r["imageUrl"],
                 )
                 db.add(new_asset)
                 final_results.append(r)
-        
+
         # 브랜딩 단계 완료 업데이트
         if identity.branding:
             identity.branding.current_step = "COMPLETED"
-            identity.branding.title = identity.brand_name # 최종 브랜드 이름으로 제목 업데이트
-            
+            identity.branding.title = identity.brand_name  # 최종 브랜드 이름으로 제목 업데이트
+
         await db.commit()
         return final_results
     except Exception as e:
         import traceback
+
         print(f"CRITICAL ERROR in generate_marketing_assets:\n{traceback.format_exc()}")
         raise e
+
 
 async def finalize_brand_logo(db: AsyncSession, identity_id: uuid.UUID, image_url: str):
     """선택된 로고(Base64)를 파일로 저장하고 DB에 등록합니다."""
@@ -620,13 +665,13 @@ async def finalize_brand_logo(db: AsyncSession, identity_id: uuid.UUID, image_ur
     file_name = f"final_logo_{identity_id}_{uuid.uuid4().hex[:6]}.png"
     destination_path = f"logos/{file_name}"
     final_url = image_url
-    
+
     try:
         if image_url.startswith("data:image"):
             # Base64 데이터 추출 (data:image/png;base64,...)
             header, encoded = image_url.split(",", 1)
             image_bytes = base64.b64decode(encoded)
-            
+
             # 저장소 클라이언트를 사용하여 업로드
             final_url = await storage_client.upload_bytes(image_bytes, destination_path)
     except Exception as e:
@@ -639,19 +684,20 @@ async def finalize_brand_logo(db: AsyncSession, identity_id: uuid.UUID, image_ur
         identity_id=identity_id,
         image_url=final_url,
         style_tag="FINAL_SELECTION",
-        is_final=True
+        is_final=True,
     )
     db.add(new_logo)
     await db.commit()
     await db.refresh(new_logo)
-    
+
     # 3. 프로젝트 타이틀 업데이트 (선택된 브랜드명으로)
     stmt = select(BrandIdentity).where(BrandIdentity.id == identity_id)
     result = await db.execute(stmt)
     identity = result.scalar_one_or_none()
-    
+
     if identity:
         from app.models import Branding
+
         await db.execute(
             update(Branding)
             .where(Branding.id == identity.branding_id)
@@ -660,5 +706,5 @@ async def finalize_brand_logo(db: AsyncSession, identity_id: uuid.UUID, image_ur
         # 아이덴티티 선택 상태 보장
         identity.is_selected = True
         await db.commit()
-        
+
     return new_logo

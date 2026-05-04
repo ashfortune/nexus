@@ -3,6 +3,7 @@ package com.team.nexus.global.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 

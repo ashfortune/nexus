@@ -1,5 +1,5 @@
-import SubsidySearchPage from "./components/SubsidySearchPage";
+import SubsidySearchPage from './components/SubsidySearchPage';
 
 export default function SubsidyPage() {
-    return <SubsidySearchPage />;
+  return <SubsidySearchPage />;
 }

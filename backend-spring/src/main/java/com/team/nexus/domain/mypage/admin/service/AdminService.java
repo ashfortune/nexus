@@ -1,7 +1,8 @@
 package com.team.nexus.domain.mypage.admin.service;
 
-import java.util.UUID;
 import com.team.nexus.domain.mypage.admin.dto.AdminDashboardDto;
+
+import java.util.UUID;
 
 public interface AdminService {
     AdminDashboardDto getDashboardData();

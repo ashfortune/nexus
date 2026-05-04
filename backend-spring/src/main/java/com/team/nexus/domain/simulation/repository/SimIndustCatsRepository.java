@@ -1,9 +1,9 @@
 package com.team.nexus.domain.simulation.repository;
 
+import com.team.nexus.domain.simulation.dto.SimIndustCatsDto;
 import com.team.nexus.global.entity.IndustryCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import com.team.nexus.domain.simulation.dto.SimIndustCatsDto;
 
 import java.util.List;
 import java.util.UUID;

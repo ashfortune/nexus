@@ -1,15 +1,15 @@
-import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import get_db
-from app.domain.simulation import simulationService, simulationSchema
+from app.domain.simulation import simulationSchema, simulationService
 
 router = APIRouter()
 
+
 @router.post("/market-prediction", response_model=simulationSchema.PredictionResponse)
 async def predict_market_survival(
-    request: simulationSchema.PredictionRequest,
-    db: AsyncSession = Depends(get_db)
+    request: simulationSchema.PredictionRequest, db: AsyncSession = Depends(get_db)
 ):
     """
     창업 생존 예측 API

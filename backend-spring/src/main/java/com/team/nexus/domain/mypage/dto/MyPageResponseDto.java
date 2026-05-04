@@ -1,8 +1,9 @@
 package com.team.nexus.domain.mypage.dto;
 
 import lombok.*;
-import java.util.List;
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter

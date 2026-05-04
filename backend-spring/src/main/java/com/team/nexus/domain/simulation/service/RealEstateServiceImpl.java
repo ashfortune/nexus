@@ -1,19 +1,18 @@
 package com.team.nexus.domain.simulation.service;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.team.nexus.domain.simulation.dto.ProcessedRealEstateDto;
 import com.team.nexus.domain.simulation.dto.RealEstateAPIResponseDto;
 import com.team.nexus.domain.simulation.dto.RealEstateResponseItemDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.web.reactive.function.client.WebClient;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 @Service
 @RequiredArgsConstructor
