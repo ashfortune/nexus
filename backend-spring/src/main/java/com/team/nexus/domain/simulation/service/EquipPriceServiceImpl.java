@@ -22,7 +22,7 @@ public class EquipPriceServiceImpl implements EquipPriceService {
         public EquipPriceResponseDto getEquipPriceList(String ksicCode) {
                 IndustryCategory industryCategory = industryCategoryQueryRepository.findFirstByKsicCode(ksicCode)
                                 .orElseThrow(() -> new RuntimeException(
-                                                 "Industry Category not found for ksicCode: " + ksicCode));
+                                                "Industry Category not found for ksicCode: " + ksicCode));
 
                 List<EquipmentPrice> equipmentPrices = equipPriceRepository
                                 .findByIndustryCategoryId(industryCategory.getId());
@@ -40,15 +40,15 @@ public class EquipPriceServiceImpl implements EquipPriceService {
 
                 List<EquipPriceResponseDto.EquipPriceItem> items = equipmentPrices.stream()
                                 .map(ep -> EquipPriceResponseDto.EquipPriceItem.builder()
-                                                 .equipNameKR(ep.getEquipment_kr())
-                                                 .equipNameEng(ep.getEquipment_eng())
-                                                 .productName(ep.getProduct_name())
-                                                 .productPrice(ep.getPrice())
-                                                 .detail(ep.getDetail())
-                                                 .link(ep.getLink())
-                                                 .imageUrl(ep.getImage_url())
-                                                 .source(ep.getSource())
-                                                 .build())
+                                                .equipNameKR(ep.getEquipment_kr())
+                                                .equipNameEng(ep.getEquipment_eng())
+                                                .productName(ep.getProduct_name())
+                                                .productPrice(ep.getPrice())
+                                                .detail(ep.getDetail())
+                                                .link(ep.getLink())
+                                                .imageUrl(ep.getImage_url())
+                                                .source(ep.getSource())
+                                                .build())
                                 .toList();
 
                 return EquipPriceResponseDto.builder()
