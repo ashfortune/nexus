@@ -268,13 +268,29 @@ CREATE TABLE labor_contracts (
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    industry_category_id UUID REFERENCES industry_categories(id),
     title VARCHAR(100) NOT NULL,
     content TEXT,
     region_name VARCHAR(20),
     category_name VARCHAR(20),
     view_count INT DEFAULT 0,
+    like_count INT DEFAULT 0,
     image_url VARCHAR(255),
     is_anonymous BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE board_images (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    sort_order INT DEFAULT 0
+);
+
+CREATE TABLE board_likes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -284,6 +300,7 @@ CREATE TABLE comments (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     parent_comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    report_count INT DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

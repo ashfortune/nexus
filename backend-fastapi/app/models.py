@@ -507,12 +507,40 @@ class Board(Base):
     region_name: Mapped[Optional[str]] = mapped_column(String(20))
     category_name: Mapped[Optional[str]] = mapped_column(String(20))
     view_count: Mapped[Optional[int]] = mapped_column(Integer, server_default=text("0"))
+    like_count: Mapped[Optional[int]] = mapped_column(Integer, server_default=text("0"))
     image_url: Mapped[Optional[str]] = mapped_column(String(255))
     is_anonymous: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text("false"))
     created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="boards")
+    industry_category: Mapped[Optional["IndustryCategory"]] = relationship(back_populates="boards")
+    comments: Mapped[List["Comment"]] = relationship(back_populates="board", cascade="all, delete-orphan")
+    images: Mapped[List["BoardImage"]] = relationship(back_populates="board", cascade="all, delete-orphan")
+    likes: Mapped[List["BoardLike"]] = relationship(back_populates="board", cascade="all, delete-orphan")
+
+class BoardImage(Base):
+    __tablename__ = "board_images"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    board_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("boards.id", ondelete="CASCADE"), nullable=False)
+    image_url: Mapped[str] = mapped_column(Text, nullable=False)
+    sort_order: Mapped[Optional[int]] = mapped_column(Integer, server_default=text("0"))
+
+    # Relationships
+    board: Mapped["Board"] = relationship(back_populates="images")
+
+class BoardLike(Base):
+    __tablename__ = "board_likes"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    board_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("boards.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+
+    # Relationships
+    board: Mapped["Board"] = relationship(back_populates="likes")
+    user: Mapped["User"] = relationship(back_populates="board_likes")
     comments: Mapped[List["Comment"]] = relationship(
         back_populates="board", cascade="all, delete-orphan"
     )
@@ -529,9 +557,8 @@ class Comment(Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    parent_comment_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        ForeignKey("comments.id", ondelete="CASCADE")
-    )
+    parent_comment_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("comments.id", ondelete="CASCADE"))
+    report_count: Mapped[Optional[int]] = mapped_column(Integer, server_default=text("0"))
     created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
 
     # Relationships

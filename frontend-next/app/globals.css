@@ -71,3 +71,14 @@ body {
   background: var(--nexus-surface-lowest);
   border-radius: 16px;
 }
+
+.nexus-glass {
+  background: var(--nexus-glass-bg);
+  backdrop-filter: blur(var(--nexus-glass-blur));
+  -webkit-backdrop-filter: blur(var(--nexus-glass-blur));
+}
+
+.nexus-card {
+  background: var(--nexus-surface-lowest);
+  border-radius: 16px;
+}
