@@ -52,7 +52,7 @@ export default function LoginPage() {
       });
 
       const result = await response.json();
-      console.log("Login Result:", result);
+      // console.log("Login Result:", result);
 
       if (response.ok && result.status === "success") {
         const data = result.data;

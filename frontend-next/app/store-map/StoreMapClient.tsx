@@ -202,7 +202,7 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
 
   const handleStartAnalysis = async () => {
     if (selectedRegion == "" || !selectedIndustry) return;
-    console.log("요청 파라미터:", selectedRegion, selectedIndustry);
+    // console.log("요청 파라미터:", selectedRegion, selectedIndustry);
     setIsLoading(true);
     try {
       const data = await fetchStoresData(selectedRegion.toString(), selectedIndustry);

@@ -109,19 +109,23 @@ public class MyPageServiceImpl implements MyPageService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         try {
-            String uploadDir = "c:/nexus/uploads/profiles/";
+            // Spring Boot 실행 경로 기준 uploads 폴더 사용
+            String uploadDir = "uploads/profiles/";
             java.io.File dir = new java.io.File(uploadDir);
             if (!dir.exists()) dir.mkdirs();
 
             String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
             String savedFilename = UUID.randomUUID().toString() + extension;
-            java.nio.file.Path path = java.nio.file.Paths.get(uploadDir + savedFilename);
+            java.nio.file.Path path = java.nio.file.Paths.get(uploadDir + savedFilename).toAbsolutePath().normalize();
 
             java.nio.file.Files.copy(file.getInputStream(), path, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-            // DB에는 웹에서 접근 가능한 경로 저장 (예: /uploads/profiles/filename)
-            user.setProfileImage("/uploads/profiles/" + savedFilename);
+            // GroupPurchaseFileController의 display 엔드포인트를 통해 접근하도록 경로 설정
+            user.setProfileImage("/api/v1/group-purchases/files/display/profiles/" + savedFilename);
             userRepository.save(user);
         } catch (java.io.IOException e) {
             throw new RuntimeException("프로필 이미지 업로드 중 오류가 발생했습니다: " + e.getMessage());
