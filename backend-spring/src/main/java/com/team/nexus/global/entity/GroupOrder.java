@@ -34,16 +34,16 @@ public class GroupOrder {
     @Column(name = "total_price", nullable = false)
     private Integer totalPrice;
 
-    @Column(name = "pg_provider", length = 20)
-    private String pgProvider;
+    @Column(name = "payment_provider", length = 100)
+    private String paymentProvider;
 
-    @Column(name = "pg_tid", length = 200)
-    private String pgTid;
+    @Column(name = "payment_key", columnDefinition = "TEXT")
+    private String paymentKey;
 
-    @Column(name = "payment_method", length = 50)
+    @Column(name = "payment_method", length = 100)
     private String paymentMethod;
 
-    @Column(name = "payment_status", length = 20)
+    @Column(name = "payment_status", length = 50)
     private String paymentStatus;
 
     @Column(name = "paid_at")

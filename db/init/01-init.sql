@@ -16,7 +16,10 @@ CREATE TABLE users (
     biz_no VARCHAR(12),
     address VARCHAR(255),
     login_type INT DEFAULT 0, 
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    profile_image VARCHAR(255),
+    is_suspended BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE industry_categories (
@@ -33,7 +36,7 @@ CREATE TABLE region_codes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     region_code INT NOT NULL,
     city_name VARCHAR(10) NOT NULL,
-    county_name VARCHAR(10),
+    county_name VARCHAR(10) NOT NULL,
     latitude DECIMAL(13, 10),
     longitude DECIMAL(13, 10)
 );
@@ -306,10 +309,10 @@ CREATE TABLE group_orders (
     user_id UUID NOT NULL REFERENCES users(id),
     order_count INT DEFAULT 1,
     total_price INT NOT NULL,
-    pg_provider VARCHAR(20) CHECK (pg_provider IN ('TOSS', 'KAKAO')),
-    pg_tid VARCHAR(200),
-    payment_method VARCHAR(50),
-    payment_status VARCHAR(20) CHECK (payment_status IN ('READY', 'PAID', 'CANCELLED', 'FAILED')) DEFAULT 'READY',
+    payment_provider VARCHAR(100),
+    payment_key TEXT,
+    payment_method VARCHAR(100),
+    payment_status VARCHAR(50),
     paid_at TIMESTAMPTZ
 );
 
@@ -319,6 +322,7 @@ CREATE TABLE chat_rooms (
     description TEXT,
     image_url VARCHAR(500),
     type VARCHAR(20) DEFAULT 'GROUP',
+    user_id UUID REFERENCES users(id),
     password VARCHAR(255),
     last_message_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW()

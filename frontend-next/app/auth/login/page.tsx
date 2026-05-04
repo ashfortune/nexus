@@ -52,7 +52,7 @@ export default function LoginPage() {
       });
 
       const result = await response.json();
-      console.log("Login Result:", result);
+      // console.log("Login Result:", result);
 
       if (response.ok && result.status === "success") {
         const data = result.data;
@@ -64,9 +64,11 @@ export default function LoginPage() {
           console.error("User ID is missing in the response:", data);
         }
 
-        // 로컬 스토리지에 토큰 저장
+        // 로컬 스토리지에 토큰 및 권한 정보 저장
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("nickname", nickname);
+        localStorage.setItem("userType", data.userType.toString());
+        localStorage.setItem("profileImage", data.profileImage || "");
         if (userId) localStorage.setItem("userId", userId);
         
         // 헤더에 로그인 상태 변경 이벤트 알림 (수정된 Header.tsx 반영)

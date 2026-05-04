@@ -34,20 +34,29 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [nickname, setNickname] = useState('');
+  const [userType, setUserType] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const pathname = usePathname();
-
+  
   const profileRef = useRef<HTMLDivElement>(null);
 
   // 1. 로그인 상태를 체크하는 함수를 별도로 분리합니다.
   const checkLoginStatus = useCallback(() => {
     const token = localStorage.getItem('accessToken');
     const savedNickname = localStorage.getItem('nickname');
+    const savedUserType = localStorage.getItem('userType');
+    const savedProfileImage = localStorage.getItem('profileImage');
+    
     if (token) {
       setIsLoggedIn(true);
       setNickname(savedNickname || 'User');
+      setUserType(savedUserType);
+      setProfileImage(savedProfileImage);
     } else {
       setIsLoggedIn(false);
       setNickname('');
+      setUserType(null);
+      setProfileImage(null);
     }
   }, []);
 
@@ -159,15 +168,31 @@ export default function Header() {
                 </Link>
               ) : (
                 <div className="relative flex items-center">
-                  <button onClick={toggleProfile} className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-[var(--nexus-outline-variant)] overflow-hidden bg-gray-100 flex items-center justify-center">
-                    <span className="text-xs font-bold text-gray-500">{nickname[0] || 'P'}</span>
+                  <button onClick={toggleProfile} className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-[var(--nexus-outline-variant)] overflow-hidden bg-white flex items-center justify-center shadow-sm">
+                    {profileImage ? (
+                      <img 
+                        src={`http://localhost:8080${profileImage}`} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs font-black text-[var(--nexus-primary)]">{nickname[0] || 'P'}</span>
+                    )}
                   </button>
                   {isProfileOpen && (
                     <div className="absolute right-0 top-14 w-52 bg-white border border-[var(--nexus-outline-variant)] shadow-xl rounded-md overflow-hidden z-[110]">
                       <div className="px-5 py-3.5 text-sm text-gray-400 border-b border-gray-100 bg-gray-50/50">
                         <span className="font-bold text-[var(--nexus-primary)]">{nickname}</span>님 환영합니다
                       </div>
-                      <Link href="/" className="block px-5 py-3.5 text-sm hover:bg-gray-50 border-b border-gray-100">ℹ️ 프로필</Link>
+                      <Link 
+                        href={userType === '2' ? "/mypage/admin" : "/mypage"} 
+                        className="block px-5 py-3.5 text-sm hover:bg-gray-50 border-b border-gray-100"
+                      >
+                        {userType === '2' ? "⚙️ 관리자 콘솔" : "ℹ️ 프로필"}
+                      </Link>
+                      {userType === '2' && (
+                        <Link href="/mypage" className="block px-5 py-3.5 text-sm hover:bg-gray-50 border-b border-gray-100 text-gray-500">ℹ️ 프로필</Link>
+                      )}
                       <Link href="/chat" className="block px-5 py-3.5 text-sm hover:bg-gray-50 border-b border-gray-100">💬 채팅하기</Link>
                       <button onClick={handleLogout} className="w-full text-left px-5 py-3.5 text-sm text-red-500 hover:bg-red-50 font-semibold">🚣 로그아웃</button>
                     </div>

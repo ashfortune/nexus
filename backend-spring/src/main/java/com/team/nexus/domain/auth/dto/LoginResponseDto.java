@@ -28,4 +28,7 @@ public class LoginResponseDto {
 
     @Schema(description = "사용자 유형 (0: 일반, 1: 사업가)")
     private int userType;
+
+    @Schema(description = "프로필 이미지 URL")
+    private String profileImage;
 }

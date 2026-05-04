@@ -98,44 +98,65 @@ public class GroupPurchaseServiceImpl implements GroupPurchaseService {
     @Override
     @Transactional
     public void participate(UUID groupBuyId, UUID userId, GroupOrderRequestDto orderDto) {
-        if (groupOrderRepository.existsByGroupPurchaseIdAndUserId(groupBuyId, userId)) {
-            throw new RuntimeException("이미 참여한 공동구매입니다.");
+        log.info("[Participate] Start - groupBuyId: {}, userId: {}", groupBuyId, userId);
+        
+        try {
+            if (groupOrderRepository.existsByGroupPurchaseIdAndUserId(groupBuyId, userId)) {
+                log.warn("[Participate] Already participated: userId={}, groupBuyId={}", userId, groupBuyId);
+                throw new RuntimeException("이미 참여한 공동구매입니다.");
+            }
+            log.info("[Participate] Step 1: Participation check passed");
+
+            GroupPurchase groupPurchase = groupPurchaseRepository.findById(groupBuyId)
+                    .orElseThrow(() -> new IllegalArgumentException("공동구매 정보를 찾을 수 없습니다. (ID: " + groupBuyId + ")"));
+            log.info("[Participate] Step 2: GroupPurchase found - title: {}", groupPurchase.getTitle());
+
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. (ID: " + userId + ")"));
+            log.info("[Participate] Step 3: User found - nickname: {}", user.getNickname());
+
+            GroupOrder order = GroupOrder.builder()
+                    .id(UUID.randomUUID().toString())
+                    .groupPurchase(groupPurchase)
+                    .user(user)
+                    .orderCount(orderDto.getOrderCount())
+                    .totalPrice(groupPurchase.getItemPrice() * orderDto.getOrderCount())
+                    .paymentProvider(orderDto.getPgProvider())
+                    .paymentMethod(orderDto.getPaymentMethod())
+                    .paymentKey(orderDto.getPgTid())
+                    .paymentStatus("PAID")
+                    .paidAt(LocalDateTime.now())
+                    .build();
+            log.info("[Participate] Step 4: GroupOrder object built");
+
+            groupOrderRepository.save(order);
+            log.info("[Participate] Step 5: GroupOrder saved successfully - ID: {}", order.getId());
+
+            int current = (groupPurchase.getCurrentCount() == null) ? 0 : groupPurchase.getCurrentCount();
+            groupPurchase.setCurrentCount(current + orderDto.getOrderCount());
+            log.info("[Participate] Step 6: currentCount updated: {} -> {}", current, groupPurchase.getCurrentCount());
+
+            if (groupPurchase.getCurrentCount() >= groupPurchase.getTargetCount()) {
+                groupPurchase.setStatus("COMPLETED");
+                log.info("[Participate] Step 7: Status changed to COMPLETED");
+            }
+
+            groupPurchaseRepository.save(groupPurchase);
+            log.info("[Participate] Step 8: GroupPurchase saved successfully - All Done!");
+
+        } catch (Exception e) {
+            log.error("[Participate] Error during participation process: {}", e.getMessage(), e);
+            throw e;
         }
-
-        GroupPurchase groupPurchase = groupPurchaseRepository.findById(groupBuyId)
-                .orElseThrow(() -> new IllegalArgumentException("Group purchase not found"));
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        GroupOrder order = GroupOrder.builder()
-                .id(UUID.randomUUID().toString())
-                .groupPurchase(groupPurchase)
-                .user(user)
-                .orderCount(orderDto.getOrderCount())
-                .totalPrice(groupPurchase.getItemPrice() * orderDto.getOrderCount())
-                .pgProvider(orderDto.getPgProvider())
-                .paymentMethod(orderDto.getPaymentMethod())
-                .pgTid(orderDto.getPgTid())
-                .paymentStatus("PAID")
-                .paidAt(LocalDateTime.now())
-                .build();
-
-        groupOrderRepository.save(order);
-
-        groupPurchase.setCurrentCount(groupPurchase.getCurrentCount() + orderDto.getOrderCount());
-
-        if (groupPurchase.getCurrentCount() >= groupPurchase.getTargetCount()) {
-            groupPurchase.setStatus("COMPLETED");
-        }
-
-        groupPurchaseRepository.save(groupPurchase);
     }
 
     @Override
     @Transactional
     public void confirmPayment(UUID groupBuyId, UUID userId, PaymentConfirmRequestDto confirmDto) {
+        log.info("[Confirm Payment] Start: groupBuyId={}, userId={}, paymentKey={}", groupBuyId, userId, confirmDto.getPaymentKey());
+        
         if (confirmDto.getPaymentKey() != null && confirmDto.getPaymentKey().startsWith("MOCK_")) {
+            log.info("[Confirm Payment] Processing MOCK payment");
             GroupOrderRequestDto orderDto = new GroupOrderRequestDto();
             orderDto.setOrderCount(1);
             orderDto.setPgProvider("KAKAO_PAY_MOCK");
@@ -156,21 +177,32 @@ public class GroupPurchaseServiceImpl implements GroupPurchaseService {
         body.put("amount", confirmDto.getAmount());
 
         try {
+            log.info("[Confirm Payment] Requesting Toss API: {}", url);
             Map<String, Object> response = externalApiService.post(url, body, headers, Map.class);
+            log.info("[Confirm Payment] Toss API Response: {}", response);
 
-            String method = (String) response.get("method");
-            String pgTid = (String) response.get("paymentKey");
+            if (response == null) {
+                throw new RuntimeException("토스 결제 승인 응답이 비어있습니다.");
+            }
+
+            String method = response.get("method") != null ? response.get("method").toString() : "UNKNOWN";
+            String pgTid = response.get("paymentKey") != null ? response.get("paymentKey").toString() : confirmDto.getPaymentKey();
 
             String pgProvider = "TOSS";
             if ("카드".equals(method)) {
                 Map<String, Object> card = (Map<String, Object>) response.get("card");
-                if (card != null) {
-                    pgProvider = (String) card.get("issuerCode");
+                if (card != null && card.get("issuerCode") != null) {
+                    pgProvider = card.get("issuerCode").toString();
                 }
-            } else if (response.containsKey("easyPay")) {
+            } else if (response.get("easyPay") != null) {
                 Map<String, Object> easyPay = (Map<String, Object>) response.get("easyPay");
-                if (easyPay != null) {
-                    pgProvider = (String) easyPay.get("provider");
+                if (easyPay != null && easyPay.get("provider") != null) {
+                    pgProvider = easyPay.get("provider").toString();
+                }
+            } else if (response.get("virtualAccount") != null) {
+                Map<String, Object> va = (Map<String, Object>) response.get("virtualAccount");
+                if (va != null && va.get("bankCode") != null) {
+                    pgProvider = va.get("bankCode").toString();
                 }
             }
 
@@ -181,8 +213,10 @@ public class GroupPurchaseServiceImpl implements GroupPurchaseService {
             orderDto.setPgTid(pgTid);
 
             participate(groupBuyId, userId, orderDto);
+            log.info("[Confirm Payment] Successfully completed");
 
         } catch (Exception e) {
+            log.error("[Confirm Payment] Error occurred: {}", e.getMessage(), e);
             throw new RuntimeException("결제 승인 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
@@ -205,14 +239,14 @@ public class GroupPurchaseServiceImpl implements GroupPurchaseService {
         headers.put("Content-Type", "application/json");
 
         for (GroupOrder order : orders) {
-            if (order.getPgTid() != null && !"KAKAO_PAY_MOCK".equals(order.getPgProvider())) {
+            if (order.getPaymentKey() != null && !"KAKAO_PAY_MOCK".equals(order.getPaymentProvider())) {
                 try {
-                    log.info("Attempting refund for order {}: pgTid={}", order.getId(), order.getPgTid());
+                    log.info("Attempting refund for order {}: paymentKey={}", order.getId(), order.getPaymentKey());
 
                     Map<String, String> body = new HashMap<>();
                     body.put("cancelReason", "공동구매 취소로 인한 자동 환불");
 
-                    String cancelUrl = "https://api.tosspayments.com/v1/payments/" + order.getPgTid() + "/cancel";
+                    String cancelUrl = "https://api.tosspayments.com/v1/payments/" + order.getPaymentKey() + "/cancel";
                     externalApiService.post(cancelUrl, body, headers, String.class);
 
                     log.info("Successfully refunded order {}", order.getId());

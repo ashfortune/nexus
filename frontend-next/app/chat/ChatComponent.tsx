@@ -432,9 +432,9 @@ const ChatComponent = () => {
 
   const handleFileMessageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    console.log("File selected:", file);
+    // console.log("File selected:", file);
     if (!file || !activeRoomId || !currentUserId || !chatServiceRef.current) {
-      console.log("Missing required data:", { file, activeRoomId, currentUserId, connected: !!chatServiceRef.current });
+      // console.log("Missing required data:", { file, activeRoomId, currentUserId, connected: !!chatServiceRef.current });
       return;
     }
 
@@ -450,19 +450,19 @@ const ChatComponent = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Upload success:", data);
+        // console.log("Upload success:", data);
         const fileUrl = data.url;
         const fileName = file.name;
         const isImage = file.type.startsWith('image/');
         
-        console.log("Sending file message:", {
+        /* console.log("Sending file message:", {
           activeRoomId,
           currentUserId,
           text: isImage ? '사진을 보냈습니다.' : `파일을 보냈습니다: ${fileName}`,
           type: isImage ? 'IMAGE' : 'FILE',
           fileUrl,
           fileName
-        });
+        }); */
 
         chatServiceRef.current.sendMessage(
           activeRoomId,
