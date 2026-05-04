@@ -277,7 +277,12 @@ async def save_subsidy(data: dict, source_url: str, db: AsyncSession):
                     life_cycle = EXCLUDED.life_cycle,
                     updated_at = NOW()
             """),
-            {**data, "deadline": deadline, "start_date": start_date, "source_url": source_url}
+            {
+                **data,
+                "deadline": deadline.isoformat() if deadline else None,
+                "start_date": start_date.isoformat() if start_date else None,
+                "source_url": source_url
+            }
         )
         await db.commit()
         return True
@@ -289,7 +294,7 @@ async def save_subsidy(data: dict, source_url: str, db: AsyncSession):
 async def delete_expired_subsidies(db: AsyncSession):
     await db.execute(
         text("DELETE FROM subsidies WHERE deadline < :today"),
-        {"today": date.today()}
+        {"today": date.today().isoformat()}
     )
     await db.commit()
     print("만료된 지원금 삭제 완료")
