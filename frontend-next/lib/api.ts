@@ -80,6 +80,13 @@ export const api = {
       method: 'PUT', 
       body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)
     }),
+
+  patch: (path: string, body?: any, options?: RequestOptions) => 
+    request(path, { 
+      ...options, 
+      method: 'PATCH', 
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)
+    }),
     
   delete: (path: string, options?: RequestOptions) => 
     request(path, { ...options, method: 'DELETE' }),

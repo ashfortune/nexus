@@ -126,7 +126,11 @@ export default function MyPage() {
       const result = await response.json();
       if (result.status === 'success') {
         alert('사업자 회원으로 전환되었습니다.');
+        // 전역 상태 업데이트 추가
+        useAuthStore.getState().updateUser({ userType: 1, bizNo });
         window.location.reload();
+      } else {
+        alert(result.message || '전환 처리에 실패했습니다.');
       }
     } catch (error) {
       alert('전환 처리 중 오류가 발생했습니다.');
