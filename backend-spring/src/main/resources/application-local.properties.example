@@ -15,3 +15,8 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 
 # SQL Parameter Logging
 logging.level.org.hibernate.orm.jdbc.bind=trace
+
+# Payment Configuration
+toss.client-key=your_toss_client_key
+kakao.pay.client-id=TC0ONETIME
+

@@ -2,6 +2,14 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'checkstyle'
+}
+
+checkstyle {
+    toolVersion = "10.12.5"
+    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    ignoreFailures = true // 일단 에러가 나도 빌드는 되게 설정 (경고 위주)
+    maxWarnings = 0
 }
 
 group = 'com.team.nexus'
@@ -26,7 +34,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'com.pgvector:pgvector:0.1.6'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -41,6 +51,15 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // iText PDF
+    implementation 'com.itextpdf:itext7-core:7.2.5'
+    implementation 'com.itextpdf:font-asian:7.2.5'
+    // Webclient
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // XML Parsing (Real Estate API)
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
 }
 
 tasks.named('test') {

@@ -77,7 +77,7 @@ backend-fastapi/
 | **Frontend** | Next.js | `16.2.1` | App Router, React 19, TypeScript |
 | **Styling** | Tailwind CSS | `v4.x` | 최신 유틸리티 엔진 |
 | **Backend (Core)** | Spring Boot | `3.3.4` | Java 17, Gradle |
-| **Backend (AI)** | FastAPI | `1.0.0` | Python 3.11+, .venv |
+| **Backend (AI)** | FastAPI | `1.0.0` | Python 3.10+, .venv |
 | **Database** | PostgreSQL | `16.x` | UUID-OSSP, Vector 지원 |
 | **Documentation** | Swagger / Redoc | - | OpenAPI 3.0 사양 |
 
@@ -125,7 +125,32 @@ npm install && npm run dev
 
 ---
 
-## 👥 6. 협업 가이드 (Collaboration)
+## 💎 6. 코드 품질 및 린터 (Code Quality & Linters)
+
+Nexus 프로젝트는 고품질의 코드 유지를 위해 각 파트별로 최적화된 린터와 포맷터를 적용하고 있습니다.
+
+### 🎨 Frontend (Next.js)
+- **도구**: ESLint, Prettier
+- **사용법**:
+  - `npm run lint`: 코드 문법 및 규칙 검사
+  - `npm run format`: Prettier 규칙에 따른 코드 자동 포맷팅
+
+### 🐍 Backend - AI Engine (FastAPI)
+- **도구**: Ruff (초고속 Python 린터/포맷터)
+- **사용법**:
+  - `ruff check .`: 코드 린트 검사
+  - `ruff format .`: 코드 자동 포맷팅
+  - `ruff check --fix .`: 수정 가능한 린트 에러 자동 해결
+
+### ☕ Backend - Core (Spring Boot)
+- **도구**: Checkstyle (Google Java Style Guide 기반)
+- **사용법**:
+  - `./gradlew checkstyleMain`: 자바 코드 스타일 검사
+  - **리포트 확인**: `build/reports/checkstyle/main.html` 파일에서 상세 결과 확인 가능
+
+---
+
+## 👥 7. 협업 가이드 (Collaboration)
 
 ### 🤖 AI 에이전트(Antigravity) 활용
 본 프로젝트는 AI와의 완벽한 협업을 위해 컨벤션을 공유합니다. 

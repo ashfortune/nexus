@@ -37,8 +37,7 @@ public class BrandIdentity {
     @Column(name = "is_selected")
     private Boolean isSelected;
 
-    // Vector type (embedding) is skipped for now. Using @Transient to prevent
-    // Hibernate mapping errors.
+    // Vector type (embedding) is skipped for now. Using @Transient to prevent Hibernate mapping errors.
     @Transient
     private double[] embedding;
 }

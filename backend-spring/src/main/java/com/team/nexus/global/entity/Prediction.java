@@ -1,11 +1,10 @@
 package com.team.nexus.global.entity;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +37,15 @@ public class Prediction {
     @Column(name = "predicted_cost")
     private Integer predictedCost;
 
+    @Column(name = "moving_average")
+    private Double movingAverage;
+
+    @Column(name = "return_rate")
+    private Double returnRate;
+
     @OneToMany(mappedBy = "prediction", cascade = CascadeType.ALL)
     private List<DailyPrediction> dailyPredictions = new ArrayList<>();
+
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
 }

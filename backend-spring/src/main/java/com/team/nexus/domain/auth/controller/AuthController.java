@@ -1,10 +1,6 @@
 package com.team.nexus.domain.auth.controller;
 
-import com.team.nexus.domain.auth.dto.LoginRequestDto;
-import com.team.nexus.domain.auth.dto.LoginResponseDto;
-import com.team.nexus.domain.auth.dto.PasswordResetRequestDto;
-import com.team.nexus.domain.auth.dto.PasswordResetResponseDto;
-import com.team.nexus.domain.auth.dto.SignupRequestDto;
+import com.team.nexus.domain.auth.dto.*;
 import com.team.nexus.domain.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +15,7 @@ import java.util.Map;
 @Tag(name = "Authentication", description = "인증 및 회원가입 관련 API")
 @RestController
 @RequestMapping("/api/v1/auth")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RequiredArgsConstructor
 public class AuthController {
 

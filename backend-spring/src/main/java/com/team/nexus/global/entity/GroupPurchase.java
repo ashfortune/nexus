@@ -1,11 +1,10 @@
 package com.team.nexus.global.entity;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -50,4 +49,17 @@ public class GroupPurchase {
 
     @Column(name = "status", length = 20)
     private String status;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
+
+    @Column(name = "region", length = 100)
+    private String region;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "groupPurchase", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<GroupOrder> orders = new java.util.ArrayList<>();
 }

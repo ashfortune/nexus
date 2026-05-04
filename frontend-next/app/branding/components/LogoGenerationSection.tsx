@@ -141,10 +141,11 @@ export default function LogoGenerationSection({
             <button
               onClick={generateLogos}
               disabled={isGenerating}
-              className={`px-12 py-5 bg-[var(--nexus-primary)] text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-[var(--nexus-primary)]/20 hover:-translate-y-1 active:scale-95 ${isGenerating
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-[var(--nexus-primary-container)]'
-                }`}
+              className={`px-12 py-5 bg-[var(--nexus-primary)] text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-[var(--nexus-primary)]/20 hover:-translate-y-1 active:scale-95 ${
+                isGenerating
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-[var(--nexus-primary-container)]'
+              }`}
             >
               {isGenerating ? 'Analyzing Visual Patterns...' : 'Generate Logo Concepts'}
             </button>
@@ -227,10 +228,11 @@ export default function LogoGenerationSection({
                 <div key={logo.id} className={`group relative flex flex-col gap-4`}>
                   <div
                     onClick={() => setSelectedLogoId(logo.id)}
-                    className={`relative aspect-square cursor-pointer overflow-hidden rounded-[3.5rem] border-4 transition-all duration-700 p-2 ${selectedLogoId === logo.id
-                      ? 'border-[var(--nexus-primary)] bg-white shadow-[0_40px_80px_-20px_rgba(11,26,125,0.2)] -translate-y-3'
-                      : 'border-transparent bg-[var(--nexus-surface-low)] hover:border-[var(--nexus-outline-variant)]'
-                      }`}
+                    className={`relative aspect-square cursor-pointer overflow-hidden rounded-[3.5rem] border-4 transition-all duration-700 p-2 ${
+                      selectedLogoId === logo.id
+                        ? 'border-[var(--nexus-primary)] bg-white shadow-[0_40px_80px_-20px_rgba(11,26,125,0.2)] -translate-y-3'
+                        : 'border-transparent bg-[var(--nexus-surface-low)] hover:border-[var(--nexus-outline-variant)]'
+                    }`}
                   >
                     <div className="w-full h-full rounded-[3rem] overflow-hidden bg-white flex items-center justify-center p-12">
                       <img
@@ -356,10 +358,11 @@ export default function LogoGenerationSection({
           <button
             disabled={!selectedLogoId || isGenerating || isFinalizing}
             onClick={handleConfirmSelection}
-            className={`flex-1 md:flex-none flex items-center justify-center gap-3 px-12 py-5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-2xl active:scale-95 ${selectedLogoId && !isGenerating && !isFinalizing
-              ? 'bg-[var(--nexus-primary)] text-white hover:bg-[var(--nexus-primary-container)] shadow-[var(--nexus-primary)]/30'
-              : 'bg-gray-100 text-gray-300 cursor-not-allowed shadow-none'
-              }`}
+            className={`flex-1 md:flex-none flex items-center justify-center gap-3 px-12 py-5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-2xl active:scale-95 ${
+              selectedLogoId && !isGenerating && !isFinalizing
+                ? 'bg-[var(--nexus-primary)] text-white hover:bg-[var(--nexus-primary-container)] shadow-[var(--nexus-primary)]/30'
+                : 'bg-gray-100 text-gray-300 cursor-not-allowed shadow-none'
+            }`}
           >
             {isFinalizing ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

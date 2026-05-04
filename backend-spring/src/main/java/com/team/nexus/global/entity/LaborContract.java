@@ -58,4 +58,7 @@ public class LaborContract {
 
     @Column(name = "pdf_url", length = 500)
     private String pdfUrl;
+
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private java.time.LocalDateTime createdAt;
 }

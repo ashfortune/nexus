@@ -37,6 +37,12 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         Map<String, Object> attributes = oAuth2User.getAttributes();
         
+        try (java.io.FileWriter fw = new java.io.FileWriter("C:/nexus/oauth_debug.log", true)) {
+            fw.write(new java.util.Date() + " - CustomOAuth2UserService.loadUser started for: " + registrationId + "\n");
+        } catch (java.io.IOException e) {
+            log.error("Log file write error", e);
+        }
+        
         String email = "";
         String nickname = "";
         int loginType = 0; // 0: Local, 1: Google, 2: Kakao
@@ -54,6 +60,12 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         }
 
         saveOrUpdate(email, nickname, loginType);
+
+        try (java.io.FileWriter fw = new java.io.FileWriter("C:/nexus/oauth_debug.log", true)) {
+            fw.write(new java.util.Date() + " - CustomOAuth2UserService.loadUser completed for: " + email + "\n");
+        } catch (java.io.IOException e) {
+            log.error("Log file write error", e);
+        }
 
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
@@ -77,7 +89,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                     .passwd("") // 소셜 로그인은 비밀번호 없음
                     .userType(0) // 기본 일반 회원
                     .loginType(loginType)
-                    .address("") // 소셜 로그인은 주소 정보 없음 (나중에 입력 유도 가능)
+                    .address("") // 소셜 로그인은 주소 정보 없음
                     .build();
             userRepository.save(user);
         }

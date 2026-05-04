@@ -28,13 +28,13 @@ export default function InterviewSection({
     initialMessages && initialMessages.length > 0
       ? initialMessages
       : [
-        {
-          id: 1,
-          role: 'assistant',
-          content:
-            '안녕하세요 대표님! 어떤 비즈니스를 준비 중이신가요? 생각하고 계신 산업군이나 핵심 서비스를 간단히 설명해 주세요.',
-        },
-      ]
+          {
+            id: 1,
+            role: 'assistant',
+            content:
+              '안녕하세요 대표님! 어떤 비즈니스를 준비 중이신가요? 생각하고 계신 산업군이나 핵심 서비스를 간단히 설명해 주세요.',
+          },
+        ]
   );
   const [inputValue, setInputValue] = useState('');
   const [keywords, setKeywords] = useState<string[]>(initialKeywords || []);
@@ -173,10 +173,11 @@ export default function InterviewSection({
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] px-6 py-4 rounded-[2rem] text-sm leading-relaxed font-medium shadow-sm transition-all hover:shadow-md ${msg.role === 'user'
-                  ? 'bg-[var(--nexus-primary)] text-white rounded-tr-none'
-                  : 'bg-white text-[var(--nexus-on-bg)] rounded-tl-none border border-[var(--nexus-outline-variant)]/20'
-                  }`}
+                className={`max-w-[80%] px-6 py-4 rounded-[2rem] text-sm leading-relaxed font-medium shadow-sm transition-all hover:shadow-md ${
+                  msg.role === 'user'
+                    ? 'bg-[var(--nexus-primary)] text-white rounded-tr-none'
+                    : 'bg-white text-[var(--nexus-on-bg)] rounded-tl-none border border-[var(--nexus-outline-variant)]/20'
+                }`}
               >
                 {msg.content}
               </div>
@@ -283,10 +284,11 @@ export default function InterviewSection({
         <button
           onClick={handleCompleteInterview}
           disabled={!isFinished || isGeneratingBranding}
-          className={`w-full py-6 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all shadow-2xl flex items-center justify-center gap-4 group ${isFinished
-            ? 'bg-[var(--nexus-secondary)] text-white hover:bg-[var(--nexus-secondary-container)] shadow-[var(--nexus-secondary)]/30 hover:-translate-y-1 active:scale-95'
-            : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed shadow-none'
-            }`}
+          className={`w-full py-6 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all shadow-2xl flex items-center justify-center gap-4 group ${
+            isFinished
+              ? 'bg-[var(--nexus-secondary)] text-white hover:bg-[var(--nexus-secondary-container)] shadow-[var(--nexus-secondary)]/30 hover:-translate-y-1 active:scale-95'
+              : 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed shadow-none'
+          }`}
         >
           {isGeneratingBranding ? (
             <>

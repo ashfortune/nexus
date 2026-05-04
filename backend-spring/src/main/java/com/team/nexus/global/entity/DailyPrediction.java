@@ -1,11 +1,10 @@
 package com.team.nexus.global.entity;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -32,4 +31,13 @@ public class DailyPrediction {
 
     @Column(name = "pred_sales")
     private Integer predSales;
+
+    @Column(name = "actual_sales")
+    private Integer actualSales;
+
+    @Column(name = "moving_average")
+    private Double movingAverage;
+
+    @Column(name = "return_rate")
+    private Double returnRate;
 }

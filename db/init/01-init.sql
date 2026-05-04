@@ -16,7 +16,10 @@ CREATE TABLE users (
     biz_no VARCHAR(12),
     address VARCHAR(255),
     login_type INT DEFAULT 0, 
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    profile_image VARCHAR(255),
+    is_suspended BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE industry_categories (
@@ -25,7 +28,7 @@ CREATE TABLE industry_categories (
     parent_id   UUID REFERENCES industry_categories(id) ON DELETE SET NULL,
     level       SMALLINT NOT NULL, 
     ksic_code   VARCHAR(20),
-    embedding VECTOR(768),
+    embedding VECTOR(768),       
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -33,7 +36,9 @@ CREATE TABLE region_codes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     region_code INT NOT NULL,
     city_name VARCHAR(10) NOT NULL,
-    county_name VARCHAR(10) NOT NULL
+    county_name VARCHAR(10) NOT NULL,
+    latitude DECIMAL(13, 10),
+    longitude DECIMAL(13, 10)
 );
 
 ---------------------------------------
@@ -46,6 +51,7 @@ CREATE TABLE brandings (
     industry_category_id UUID NOT NULL REFERENCES industry_categories(id),
     title VARCHAR(100) NOT NULL,
     keywords JSONB,
+    chat_history JSONB,
     current_step VARCHAR(20) DEFAULT 'INTERVIEW',
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -135,6 +141,7 @@ CREATE TABLE sales (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     sales_date TIMESTAMPTZ NOT NULL,
     total_amount INT DEFAULT 0,
+    store_number VARCHAR(255),
     file_url VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -155,6 +162,8 @@ CREATE TABLE predictions (
     base_date TIMESTAMPTZ NOT NULL,
     total_sales INT,
     predicted_cost INT,
+    moving_average DOUBLE PRECISION,
+    return_rate DOUBLE PRECISION,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -163,7 +172,10 @@ CREATE TABLE daily_predictions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     prediction_id UUID NOT NULL REFERENCES predictions(id) ON DELETE CASCADE,
     target_date TIMESTAMPTZ NOT NULL,
-    pred_sales INT
+    pred_sales INT,
+    actual_sales INT,
+    moving_average DOUBLE PRECISION,
+    return_rate DOUBLE PRECISION
 );
 
 -- 리뷰 및 감성 분석 데이터
@@ -193,16 +205,30 @@ CREATE TABLE ai_reports (
 ---------------------------------------
 
 CREATE TABLE subsidies (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(200) NOT NULL,
-    organization VARCHAR(100) NOT NULL,
-    max_amount VARCHAR(50),
-    deadline VARCHAR(50),
-    description TEXT,
-    eligibility TEXT,
-    apply_url VARCHAR(500),
-    embedding VECTOR(1536), 
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    id              uuid                     default gen_random_uuid() not null
+        primary key,
+    name            varchar(200)                                       not null,
+    organization    varchar(100)                                       not null,
+    region          varchar(100),
+    industry        varchar(100),
+    min_age         smallint,
+    max_age         smallint,
+    max_amount      integer,
+    deadline        date,
+    start_date      date,
+    description     text,
+    support_content text,
+    target          text,
+    how_to_apply    text,
+    contact         text,
+    apply_url       text,
+    source_url      varchar(500)
+        unique,
+    embedding       vector(768),
+    is_active       boolean                  default true,
+    life_cycle      varchar(20),
+    created_at      timestamp with time zone default now(),
+    updated_at      timestamp with time zone default now()
 );
 
 CREATE TABLE equipment_prices (
@@ -288,7 +314,10 @@ CREATE TABLE group_purchases (
     current_count INT DEFAULT 1,
     start_date TIMESTAMPTZ DEFAULT NOW(),
     end_date TIMESTAMPTZ NOT NULL,
-    status VARCHAR(20) CHECK (status IN ('OPEN', 'SUCCESS', 'FAIL', 'CANCEL')) DEFAULT 'OPEN'
+    status VARCHAR(20) CHECK (status IN ('RECRUITING', 'SUCCESS', 'FAILED', 'COMPLETED', 'CANCEL')) DEFAULT 'RECRUITING',
+    description TEXT,
+    image_url TEXT,
+    region VARCHAR(100)
 );
 
 CREATE TABLE group_orders (
@@ -297,16 +326,22 @@ CREATE TABLE group_orders (
     user_id UUID NOT NULL REFERENCES users(id),
     order_count INT DEFAULT 1,
     total_price INT NOT NULL,
-    pg_provider VARCHAR(20) CHECK (pg_provider IN ('TOSS', 'KAKAO')),
-    pg_tid VARCHAR(200),
-    payment_method VARCHAR(50),
-    payment_status VARCHAR(20) CHECK (payment_status IN ('READY', 'PAID', 'CANCELLED', 'FAILED')) DEFAULT 'READY',
+    payment_provider VARCHAR(100),
+    payment_key TEXT,
+    payment_method VARCHAR(100),
+    payment_status VARCHAR(50),
     paid_at TIMESTAMPTZ
 );
 
 CREATE TABLE chat_rooms (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(100),
+    description TEXT,
+    image_url VARCHAR(500),
+    type VARCHAR(20) DEFAULT 'GROUP',
+    user_id UUID REFERENCES users(id),
+    password VARCHAR(255),
+    last_message_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -322,6 +357,34 @@ CREATE TABLE chat_messages (
     room_id UUID NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
-    is_read BOOLEAN DEFAULT FALSE,
+    type VARCHAR(20) DEFAULT 'TALK',
+    file_url TEXT,
+    file_name VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+---------------------------------------
+-- 7. 업종-KSIC 매핑 (소상공인진흥공단 ksic)
+---------------------------------------
+CREATE TABLE semas_industry_mappings (
+    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    semas_ksic_code      VARCHAR(20),
+    ksic_code            VARCHAR(20),
+    large_category_name  VARCHAR(100),
+    medium_category_name VARCHAR(100),
+    small_category_name  VARCHAR(100)
+);
+
+---------------------------------------
+-- 8. 행정 경계 (Administrative Boundaries)
+---------------------------------------
+
+CREATE TABLE IF NOT EXISTS administrative_boundaries (
+    id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    adm_cd   VARCHAR(20)  NOT NULL,
+    adm_nm   VARCHAR(100) NOT NULL,
+    boundary JSONB NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_administrative_boundaries_adm_cd
+    ON administrative_boundaries (adm_cd);

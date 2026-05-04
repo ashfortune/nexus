@@ -39,14 +39,10 @@ public class IndustryCategory {
     @Column(name = "ksic_code", length = 20)
     private String ksicCode;
 
+    @Transient
     @Column(name = "embedding", columnDefinition = "vector(768)")
     private double[] embedding;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", insertable = false, updatable = false)
     private java.time.LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = java.time.LocalDateTime.now();
-    }
 }

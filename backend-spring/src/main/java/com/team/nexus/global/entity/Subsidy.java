@@ -44,4 +44,7 @@ public class Subsidy {
 
     @Column(name = "embedding", columnDefinition = "vector")
     private double[] embedding;
+
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private java.time.LocalDateTime updatedAt;
 }

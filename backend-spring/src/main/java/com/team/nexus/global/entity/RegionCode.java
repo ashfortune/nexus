@@ -29,4 +29,11 @@ public class RegionCode {
 
     @Column(name = "county_name", nullable = false, length = 10)
     private String countyName;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
 }

@@ -68,7 +68,8 @@ public class AuthServiceImpl implements AuthService {
                 token,
                 user.getNickname(),
                 user.getUserType(),
-                user.getProfileImage());
+                user.getProfileImage()
+        );
     }
 
     @Override
