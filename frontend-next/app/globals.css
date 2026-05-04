@@ -1,26 +1,73 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--nexus-bg);
+  --foreground: var(--nexus-on-bg);
+
+  /* Hextech Blueprint Design System Tokens */
+  --nexus-bg: #f3faff;
+  --nexus-on-bg: #071e27;
+  --nexus-surface: #f3faff;
+  --nexus-surface-low: #e6f6ff;
+  --nexus-surface-lowest: #ffffff;
+  --nexus-surface-container: #dbf1fe;
+  --nexus-surface-container-high: #d5ecf8;
+  --nexus-surface-container-highest: #cfe6f2;
+  
+  --nexus-primary: #0b1a7d;
+  --nexus-on-primary: #ffffff;
+  --nexus-primary-container: #283593;
+  --nexus-on-primary-container: #9aa5ff;
+  
+  --nexus-secondary: #0060a8;
+  --nexus-on-secondary: #ffffff;
+  --nexus-secondary-container: #47a1ff;
+  --nexus-on-secondary-container: #003663;
+  
+  --nexus-tertiary: #003129;
+  --nexus-tertiary-container: #00493e;
+  --nexus-tertiary-fixed: #68fadd;
+  
+  --nexus-error: #ba1a1a;
+  --nexus-outline: #767683;
+  --nexus-outline-variant: #c6c5d4;
+  
+  --nexus-space-xs: 4px;
+  --nexus-space-sm: 8px;
+  --nexus-space-md: 16px;
+  --nexus-space-lg: 24px;
+  --nexus-space-xl: 48px;
+  --nexus-space-xxl: 80px;
+
+  --nexus-glass-bg: rgba(243, 250, 255, 0.7);
+  --nexus-glass-blur: 24px;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-manrope);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+}
+
+/* Base Utility Classes */
+.nexus-no-line {
+  border: none !important;
+}
+
+.nexus-glass {
+  background: var(--nexus-glass-bg);
+  backdrop-filter: blur(var(--nexus-glass-blur));
+  -webkit-backdrop-filter: blur(var(--nexus-glass-blur));
+}
+
+.nexus-card {
+  background: var(--nexus-surface-lowest);
+  border-radius: 16px;
 }

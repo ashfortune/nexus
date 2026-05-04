@@ -10,10 +10,12 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
-*.log
 .env
 .env*
+!.env.example
+render-env.env
 .vercel
+render-env.env
 
 # --- Frontend (Next.js) ---
 frontend-next/node_modules/
@@ -59,3 +61,17 @@ backend-fastapi/.installed.cfg
 backend-fastapi/*.egg
 backend-fastapi/lib/
 backend-fastapi/lib64/
+backend-fastapi/app/static/
+backend-fastapi/error_log.txt
+
+# --- Backend (Spring Boot) Additional ---
+backend-spring/uploads/
+
+# --- Docker ---
+docker-data/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

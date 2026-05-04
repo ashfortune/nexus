@@ -1,0 +1,1642 @@
+{
+  "region_codes": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "region_code",
+        "type": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "city_name",
+        "type": "VARCHAR(10)",
+        "nullable": false
+      },
+      {
+        "name": "county_name",
+        "type": "VARCHAR(10)",
+        "nullable": false
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": []
+  },
+  "users": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "nickname",
+        "type": "VARCHAR(255)",
+        "nullable": true
+      },
+      {
+        "name": "email",
+        "type": "VARCHAR(255)",
+        "nullable": false
+      },
+      {
+        "name": "passwd",
+        "type": "VARCHAR(255)",
+        "nullable": false
+      },
+      {
+        "name": "user_type",
+        "type": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "biz_no",
+        "type": "VARCHAR(12)",
+        "nullable": true
+      },
+      {
+        "name": "address",
+        "type": "VARCHAR(255)",
+        "nullable": true
+      },
+      {
+        "name": "login_type",
+        "type": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "access_token",
+        "type": "VARCHAR(255)",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": []
+  },
+  "industry_categories": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "parent_id",
+        "type": "UUID",
+        "nullable": true
+      },
+      {
+        "name": "level",
+        "type": "SMALLINT",
+        "nullable": false
+      },
+      {
+        "name": "ksic_code",
+        "type": "VARCHAR(20)",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "industry_categories_parent_id_fkey",
+        "constrained_columns": [
+          "parent_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "industry_categories",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "SET NULL"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "brandings": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "industry_category_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "title",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "keywords",
+        "type": "JSONB",
+        "nullable": true
+      },
+      {
+        "name": "current_step",
+        "type": "VARCHAR(20)",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "brandings_industry_category_id_fkey",
+        "constrained_columns": [
+          "industry_category_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "industry_categories",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {},
+        "comment": null
+      },
+      {
+        "name": "brandings_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "brand_identities": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "branding_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "brand_name",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "slogan",
+        "type": "VARCHAR(255)",
+        "nullable": true
+      },
+      {
+        "name": "brand_story",
+        "type": "TEXT",
+        "nullable": true
+      },
+      {
+        "name": "is_selected",
+        "type": "BOOLEAN",
+        "nullable": true
+      },
+      {
+        "name": "embedding",
+        "type": "NULL",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "brand_identities_branding_id_fkey",
+        "constrained_columns": [
+          "branding_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "brandings",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "logo_assets": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "identity_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "image_url",
+        "type": "TEXT",
+        "nullable": false
+      },
+      {
+        "name": "style_tag",
+        "type": "VARCHAR(50)",
+        "nullable": true
+      },
+      {
+        "name": "is_final",
+        "type": "BOOLEAN",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "logo_assets_identity_id_fkey",
+        "constrained_columns": [
+          "identity_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "brand_identities",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "license_industries": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "law_name",
+        "type": "VARCHAR(200)",
+        "nullable": false
+      },
+      {
+        "name": "law_article",
+        "type": "VARCHAR(100)",
+        "nullable": true
+      },
+      {
+        "name": "license_type",
+        "type": "VARCHAR(20)",
+        "nullable": false
+      },
+      {
+        "name": "department",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": []
+  },
+  "surveys": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "license_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "question",
+        "type": "VARCHAR(300)",
+        "nullable": false
+      },
+      {
+        "name": "order_num",
+        "type": "SMALLINT",
+        "nullable": false
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "surveys_license_id_fkey",
+        "constrained_columns": [
+          "license_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "license_industries",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "documents": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "license_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(200)",
+        "nullable": false
+      },
+      {
+        "name": "issuer",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "is_common",
+        "type": "BOOLEAN",
+        "nullable": false
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "documents_license_id_fkey",
+        "constrained_columns": [
+          "license_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "license_industries",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "condition_documents": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "survey_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "answer",
+        "type": "BOOLEAN",
+        "nullable": false
+      },
+      {
+        "name": "document_id",
+        "type": "UUID",
+        "nullable": false
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "condition_documents_document_id_fkey",
+        "constrained_columns": [
+          "document_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "documents",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {},
+        "comment": null
+      },
+      {
+        "name": "condition_documents_survey_id_fkey",
+        "constrained_columns": [
+          "survey_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "surveys",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "checklist_steps": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "license_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "order_num",
+        "type": "SMALLINT",
+        "nullable": false
+      },
+      {
+        "name": "place",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "task",
+        "type": "VARCHAR(300)",
+        "nullable": false
+      },
+      {
+        "name": "estimated_days",
+        "type": "VARCHAR(50)",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "checklist_steps_license_id_fkey",
+        "constrained_columns": [
+          "license_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "license_industries",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "license_industry_mappings": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "category_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "license_id",
+        "type": "UUID",
+        "nullable": false
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "license_industry_mappings_category_id_fkey",
+        "constrained_columns": [
+          "category_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "industry_categories",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {},
+        "comment": null
+      },
+      {
+        "name": "license_industry_mappings_license_id_fkey",
+        "constrained_columns": [
+          "license_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "license_industries",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {},
+        "comment": null
+      }
+    ]
+  },
+  "sales": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "sales_date",
+        "type": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "total_amount",
+        "type": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "file_url",
+        "type": "VARCHAR(255)",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "sales_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "sales_items": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "sale_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "item_name",
+        "type": "VARCHAR(255)",
+        "nullable": true
+      },
+      {
+        "name": "price",
+        "type": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "quantity",
+        "type": "INTEGER",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "sales_items_sale_id_fkey",
+        "constrained_columns": [
+          "sale_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sales",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "predictions": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "base_date",
+        "type": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "total_sales",
+        "type": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "predicted_cost",
+        "type": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "predictions_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "daily_predictions": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "prediction_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "target_date",
+        "type": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "pred_sales",
+        "type": "INTEGER",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "daily_predictions_prediction_id_fkey",
+        "constrained_columns": [
+          "prediction_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "predictions",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "reviews": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "content",
+        "type": "TEXT",
+        "nullable": true
+      },
+      {
+        "name": "tokens",
+        "type": "TEXT",
+        "nullable": true
+      },
+      {
+        "name": "sentiment_score",
+        "type": "DOUBLE PRECISION",
+        "nullable": true
+      },
+      {
+        "name": "sentiment_label",
+        "type": "VARCHAR(20)",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "reviews_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "ai_reports": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "evaluation_summary",
+        "type": "TEXT",
+        "nullable": true
+      },
+      {
+        "name": "report_file_url",
+        "type": "VARCHAR(255)",
+        "nullable": true
+      },
+      {
+        "name": "pos_ratio",
+        "type": "DOUBLE PRECISION",
+        "nullable": true
+      },
+      {
+        "name": "neg_ratio",
+        "type": "DOUBLE PRECISION",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "ai_reports_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "subsidies": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(200)",
+        "nullable": false
+      },
+      {
+        "name": "organization",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "max_amount",
+        "type": "VARCHAR(50)",
+        "nullable": true
+      },
+      {
+        "name": "deadline",
+        "type": "VARCHAR(50)",
+        "nullable": true
+      },
+      {
+        "name": "description",
+        "type": "TEXT",
+        "nullable": true
+      },
+      {
+        "name": "eligibility",
+        "type": "TEXT",
+        "nullable": true
+      },
+      {
+        "name": "apply_url",
+        "type": "VARCHAR(500)",
+        "nullable": true
+      },
+      {
+        "name": "embedding",
+        "type": "NULL",
+        "nullable": true
+      },
+      {
+        "name": "updated_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": []
+  },
+  "equipment_prices": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "industry_category_id",
+        "type": "UUID",
+        "nullable": true
+      },
+      {
+        "name": "equipment_kr",
+        "type": "VARCHAR(50)",
+        "nullable": false
+      },
+      {
+        "name": "equipment_eng",
+        "type": "VARCHAR(50)",
+        "nullable": false
+      },
+      {
+        "name": "price",
+        "type": "INTEGER",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "equipment_prices_industry_category_id_fkey",
+        "constrained_columns": [
+          "industry_category_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "industry_categories",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {},
+        "comment": null
+      }
+    ]
+  },
+  "labor_contracts": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": true
+      },
+      {
+        "name": "employer_name",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "employee_name",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "start_date",
+        "type": "DATE",
+        "nullable": false
+      },
+      {
+        "name": "workplace",
+        "type": "VARCHAR(200)",
+        "nullable": false
+      },
+      {
+        "name": "job_description",
+        "type": "VARCHAR(300)",
+        "nullable": false
+      },
+      {
+        "name": "daily_work_hours",
+        "type": "SMALLINT",
+        "nullable": false
+      },
+      {
+        "name": "weekly_work_days",
+        "type": "SMALLINT",
+        "nullable": false
+      },
+      {
+        "name": "hourly_wage",
+        "type": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "weekly_allowance",
+        "type": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "employee_type",
+        "type": "VARCHAR(20)",
+        "nullable": false
+      },
+      {
+        "name": "pdf_url",
+        "type": "VARCHAR(500)",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "labor_contracts_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "SET NULL"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "boards": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "title",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "content",
+        "type": "TEXT",
+        "nullable": true
+      },
+      {
+        "name": "region_name",
+        "type": "VARCHAR(20)",
+        "nullable": true
+      },
+      {
+        "name": "category_name",
+        "type": "VARCHAR(20)",
+        "nullable": true
+      },
+      {
+        "name": "view_count",
+        "type": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "image_url",
+        "type": "VARCHAR(255)",
+        "nullable": true
+      },
+      {
+        "name": "is_anonymous",
+        "type": "BOOLEAN",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "boards_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "comments": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "board_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "content",
+        "type": "TEXT",
+        "nullable": false
+      },
+      {
+        "name": "parent_comment_id",
+        "type": "UUID",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "comments_board_id_fkey",
+        "constrained_columns": [
+          "board_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "boards",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      },
+      {
+        "name": "comments_parent_comment_id_fkey",
+        "constrained_columns": [
+          "parent_comment_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "comments",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      },
+      {
+        "name": "comments_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "group_purchases": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "title",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "item_name",
+        "type": "VARCHAR(100)",
+        "nullable": false
+      },
+      {
+        "name": "item_price",
+        "type": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "target_count",
+        "type": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "current_count",
+        "type": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "start_date",
+        "type": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "end_date",
+        "type": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR(20)",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "group_purchases_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {},
+        "comment": null
+      }
+    ]
+  },
+  "group_orders": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "VARCHAR(50)",
+        "nullable": false
+      },
+      {
+        "name": "gp_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "order_count",
+        "type": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "total_price",
+        "type": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "pg_provider",
+        "type": "VARCHAR(20)",
+        "nullable": true
+      },
+      {
+        "name": "pg_tid",
+        "type": "VARCHAR(200)",
+        "nullable": true
+      },
+      {
+        "name": "payment_method",
+        "type": "VARCHAR(50)",
+        "nullable": true
+      },
+      {
+        "name": "payment_status",
+        "type": "VARCHAR(20)",
+        "nullable": true
+      },
+      {
+        "name": "paid_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "group_orders_gp_id_fkey",
+        "constrained_columns": [
+          "gp_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "group_purchases",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {},
+        "comment": null
+      },
+      {
+        "name": "group_orders_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {},
+        "comment": null
+      }
+    ]
+  },
+  "chat_rooms": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "title",
+        "type": "VARCHAR(100)",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": []
+  },
+  "chat_participants": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "room_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "joined_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "chat_participants_room_id_fkey",
+        "constrained_columns": [
+          "room_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "chat_rooms",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      },
+      {
+        "name": "chat_participants_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "chat_messages": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "room_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "content",
+        "type": "TEXT",
+        "nullable": false
+      },
+      {
+        "name": "is_read",
+        "type": "BOOLEAN",
+        "nullable": true
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "chat_messages_room_id_fkey",
+        "constrained_columns": [
+          "room_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "chat_rooms",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      },
+      {
+        "name": "chat_messages_user_id_fkey",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  },
+  "marketing_assets": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "identity_id",
+        "type": "UUID",
+        "nullable": false
+      },
+      {
+        "name": "type",
+        "type": "VARCHAR(20)",
+        "nullable": false
+      },
+      {
+        "name": "file_url",
+        "type": "TEXT",
+        "nullable": false
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "fks": [
+      {
+        "name": "marketing_assets_identity_id_fkey",
+        "constrained_columns": [
+          "identity_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "brand_identities",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "CASCADE"
+        },
+        "comment": null
+      }
+    ]
+  }
+}

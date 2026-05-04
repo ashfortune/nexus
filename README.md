@@ -77,7 +77,7 @@ backend-fastapi/
 | **Frontend** | Next.js | `16.2.1` | App Router, React 19, TypeScript |
 | **Styling** | Tailwind CSS | `v4.x` | 최신 유틸리티 엔진 |
 | **Backend (Core)** | Spring Boot | `3.3.4` | Java 17, Gradle |
-| **Backend (AI)** | FastAPI | `1.0.0` | Python 3.11+, .venv |
+| **Backend (AI)** | FastAPI | `1.0.0` | Python 3.10+, .venv |
 | **Database** | PostgreSQL | `16.x` | UUID-OSSP, Vector 지원 |
 | **Documentation** | Swagger / Redoc | - | OpenAPI 3.0 사양 |
 

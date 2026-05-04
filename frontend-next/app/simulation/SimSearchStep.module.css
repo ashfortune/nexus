@@ -1,0 +1,439 @@
+/* ═══════════════════════════════════════════════
+   SimSearchStep.module.css
+   창업 시뮬레이션 - 1단계 (검색 + 예시)
+═══════════════════════════════════════════════ */
+
+/* ── 전체 래퍼 ── */
+.wrapper {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 40%, #16213e 100%);
+  color: #fff;
+  font-family: "Inter", "Apple SD Gothic Neo", sans-serif;
+}
+
+/* ═══════════════ HERO SECTION ═══════════════ */
+.heroSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 72px 24px 64px;
+  text-align: center;
+}
+
+.heroBadge {
+  display: inline-block;
+  background: linear-gradient(90deg, #7c3aed, #4f46e5);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 16px;
+  border-radius: 999px;
+  margin-bottom: 20px;
+}
+
+.heroTitle {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0 0 16px;
+  color: #fff;
+}
+
+.heroAccent {
+  background: linear-gradient(90deg, #a78bfa, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroSub {
+  font-size: 1rem;
+  color: #94a3b8;
+  line-height: 1.7;
+  margin: 0 0 48px;
+}
+
+/* ── 검색 카드 ── */
+.searchCard {
+  width: 100%;
+  max-width: 780px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 36px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+}
+
+.fieldGroup {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #c4b5fd;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fieldIcon {
+  font-size: 1rem;
+}
+
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 1rem;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: #64748b;
+}
+
+.input:focus {
+  border-color: #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
+}
+
+.selectedBadge {
+  position: absolute;
+  right: 12px;
+  background: linear-gradient(90deg, #7c3aed, #4f46e5);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* ── 드롭다운 ── */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: #1e1b4b;
+  border: 1px solid rgba(124, 58, 237, 0.4);
+  border-radius: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.dropdownItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 0.92rem;
+  gap: 8px;
+}
+
+.dropdownItem:hover {
+  background: rgba(124, 58, 237, 0.25);
+}
+
+.dropdownName {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.dropdownCode {
+  color: #7c3aed;
+  font-size: 0.75rem;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.dropdownEmpty {
+  padding: 12px 14px;
+  color: #64748b;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* ── 제출 버튼 ── */
+.submitBtn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.25s;
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+
+.submitBtnActive {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.45);
+}
+
+.submitBtnActive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.6);
+}
+
+.submitBtnActive:active {
+  transform: translateY(0);
+}
+
+.submitBtnDisabled {
+  background: rgba(255, 255, 255, 0.07);
+  color: #475569;
+  cursor: not-allowed;
+}
+
+.btnArrow {
+  font-size: 1.1rem;
+  transition: transform 0.2s;
+}
+
+.submitBtnActive:hover .btnArrow {
+  transform: translateX(4px);
+}
+
+/* ── 로딩 스피너 ── */
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════ PREVIEW SECTION ═══════════════ */
+.previewSection {
+  background: #0d0d1a;
+  padding: 64px 24px 80px;
+}
+
+.previewHeader {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.previewTag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #7c3aed;
+  border: 1px solid rgba(124, 58, 237, 0.5);
+  padding: 3px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.previewTitle {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  margin: 0 0 10px;
+}
+
+.previewSub {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ── 그리드 카드 ── */
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 860px;
+  margin: 0 auto 48px;
+}
+
+.previewCard {
+  background: linear-gradient(145deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 28px;
+  transition: transform 0.25s, border-color 0.25s;
+}
+
+.previewCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(124, 58, 237, 0.4);
+}
+
+.previewCardIcon {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.previewCardTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.previewCardDesc {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.65;
+  margin-bottom: 20px;
+}
+
+/* 부동산 통계 */
+.previewStatRow {
+  display: flex;
+  gap: 12px;
+}
+
+.previewStat {
+  flex: 1;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.previewStatVal {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #a78bfa;
+  margin-bottom: 4px;
+}
+
+.previewStatKey {
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+/* 설비 태그 */
+.previewEquipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.previewEquipTag {
+  background: rgba(79, 70, 229, 0.15);
+  border: 1px solid rgba(79, 70, 229, 0.35);
+  color: #818cf8;
+  font-size: 0.78rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.previewTotalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 14px;
+  font-size: 0.88rem;
+  color: #94a3b8;
+}
+
+.previewTotalVal {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #60a5fa;
+}
+
+/* ── 단계 안내 ── */
+.stepsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepIcon {
+  width: 52px;
+  height: 52px;
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.stepLabel {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.stepArrow {
+  font-size: 1.5rem;
+  color: #7c3aed;
+  margin-bottom: 20px;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 640px) {
+  .searchCard {
+    padding: 24px 20px;
+  }
+
+  .heroTitle {
+    font-size: 1.8rem;
+  }
+
+  .previewGrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -10,7 +10,7 @@ import java.util.Map;
 
 @Tag(name = "Inter-Server Communication", description = "다른 서버(FastAPI 등)와 통신하는 API")
 @RestController
-@RequestMapping("/api/comm")
+@RequestMapping("/api/v1/comm")
 public class CommunicationController {
 
     private final FastApiClient fastApiClient;
