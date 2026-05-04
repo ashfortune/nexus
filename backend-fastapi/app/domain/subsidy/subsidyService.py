@@ -1,32 +1,64 @@
-import requests
 import os
 import re
-from datetime import date, timedelta, datetime
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
-from app.core.ai_client import GeminiClient
+from datetime import date, datetime, timedelta
+
+import requests
 from dotenv import load_dotenv
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.ai_client import GeminiClient
 
 load_dotenv()
 
 SMES_API_URL = "https://www.smes.go.kr/fnct/apiReqst/extPblancInfo"
 SMES_TOKEN = os.getenv("SMES_API_TOKEN")
 
+
 def get_embedding(text_input: str):
     return GeminiClient._local_model.encode(text_input).tolist()
 
 
 def extract_region_from_name(name: str) -> str | None:
-    match = re.match(r'^[\[\(]([^\]\)]+)[\]\)]', name)
+    match = re.match(r"^[\[\(]([^\]\)]+)[\]\)]", name)
     return match.group(1) if match else None
 
+
 REGION_KEYWORDS = [
-    "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종",
-    "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
-    "서울특별시", "부산광역시", "대구광역시", "인천광역시", "광주광역시",
-    "대전광역시", "울산광역시", "세종특별자치시", "경기도", "강원도",
-    "충청북도", "충청남도", "전라북도", "전라남도", "경상북도", "경상남도",
-    "제주특별자치도"
+    "서울",
+    "부산",
+    "대구",
+    "인천",
+    "광주",
+    "대전",
+    "울산",
+    "세종",
+    "경기",
+    "강원",
+    "충북",
+    "충남",
+    "전북",
+    "전남",
+    "경북",
+    "경남",
+    "제주",
+    "서울특별시",
+    "부산광역시",
+    "대구광역시",
+    "인천광역시",
+    "광주광역시",
+    "대전광역시",
+    "울산광역시",
+    "세종특별자치시",
+    "경기도",
+    "강원도",
+    "충청북도",
+    "충청남도",
+    "전라북도",
+    "전라남도",
+    "경상북도",
+    "경상남도",
+    "제주특별자치도",
 ]
 
 
@@ -109,6 +141,7 @@ def parse_subsidy(item: dict) -> tuple:
         "life_cycle": classify_life_cycle(item),
     }, source_url
 
+
 async def get_subsidy_by_id(db: AsyncSession, subsidy_id):
     result = await db.execute(
         text("""
@@ -118,17 +151,18 @@ async def get_subsidy_by_id(db: AsyncSession, subsidy_id):
              FROM subsidies
              WHERE id = :id
              """),
-        {"id": str(subsidy_id)}
+        {"id": str(subsidy_id)},
     )
     return result.fetchone()
 
+
 async def get_subsidies(
-        db: AsyncSession,
-        region: str = None,
-        query: str = None,
-        life_cycle: str = None,
-        page: int = 1,
-        size: int = 10
+    db: AsyncSession,
+    region: str = None,
+    query: str = None,
+    life_cycle: str = None,
+    page: int = 1,
+    size: int = 10,
 ):
     conditions = ["is_active = true"]
     params = {}
@@ -215,9 +249,9 @@ async def fetch_subsidies_from_api():
     today = date.today().strftime("%Y%m%d")
     params = {
         "token": SMES_TOKEN,
-        "strDt": yesterday, #초기 DB 저장시에는 strDt: "20200101" 돌리고 이후에는 yesterday로 변경
+        "strDt": yesterday,  # 초기 DB 저장시에는 strDt: "20200101" 돌리고 이후에는 yesterday로 변경
         "endDt": today,
-        "html": "no"
+        "html": "no",
     }
     try:
         response = requests.get(SMES_API_URL, params=params, timeout=120)
@@ -277,12 +311,7 @@ async def save_subsidy(data: dict, source_url: str, db: AsyncSession):
                     life_cycle = EXCLUDED.life_cycle,
                     updated_at = NOW()
             """),
-            {
-                **data,
-                "deadline": deadline,
-                "start_date": start_date,
-                "source_url": source_url
-            }
+            {**data, "deadline": deadline, "start_date": start_date, "source_url": source_url},
         )
         await db.commit()
         return True
@@ -293,8 +322,7 @@ async def save_subsidy(data: dict, source_url: str, db: AsyncSession):
 
 async def delete_expired_subsidies(db: AsyncSession):
     await db.execute(
-        text("DELETE FROM subsidies WHERE deadline < CAST(:today AS DATE)"),
-        {"today": date.today()}
+        text("DELETE FROM subsidies WHERE deadline < CAST(:today AS DATE)"), {"today": date.today()}
     )
     await db.commit()
     print("만료된 지원금 삭제 완료")

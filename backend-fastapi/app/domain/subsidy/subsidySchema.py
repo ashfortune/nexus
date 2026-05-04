@@ -1,7 +1,9 @@
-from pydantic import BaseModel
+from datetime import date
 from typing import Optional
 from uuid import UUID
-from datetime import date
+
+from pydantic import BaseModel
+
 
 class SubsidyFilterRequest(BaseModel):
     region: Optional[str] = None
@@ -9,6 +11,7 @@ class SubsidyFilterRequest(BaseModel):
     query: Optional[str] = None
     page: int = 1
     size: int = 10
+
 
 class SubsidyCardResponse(BaseModel):
     id: UUID
@@ -20,6 +23,7 @@ class SubsidyCardResponse(BaseModel):
     deadline: Optional[date]
     description: Optional[str]
     apply_url: Optional[str]
+
 
 class SubsidyDetailResponse(BaseModel):
     id: UUID
@@ -36,6 +40,7 @@ class SubsidyDetailResponse(BaseModel):
     how_to_apply: Optional[str]
     contact: Optional[str]
     apply_url: Optional[str]
+
 
 class SubsidyListResponse(BaseModel):
     total: int
