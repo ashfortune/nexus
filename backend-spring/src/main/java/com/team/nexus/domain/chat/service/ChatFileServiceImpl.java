@@ -1,12 +1,10 @@
 package com.team.nexus.domain.chat.service;
 
-import com.team.nexus.global.util.SupabaseStorageUtil;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,14 +13,17 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ChatFileServiceImpl implements ChatFileService {
 
-    @Value("${supabase.storage-type:LOCAL}")
-    private String storageType;
-
-    private final SupabaseStorageUtil supabaseStorageUtil;
     private final String uploadPath = "uploads/";
+
+    public ChatFileServiceImpl() {
+        // 업로드 루트 폴더 생성
+        File directory = new File(uploadPath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+    }
 
     @Override
     public String uploadFile(MultipartFile file, String category) {
@@ -30,52 +31,35 @@ public class ChatFileServiceImpl implements ChatFileService {
             throw new IllegalArgumentException("파일이 비어있습니다.");
         }
 
-        // 설정에 따라 저장 방식 선택
-        if ("SUPABASE".equalsIgnoreCase(storageType)) {
-            return uploadToSupabase(file, category);
-        } else {
-            return uploadToLocal(file, category);
-        }
-    }
-
-    private String uploadToSupabase(MultipartFile file, String category) {
-        try {
-            String folder = "chat";
-            if (category != null && !category.isEmpty()) {
-                folder += "/" + category;
-            }
-            String publicUrl = supabaseStorageUtil.uploadFile(file, folder);
-            log.info("File uploaded successfully to Supabase: {}", publicUrl);
-            return publicUrl;
-        } catch (Exception e) {
-            log.error("Failed to upload to Supabase", e);
-            throw new RuntimeException("Supabase 업로드 중 오류 발생");
-        }
-    }
-
-    private String uploadToLocal(MultipartFile file, String category) {
         try {
             String originalFilename = file.getOriginalFilename();
-            String extension = (originalFilename != null && originalFilename.contains(".")) ? 
-                               originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            
             String savedFilename = UUID.randomUUID().toString() + extension;
             
+            // 카테고리(폴더) 경로 설정
             Path rootPath = Paths.get(uploadPath).toAbsolutePath().normalize();
             Path targetDir = (category != null && !category.isEmpty()) ? rootPath.resolve(category) : rootPath;
             
+            // 폴더가 없으면 생성
             if (!Files.exists(targetDir)) {
                 Files.createDirectories(targetDir);
             }
-            
+
             Path filePath = targetDir.resolve(savedFilename);
-            Files.write(filePath, file.getBytes());
             
-            log.info("File uploaded successfully to local: {}", filePath);
+            Files.write(filePath, file.getBytes());
+            log.info("File uploaded successfully to: {}", filePath);
+            
+            // 브라우저에서 접근 가능한 URL 경로 반환
             String subPath = (category != null && !category.isEmpty()) ? category + "/" : "";
             return "/api/v1/chat/files/display/" + subPath + savedFilename;
         } catch (IOException e) {
-            log.error("Failed to upload to local", e);
-            throw new RuntimeException("로컬 업로드 중 오류 발생");
+            log.error("Failed to upload file", e);
+            throw new RuntimeException("파일 업로드 중 오류가 발생했습니다.");
         }
     }
 }
