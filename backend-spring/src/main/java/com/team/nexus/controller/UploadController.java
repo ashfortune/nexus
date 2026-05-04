@@ -69,17 +69,12 @@ public class UploadController {
         return handleUpload("chat", files);
     }
 
-    @Operation(summary = "브랜딩 에셋 업로드")
-    @PostMapping("/branding")
-    public ResponseEntity<Map<String, Object>> uploadBrandingAssets(@RequestParam("files") List<MultipartFile> files) {
-        return handleUpload("branding", files);
-    }
-
     private ResponseEntity<Map<String, Object>> handleUpload(String folder, List<MultipartFile> files) {
         List<String> urls = new ArrayList<>();
-        
+
         for (MultipartFile file : files) {
-            if (file.isEmpty()) continue;
+            if (file.isEmpty())
+                continue;
 
             try {
                 String originalFilename = file.getOriginalFilename();
@@ -90,18 +85,22 @@ public class UploadController {
 
                 String uniqueFilename = UUID.randomUUID().toString() + extension;
                 String storagePath = folder + "/" + uniqueFilename;
-                String uploadUrl = String.format("%s/storage/v1/object/%s/%s", supabaseUrl, supabaseBucket, storagePath);
+                String uploadUrl = String.format("%s/storage/v1/object/%s/%s", supabaseUrl, supabaseBucket,
+                        storagePath);
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.set("apikey", supabaseKey);
                 headers.set("Authorization", "Bearer " + supabaseKey);
-                headers.setContentType(MediaType.valueOf(file.getContentType() != null ? file.getContentType() : "image/jpeg"));
+                headers.setContentType(
+                        MediaType.valueOf(file.getContentType() != null ? file.getContentType() : "image/jpeg"));
 
                 HttpEntity<byte[]> entity = new HttpEntity<>(file.getBytes(), headers);
-                ResponseEntity<String> response = restTemplate.exchange(uploadUrl, HttpMethod.POST, entity, String.class);
+                ResponseEntity<String> response = restTemplate.exchange(uploadUrl, HttpMethod.POST, entity,
+                        String.class);
 
                 if (response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED) {
-                    urls.add(String.format("%s/storage/v1/object/public/%s/%s", supabaseUrl, supabaseBucket, storagePath));
+                    urls.add(String.format("%s/storage/v1/object/public/%s/%s", supabaseUrl, supabaseBucket,
+                            storagePath));
                 }
             } catch (Exception e) {
                 log.error("Upload failed for file: {}", file.getOriginalFilename(), e);
@@ -111,7 +110,6 @@ public class UploadController {
         return ResponseEntity.ok(Map.of(
                 "status", "success",
                 "message", urls.size() + "개의 파일이 업로드되었습니다.",
-                "urls", urls
-        ));
+                "urls", urls));
     }
 }
