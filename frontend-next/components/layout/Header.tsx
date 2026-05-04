@@ -30,9 +30,9 @@ const MENU_DATA = [
     title: '커뮤니티',
     hasSub: true,
     subMenu: [
-      { name: '자유 게시판', href: '/' },
-      { name: '지역별 게시판', href: '/' },
-      { name: '업종별 게시판', href: '/' },
+      { name: '자유 게시판', href: '/board' },
+      { name: '지역별 게시판', href: '/region-board' },
+      { name: '업종별 게시판', href: '/industry-board' },
       { name: '전문가 매칭', href: '/' },
     ],
   },
