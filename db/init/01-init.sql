@@ -339,3 +339,17 @@ CREATE TABLE semas_industry_mappings (
     medium_category_name VARCHAR(100),
     small_category_name  VARCHAR(100)
 );
+
+---------------------------------------
+-- 8. 행정 경계 (Administrative Boundaries)
+---------------------------------------
+
+CREATE TABLE IF NOT EXISTS administrative_boundaries (
+    id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    adm_cd   VARCHAR(20)  NOT NULL,
+    adm_nm   VARCHAR(100) NOT NULL,
+    boundary JSONB NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_administrative_boundaries_adm_cd
+    ON administrative_boundaries (adm_cd);

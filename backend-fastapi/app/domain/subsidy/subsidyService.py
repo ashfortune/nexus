@@ -20,6 +20,15 @@ def extract_region_from_name(name: str) -> str | None:
     match = re.match(r'^[\[\(]([^\]\)]+)[\]\)]', name)
     return match.group(1) if match else None
 
+REGION_KEYWORDS = [
+    "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종",
+    "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
+    "서울특별시", "부산광역시", "대구광역시", "인천광역시", "광주광역시",
+    "대전광역시", "울산광역시", "세종특별자치시", "경기도", "강원도",
+    "충청북도", "충청남도", "전라북도", "전라남도", "경상북도", "경상남도",
+    "제주특별자치도"
+]
+
 
 def classify_life_cycle(item: dict) -> str:
     keywords_map = {
@@ -125,8 +134,34 @@ async def get_subsidies(
     params = {}
 
     if region:
-        conditions.append("(region ILIKE :region OR region IS NULL)")
+        region_text_expr = """
+            COALESCE(region, '') || ' ' ||
+            COALESCE(name, '') || ' ' ||
+            COALESCE(description, '') || ' ' ||
+            COALESCE(support_content, '') || ' ' ||
+            COALESCE(target, '')
+        """
+
+        other_region_conditions = []
+        for idx, keyword in enumerate(REGION_KEYWORDS):
+            if keyword == region:
+                continue
+
+            key = f"region_kw_{idx}"
+            other_region_conditions.append(f"{region_text_expr} NOT ILIKE :{key}")
+            params[key] = f"%{keyword}%"
+
+        no_other_region_sql = " AND ".join(other_region_conditions)
+
+        conditions.append(f"""
+            (
+                {region_text_expr} ILIKE :region
+                OR {region_text_expr} ILIKE :nationwide
+                OR ({no_other_region_sql})
+            )
+        """)
         params["region"] = f"%{region}%"
+        params["nationwide"] = "%전국%"
 
     if life_cycle:
         conditions.append("life_cycle = :life_cycle")
@@ -137,7 +172,20 @@ async def get_subsidies(
     if query:
         query_embedding = get_embedding(query)
         embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
-        order = f"ORDER BY embedding <=> '{embedding_str}'::vector"
+
+        order = f"""
+            ORDER BY
+                CASE
+                    WHEN name ILIKE :query_exact THEN 0
+                    WHEN support_content ILIKE :query_exact THEN 1
+                    WHEN description ILIKE :query_exact THEN 2
+                    WHEN target ILIKE :query_exact THEN 3
+                    ELSE 4
+                END,
+                embedding <=> '{embedding_str}'::vector
+        """
+
+        params["query_exact"] = f"%{query}%"
     else:
         order = "ORDER BY deadline ASC NULLS LAST"
 

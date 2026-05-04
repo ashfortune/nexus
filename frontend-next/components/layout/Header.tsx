@@ -10,12 +10,12 @@ const MENU_DATA = [
     subMenu: [{ name: '창업 비용 시뮬레이션', href: '/simulation' },
     { name: '상권 분석 지도', href: '/store-map' }]
   },
-  { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/' },
+  { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/subsidy' },
   { id: 'creative', title: 'AI 브랜딩', hasSub: false, href: '/branding' },
   {
     id: 'compliance', title: '창업 가이드', hasSub: true,
-    subMenu: [{ name: '서류 가이드', href: '/' },
-    { name: '고용 가이드', href: '/' }]
+    subMenu: [{ name: '서류 가이드', href: '/license' },
+    { name: '고용 가이드', href: '/worker' }]
   },
   {
     id: 'community', title: '커뮤니티', hasSub: true,
