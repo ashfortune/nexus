@@ -61,7 +61,9 @@ export default function BoardPage() {
 
   useEffect(() => {
     fetchPosts(currentPage, activeTab, searchQuery, searchType, selectedRegion);
-  }, [cu  const fetchPosts = async (page: number, tab: 'all' | 'popular' = 'all', keyword: string = "", type: string = "all", region: string = "gyeonggi") => {
+  }, [currentPage, activeTab, searchQuery, searchType, selectedRegion]);
+
+  const fetchPosts = async (page: number, tab: 'all' | 'popular' = 'all', keyword: string = "", type: string = "all", region: string = "gyeonggi") => {
     setIsLoading(true);
     try {
       const regionName = regions.find(r => r.id === region)?.name || "경기도";
@@ -84,11 +86,6 @@ export default function BoardPage() {
       console.error("Failed to fetch posts:", error);
       setPosts([]);
       setTotalPages(1);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-setTotalPages(1);
     } finally {
       setIsLoading(false);
     }

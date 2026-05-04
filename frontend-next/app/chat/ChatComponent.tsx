@@ -1,5 +1,8 @@
 'use client';
 
+import { api } from '@/lib/api';
+import { useAuthStore } from '@/store/useAuthStore';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -15,7 +18,7 @@ import {
   ChevronLeft,
   Smile,
   Paperclip,
-  Image as ImageIcon,
+  ImageIcon,
   MessageSquare,
   File,
   Download,
@@ -67,8 +70,6 @@ const ChatComponent = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isConnected, setIsConnected] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [currentNickname, setCurrentNickname] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -98,36 +99,27 @@ const ChatComponent = () => {
   const chatServiceRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 1. 초기화: 로컬 스토리지에서 사용자 정보 로드
   const router = useRouter();
+  const { user } = useAuthStore.getState();
+  const currentUserId = user?.id;
+  const currentNickname = user?.nickname || '익명';
 
+  // 1. 초기화: 사용자 정보 로드
   useEffect(() => {
-    const initAuth = () => {
-      const storedUserId = localStorage.getItem('userId');
-      const storedNickname = localStorage.getItem('nickname');
-
-      if (storedUserId) {
-        setCurrentUserId(storedUserId);
-        setCurrentNickname(storedNickname || '익명');
-        fetchMyRooms(storedUserId);
-      } else {
-        // 로그인이 안 되어 있으면 로그인 페이지로 리다이렉트
-        router.push('/auth/login');
-      }
-      setIsLoading(false);
-    };
-
-    initAuth();
-    window.addEventListener('storage', initAuth);
-    return () => window.removeEventListener('storage', initAuth);
-  }, [router]);
+    if (currentUserId) {
+      fetchMyRooms(currentUserId);
+    } else {
+      router.push('/auth/login');
+    }
+    setIsLoading(false);
+  }, [currentUserId, router]);
 
   // 2. 초기 데이터 로드 (내 채팅방 목록)
   const fetchMyRooms = async (userId: string) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/mine?userId=${userId}`
-      );
+      const response = await api.get('/api/v1/chat/rooms/mine', {
+        params: { userId }
+      });
       if (response.ok) {
         const data = await response.json();
         setRooms(data);
@@ -143,7 +135,7 @@ const ChatComponent = () => {
 
   const fetchAllRooms = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms`);
+      const response = await api.get('/api/v1/chat/rooms');
       if (response.ok) {
         const data = await response.json();
         setAllRooms(data);
@@ -162,13 +154,12 @@ const ChatComponent = () => {
     if (!currentUserId || !joiningRoom) return;
 
     try {
-      const passwordParam = joinPassword ? `&password=${joinPassword}` : '';
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/${joiningRoom.id}/join?userId=${currentUserId}${passwordParam}`,
-        {
-          method: 'POST',
-        }
-      );
+      const params: Record<string, string> = { userId: currentUserId };
+      if (joinPassword) params.password = joinPassword;
+
+      const response = await api.post(`/api/v1/chat/rooms/${joiningRoom.id}/join`, null, {
+        params
+      });
       if (response.ok) {
         await fetchMyRooms(currentUserId);
         setActiveRoomId(joiningRoom.id);
@@ -195,12 +186,9 @@ const ChatComponent = () => {
     if (!activeRoomId || !currentUserId) return;
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/${activeRoomId}/leave?userId=${currentUserId}`,
-        {
-          method: 'POST',
-        }
-      );
+      const response = await api.post(`/api/v1/chat/rooms/${activeRoomId}/leave`, null, {
+        params: { userId: currentUserId }
+      });
       if (response.ok) {
         await fetchMyRooms(currentUserId);
         setActiveRoomId(null);
@@ -270,9 +258,9 @@ const ChatComponent = () => {
   const fetchMessages = async (roomId: string) => {
     if (!currentUserId) return;
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/${roomId}/messages?userId=${currentUserId}`
-      );
+      const response = await api.get(`/api/v1/chat/rooms/${roomId}/messages`, {
+        params: { userId: currentUserId }
+      });
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
@@ -318,17 +306,13 @@ const ChatComponent = () => {
         }
       }
 
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/chat/rooms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: newRoomTitle,
-          type: newRoomType,
-          description: newRoomDescription,
-          imageUrl: finalImageUrl,
-          creatorId: currentUserId,
-          password: newRoomPassword,
-        }),
+      const response = await api.post('/api/v1/chat/rooms', {
+        title: newRoomTitle,
+        type: newRoomType,
+        description: newRoomDescription,
+        imageUrl: finalImageUrl,
+        creatorId: currentUserId,
+        password: newRoomPassword,
       });
 
       if (response.ok) {
@@ -356,9 +340,7 @@ const ChatComponent = () => {
   const fetchInviteCandidates = async () => {
     if (!activeRoomId) return;
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/${activeRoomId}/invite-candidates`
-      );
+      const response = await api.get(`/api/v1/chat/rooms/${activeRoomId}/invite-candidates`);
       if (response.ok) {
         const data = await response.json();
         setInviteCandidates(data);
@@ -374,14 +356,7 @@ const ChatComponent = () => {
 
     setIsInviting(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/rooms/${activeRoomId}/invite`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(selectedUserIds),
-        }
-      );
+      const response = await api.post(`/api/v1/chat/rooms/${activeRoomId}/invite`, selectedUserIds);
 
       if (response.ok) {
         alert('성공적으로 초대되었습니다.');
@@ -425,13 +400,10 @@ const ChatComponent = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_API_URL + '/api/v1/chat/files/upload?category=chat-rooms',
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
+      const response = await api.post('/api/v1/chat/files/upload', formData, {
+        params: { category: 'chat-rooms' },
+        headers: {} // Forcing FormData boundary logic
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -447,9 +419,7 @@ const ChatComponent = () => {
 
   const handleFileMessageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    // console.log("File selected:", file);
     if (!file || !activeRoomId || !currentUserId || !chatServiceRef.current) {
-      // console.log("Missing required data:", { file, activeRoomId, currentUserId, connected: !!chatServiceRef.current });
       return;
     }
 
@@ -458,29 +428,16 @@ const ChatComponent = () => {
 
     try {
       console.log('Uploading file...');
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_API_URL + '/api/v1/chat/files/upload?category=chat-messages',
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
+      const response = await api.post('/api/v1/chat/files/upload', formData, {
+        params: { category: 'chat-messages' },
+        headers: {}
+      });
 
       if (response.ok) {
         const data = await response.json();
-        // console.log("Upload success:", data);
         const fileUrl = data.url;
         const fileName = file.name;
         const isImage = file.type.startsWith('image/');
-
-        /* console.log("Sending file message:", {
-          activeRoomId,
-          currentUserId,
-          text: isImage ? '사진을 보냈습니다.' : `파일을 보냈습니다: ${fileName}`,
-          type: isImage ? 'IMAGE' : 'FILE',
-          fileUrl,
-          fileName
-        }); */
 
         chatServiceRef.current.sendMessage(
           activeRoomId,
@@ -491,7 +448,6 @@ const ChatComponent = () => {
           fileName
         );
       } else {
-        console.error('Upload failed with status:', response.status);
         alert('파일 업로드에 실패했습니다.');
       }
     } catch (error) {

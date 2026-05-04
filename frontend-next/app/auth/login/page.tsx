@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, Mail, Eye, EyeOff, ChevronRight, AlertCircle } from 'lucide-react';
@@ -44,51 +45,41 @@ export default function LoginPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const response = await fetch(apiUrl + '/api/v1/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
+      const response = await api.post('/api/v1/auth/login', data);
       const result = await response.json();
-      // console.log("Login Result:", result);
 
       if (response.ok && result.status === 'success') {
-        const data = result.data;
-        const accessToken = data.accessToken;
-        const nickname = data.nickname;
-        const userId = data.userId || data.id; // fallback to 'id' if 'userId' is missing
+        const authData = result.data;
+        const accessToken = authData.accessToken;
+        const nickname = authData.nickname;
+        const userId = authData.userId || authData.id;
 
         if (!userId) {
-          console.error('User ID is missing in the response:', data);
+          console.error('User ID is missing in the response:', authData);
         }
 
         // Zustand 스토어에 인증 정보 저장 (localStorage 저장은 persist 미들웨어가 자동 처리)
         setAuth({
           id: userId,
-          email: data.email || '',
+          email: authData.email || '',
           nickname: nickname,
-          userType: Number(data.userType),
-          profileImage: data.profileImage || ''
+          userType: Number(authData.userType),
+          profileImage: authData.profileImage || ''
         }, accessToken);
 
-        // 기존의 수동 localStorage 저장 로직 제거
-        localStorage.setItem('accessToken', accessToken); // 기존 호환성을 위해 토큰만 유지 (필요 시)
+        // 기존 호환성을 위해 localStorage에 직접 저장 (필요한 경우에만 유지)
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('userId', userId);
+        localStorage.setItem('nickname', nickname);
 
         // 페이지 이동
         router.push('/');
-        router.refresh(); // 최신 상태 반영을 위해 권장
+        router.refresh(); 
       } else {
-        // 서버 응답이 에러인 경우 (4xx, 5xx)
-        const msg =
-          result.message || '로그인 중 오류가 발생했습니다. 이메일과 비밀번호를 확인해 주세요.';
+        const msg = result.message || '로그인 중 오류가 발생했습니다. 이메일과 비밀번호를 확인해 주세요.';
         setErrorMessage(msg);
       }
     } catch (error: any) {
-      // 네트워크 오류 또는 기타 예외 상황
       setErrorMessage('서버와 통신 중 오류가 발생했습니다. 네트워크 상태를 확인해 주세요.');
     } finally {
       setIsLoading(false);

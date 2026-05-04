@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import InterviewSection from '../components/InterviewSection';
@@ -28,8 +29,7 @@ function BrandingPageContent() {
     if (resumeId) {
       const fetchResumeData = async () => {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/branding/${resumeId}`);
-          if (!res.ok) throw new Error('Failed to fetch resume data');
+          const res = await api.get(`/api/v1/branding/${resumeId}`);
           const data = await res.json();
           // 상태 및 데이터 복구
           const recoveredData: any = {

@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import { useState } from 'react';
 import {
   Sparkles,
@@ -14,7 +15,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-const FASTAPI_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
 
 const INDUSTRIES = [
   '노래연습장업',
@@ -53,6 +53,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
   const isSeoul = admCd ? admCd.startsWith('11') : true;
   const canSubmit = industry && admCd && openYear && openMonth && !isLoading && isSeoul;
 
+
   const handlePredict = async () => {
     if (!canSubmit) return;
     setIsLoading(true);
@@ -63,25 +64,21 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
     const openDate = `${openYear}-${openMonth.padStart(2, '0')}-01`;
 
     try {
-      const res = await fetch(`${FASTAPI_BASE_URL}/api/v1/ai/simulation/market-prediction`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          industry,
-          adm_cd: admCd,
-          open_date: openDate,
-        }),
+      const res = await api.post('/api/v1/ai/simulation/market-prediction', {
+        industry,
+        adm_cd: admCd,
+        open_date: openDate,
+      }, {
+        baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000'
       });
 
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.detail ?? '예측 오류');
       }
-      // MarketPredSection.tsx handlePredict 안에 임시로 추가
-      console.log('adm_cd:', admCd);
-      console.log('dongs:', dongs);
-
-      setResult(await res.json());
+      
+      const data = await res.json();
+      setResult(data);
     } catch (e: any) {
       setError(e.message ?? '서버 오류가 발생했습니다.');
     } finally {

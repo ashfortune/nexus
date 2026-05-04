@@ -1,28 +1,22 @@
+import { api } from '@/lib/api';
 import type { SubsidyDetail, SubsidyFilterRequest, SubsidyListResponse } from './subsidyTypes';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
+const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
 
 export async function fetchSubsidies(payload: SubsidyFilterRequest) {
-  const res = await fetch(`${API_BASE_URL}/api/v1/ai/subsidy/recommend`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
+  const res = await api.post('/api/v1/ai/subsidy/recommend', payload, {
+    baseUrl: FASTAPI_URL,
     cache: 'no-store',
-  });
-
-  if (!res.ok) throw new Error('지원금 목록을 불러오지 못했습니다.');
+  } as any); // cache is not in RequestOptions but handled by fetch options spread
 
   return res.json();
 }
 
 export async function fetchSubsidyDetail(id: string) {
-  const res = await fetch(`${API_BASE_URL}/api/v1/ai/subsidy/detail/${id}`, {
+  const res = await api.get(`/api/v1/ai/subsidy/detail/${id}`, {
+    baseUrl: FASTAPI_URL,
     cache: 'no-store',
-  });
-
-  if (!res.ok) throw new Error('지원금 상세 정보를 불러오지 못했습니다.');
+  } as any);
 
   return res.json();
 }

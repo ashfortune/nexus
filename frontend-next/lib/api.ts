@@ -1,51 +1,59 @@
 import { useAuthStore } from '@/store/useAuthStore';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string>;
+  baseUrl?: string;
 }
 
 /**
  * 모든 API 요청을 처리하는 베이스 함수입니다.
- * 1. 환경변수 기반의 BASE_URL을 적용합니다.
- * 2. useAuthStore에서 토큰을 자동으로 읽어와 Bearer 헤더에 추가합니다.
- * 3. FormData가 아닐 경우 기본 Content-Type을 application/json으로 설정합니다.
  */
 async function request(path: string, options: RequestOptions = {}) {
-  const { token } = useAuthStore.getState();
+  const { token, clearAuth } = useAuthStore.getState();
+  const { baseUrl, params, ...fetchOptions } = options;
   
-  const headers = new Headers(options.headers);
+  const headers = new Headers(fetchOptions.headers);
   
-  // 토큰이 존재하면 Authorization 헤더에 추가
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  // FormData가 아닐 때만 Content-Type을 application/json으로 설정
-  if (!(options.body instanceof FormData) && !headers.has('Content-Type')) {
+  if (!(fetchOptions.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
-  // URL 생성 (파라미터 포함)
-  const url = new URL(`${BASE_URL}${path}`);
-  if (options.params) {
-    Object.keys(options.params).forEach(key => 
-      url.searchParams.append(key, options.params![key])
+  // URL 생성
+  const base = baseUrl || DEFAULT_BASE_URL;
+  const url = path.startsWith('http') ? new URL(path) : new URL(`${base}${path}`);
+  
+  if (params) {
+    Object.keys(params).forEach(key => 
+      url.searchParams.append(key, params[key])
     );
   }
 
   try {
     const response = await fetch(url.toString(), {
-      ...options,
+      ...fetchOptions,
       headers,
     });
 
-    // 401 Unauthorized 처리 (세션 만료 등)
     if (response.status === 401) {
-      console.warn('인증이 만료되었거나 권한이 없습니다.');
-      // 필요 시 이곳에서 로그아웃 처리 및 로그인 페이지 리다이렉트 가능
-      // useAuthStore.getState().clearAuth();
+      console.warn('인증이 만료되었거나 권한이 없습니다. 로그아웃 처리합니다.');
+      clearAuth();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/auth/login';
+      }
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.message || `API 요청 실패: ${response.status}`);
+      (error as any).status = response.status;
+      (error as any).data = errorData;
+      throw error;
     }
 
     return response;
@@ -63,14 +71,14 @@ export const api = {
     request(path, { 
       ...options, 
       method: 'POST', 
-      body: body instanceof FormData ? body : JSON.stringify(body) 
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)
     }),
     
   put: (path: string, body?: any, options?: RequestOptions) => 
     request(path, { 
       ...options, 
       method: 'PUT', 
-      body: body instanceof FormData ? body : JSON.stringify(body) 
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)
     }),
     
   delete: (path: string, options?: RequestOptions) => 
