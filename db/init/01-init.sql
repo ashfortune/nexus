@@ -205,16 +205,30 @@ CREATE TABLE ai_reports (
 ---------------------------------------
 
 CREATE TABLE subsidies (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(200) NOT NULL,
-    organization VARCHAR(100) NOT NULL,
-    max_amount VARCHAR(50),
-    deadline VARCHAR(50),
-    description TEXT,
-    eligibility TEXT,
-    apply_url VARCHAR(500),
-    embedding VECTOR(1536), 
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    id              uuid                     default gen_random_uuid() not null
+        primary key,
+    name            varchar(200)                                       not null,
+    organization    varchar(100)                                       not null,
+    region          varchar(100),
+    industry        varchar(100),
+    min_age         smallint,
+    max_age         smallint,
+    max_amount      integer,
+    deadline        date,
+    start_date      date,
+    description     text,
+    support_content text,
+    target          text,
+    how_to_apply    text,
+    contact         text,
+    apply_url       text,
+    source_url      varchar(500)
+        unique,
+    embedding       vector(768),
+    is_active       boolean                  default true,
+    life_cycle      varchar(20),
+    created_at      timestamp with time zone default now(),
+    updated_at      timestamp with time zone default now()
 );
 
 CREATE TABLE equipment_prices (
@@ -343,3 +357,17 @@ CREATE TABLE semas_industry_mappings (
     medium_category_name VARCHAR(100),
     small_category_name  VARCHAR(100)
 );
+
+---------------------------------------
+-- 8. 행정 경계 (Administrative Boundaries)
+---------------------------------------
+
+CREATE TABLE IF NOT EXISTS administrative_boundaries (
+    id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    adm_cd   VARCHAR(20)  NOT NULL,
+    adm_nm   VARCHAR(100) NOT NULL,
+    boundary JSONB NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_administrative_boundaries_adm_cd
+    ON administrative_boundaries (adm_cd);

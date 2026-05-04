@@ -17,7 +17,7 @@ const PredictPage = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:8000/api/v1/ai/prediction/analysis');
+      const response = await fetch(process.env.NEXT_PUBLIC_FASTAPI_URL + '/api/v1/ai/prediction/analysis');
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || '데이터를 불러오는 중 오류가 발생했습니다.');
@@ -88,7 +88,7 @@ const PredictPage = () => {
           </div>
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
-             <AnalysisReport result={analysisResult} />
+             <AnalysisReport data={analysisResult} />
           </div>
         )}
       </div>

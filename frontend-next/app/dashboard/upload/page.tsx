@@ -31,7 +31,7 @@ const UploadPage = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/ai/dashboard/upload-sales', {
+      const response = await fetch(process.env.NEXT_PUBLIC_FASTAPI_URL + '/api/v1/ai/dashboard/upload-sales', {
         method: 'POST',
         body: formData,
       });

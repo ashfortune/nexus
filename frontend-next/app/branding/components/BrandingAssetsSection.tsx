@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const API_BASE_URL = "http://localhost:8000/api/v1/ai/branding";
+const API_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL + "/api/v1/ai/branding";
 
 interface Logo {
   id: string;
@@ -45,7 +45,7 @@ export default function BrandingAssetsSection({
           ...a,
           imageUrl: a.imageUrl.startsWith("http")
             ? a.imageUrl
-            : `http://localhost:8000${a.imageUrl}`,
+            : `${process.env.NEXT_PUBLIC_FASTAPI_URL}${a.imageUrl}`,
         }));
         setAssets(newAssets);
       } else {

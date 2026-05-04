@@ -1,5 +1,7 @@
 import StoreMapClient from "./StoreMapClient";
 
+export const dynamic = 'force-dynamic';
+
 export default async function StoreMapPage() {
   const kakaoApiKey = process.env.JAVA_SCRIPT_KEY || "";
   
@@ -7,7 +9,7 @@ export default async function StoreMapPage() {
   let initialRegions = [];
 
   try {
-    const res = await fetch("http://localhost:8080/api/v1/sim/store-list", {
+    const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/v1/sim/store-list", {
       cache: "no-store",
     });
     if (res.ok) {

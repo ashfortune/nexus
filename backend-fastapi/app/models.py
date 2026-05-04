@@ -83,6 +83,7 @@ class User(Base):
     chat_messages: Mapped[List["ChatMessage"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     labor_contracts: Mapped[List["LaborContract"]] = relationship(back_populates="user")
     created_chat_rooms: Mapped[List["ChatRoom"]] = relationship(back_populates="creator")
+    checklist_progresses: Mapped[List["ChecklistProgress"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 # Import types for relationship resolution at the end of the file or use string references
 
@@ -155,11 +156,11 @@ class LicenseIndustry(Base):
     department: Mapped[str] = mapped_column(String(100), nullable=False)
 
     # Relationships
-    checklist_steps: Mapped[List["ChecklistStep"]] = relationship(back_populates="license_industry", cascade="all, delete-orphan")
     surveys: Mapped[List["Survey"]] = relationship(back_populates="license_industry", cascade="all, delete-orphan")
     documents: Mapped[List["Document"]] = relationship(back_populates="license_industry", cascade="all, delete-orphan")
     license_mappings: Mapped[List["LicenseIndustryMapping"]] = relationship(back_populates="license")
-
+    checklist_progresses: Mapped[List["ChecklistProgress"]] = relationship(back_populates="license_industry", cascade="all, delete-orphan")
+    checklist_steps: Mapped[List["ChecklistStep"]] = relationship(back_populates="license_industry", cascade="all, delete-orphan")
 class Survey(Base):
     __tablename__ = "surveys"
 
@@ -255,6 +256,21 @@ class Subsidy(Base):
     apply_url: Mapped[Optional[str]] = mapped_column(String(500))
     embedding: Mapped[Optional[list]] = mapped_column(Vector(768))
     updated_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+
+class ChecklistProgress(Base):
+    __tablename__ = "checklist_progresses"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    license_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("license_industries.id"), nullable=False)
+    current_step: Mapped[int] = mapped_column(SmallInteger, nullable=False, server_default=text("1"))
+    industry_code: Mapped[Optional[str]] = mapped_column(String(50))
+    conditions: Mapped[Optional[dict]] = mapped_column(JSON)
+    updated_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+
+    # Relationships
+    user: Mapped["User"] = relationship(back_populates="checklist_progresses")
+    license_industry: Mapped["LicenseIndustry"] = relationship(back_populates="checklist_progresses")
 
 class Sale(Base):
     __tablename__ = "sales"
@@ -470,3 +486,11 @@ class SemasIndustryMapping(Base):
     large_category_name: Mapped[Optional[str]] = mapped_column(String(100))
     medium_category_name: Mapped[Optional[str]] = mapped_column(String(100))
     small_category_name: Mapped[Optional[str]] = mapped_column(String(100))
+
+class AdministrativeBoundary(Base):
+    __tablename__ = "administrative_boundaries"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    adm_cd: Mapped[str] = mapped_column(String(20), nullable=False)
+    adm_nm: Mapped[str] = mapped_column(String(100), nullable=False)
+    boundary: Mapped[Optional[dict]] = mapped_column(JSON, nullable=False)

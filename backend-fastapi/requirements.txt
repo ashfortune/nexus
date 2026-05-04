@@ -24,3 +24,4 @@ statsmodels
 google-genai>=1.0.0
 apscheduler
 supabase
+xgboost

@@ -35,7 +35,7 @@ export default function GroupBuyDetailPage() {
   const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') || 'd38bc69d-9660-4e11-a50d-9ee90ff38673' : '';
 
   useEffect(() => {
-    fetch(`http://localhost:8080/api/v1/group-purchases/${params.id}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/group-purchases/${params.id}`)
       .then(res => res.json())
       .then(data => {
         setGb(data);
@@ -78,7 +78,7 @@ export default function GroupBuyDetailPage() {
     if (!gb || timeLeft.isExpired) return;
 
     try {
-      const checkRes = await fetch(`http://localhost:8080/api/v1/group-purchases/${params.id}/check-participation?userId=${currentUserId}`);
+      const checkRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/group-purchases/${params.id}/check-participation?userId=${currentUserId}`);
       const isParticipated = await checkRes.json();
       
       if (isParticipated) {
@@ -93,7 +93,7 @@ export default function GroupBuyDetailPage() {
 
     if (provider === 'TOSS') {
       try {
-        const configRes = await fetch('http://localhost:8080/api/v1/config');
+        const configRes = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/config');
         const configData = await configRes.json();
         const clientKey = configData.tossClientKey;
         
@@ -127,7 +127,7 @@ export default function GroupBuyDetailPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/group-purchases/${gb.id}?userId=${currentUserId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/group-purchases/${gb.id}?userId=${currentUserId}`, {
         method: 'DELETE'
       });
 

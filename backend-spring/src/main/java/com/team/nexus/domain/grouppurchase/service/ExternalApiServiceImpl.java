@@ -1,6 +1,8 @@
 package com.team.nexus.domain.grouppurchase.service;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -11,7 +13,8 @@ import java.util.Map;
 @Service
 public class ExternalApiServiceImpl implements ExternalApiService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Override
     public <T> T post(String url, Object body, Map<String, String> headers, Class<T> responseType) {

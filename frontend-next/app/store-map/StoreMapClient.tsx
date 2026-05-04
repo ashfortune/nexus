@@ -4,7 +4,7 @@ import React, { useState, useRef, useMemo, useEffect } from "react";
 import { Map, Polygon, CustomOverlayMap } from "react-kakao-maps-sdk";
 import { Search, MapPin, Sparkles, ChevronRight, BarChart3, MousePointer2 } from "lucide-react";
 import { fetchStoresData } from "./actions";
-
+import MarketPredSection from "./components/MarketPredSection";
 // ── 상수 ──
 const SEOUL_FIXED = { lat: 37.5665, lng: 126.978 };
 
@@ -18,15 +18,16 @@ const convertToWgs84 = (c: any): { lat: number; lng: number } | null => {
     return { lat: Y, lng: X };
   }
   if (X > 1000) {
-    const a = 6378137.0;          // 장반경(m)
-    const f = 1 / 298.257222101;  // 편평률
-    const b = a * (1 - f);        // 단반경
-    const e2 = 2 * f - f * f;     // 이심률 제곱
-    const k0 = 1.0;               // 축척계수
-    const lat0 = 38.0 * Math.PI / 180; // 원점 위도 (38°N)
-    const lng0 = 127.0 * Math.PI / 180; // 원점 경도 (127°E)
-    const FE = 200000.0;          // False Easting
-    const FN = 600000.0;          // False Northing
+    // 한국 TM 좌표 (EPSG:5174, Korean 1985 / Bessel 타원체 기반)
+    const a = 6377397.155;        // Bessel 1841 장반경
+    const f = 1 / 299.1528128;   // Bessel 편평률
+    const b = a * (1 - f);
+    const e2 = 2 * f - f * f;
+    const k0 = 1.0;
+    const lat0 = 38.0 * Math.PI / 180;
+    const lng0 = 127.0 * Math.PI / 180;
+    const FE = 200000.0;
+    const FN = 600000.0;  // EPSG:5174 기준 FN=600000
 
     const x = X - FE;
     const y = Y - FN;
@@ -43,7 +44,6 @@ const convertToWgs84 = (c: any): { lat: number; lng: number } | null => {
     const M0 = calcM(lat0);
     const M = M0 + y / k0;
 
-    // foot point latitude (φ1) 계산 (반복법)
     const n = (a - b) / (a + b);
     const mu = M / (a * (1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 * e2 * e2 / 256));
     const phi1 = mu
@@ -56,14 +56,13 @@ const convertToWgs84 = (c: any): { lat: number; lng: number } | null => {
     const cosPhi1 = Math.cos(phi1);
     const tanPhi1 = sinPhi1 / cosPhi1;
 
-    const e2p = e2 / (1 - e2); // 제2이심률 제곱
-    const N1 = a / Math.sqrt(1 - e2 * sinPhi1 * sinPhi1); // 묘유선곡률반경
+    const e2p = e2 / (1 - e2);
+    const N1 = a / Math.sqrt(1 - e2 * sinPhi1 * sinPhi1);
     const T1 = tanPhi1 * tanPhi1;
     const C1 = e2p * cosPhi1 * cosPhi1;
-    const R1 = a * (1 - e2) / Math.pow(1 - e2 * sinPhi1 * sinPhi1, 1.5); // 자오선곡률반경
+    const R1 = a * (1 - e2) / Math.pow(1 - e2 * sinPhi1 * sinPhi1, 1.5);
     const D = x / (N1 * k0);
 
-    // 위도 계산
     const lat_rad = phi1
       - (N1 * tanPhi1 / R1) * (
         D * D / 2
@@ -71,7 +70,6 @@ const convertToWgs84 = (c: any): { lat: number; lng: number } | null => {
         + (61 + 90 * T1 + 298 * C1 + 45 * T1 * T1 - 252 * e2p - 3 * C1 * C1) * D * D * D * D * D * D / 720
       );
 
-    // 경도 계산
     const lng_rad = lng0 + (
       D
       - (1 + 2 * T1 + C1) * D * D * D / 6
@@ -81,7 +79,6 @@ const convertToWgs84 = (c: any): { lat: number; lng: number } | null => {
     const lat = lat_rad * 180 / Math.PI;
     const lng = lng_rad * 180 / Math.PI;
 
-    // 한국 유효 범위 체크
     return (lat > 33 && lat < 39 && lng > 124 && lng < 132) ? { lat, lng } : null;
   }
 
@@ -91,11 +88,11 @@ const convertToWgs84 = (c: any): { lat: number; lng: number } | null => {
 export default function StoreMapClient({ kakaoApiKey, initialIndustries, initialRegions }: any) {
   const [isMounted, setIsMounted] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
-  const [mapInstance, setMapInstance] = useState<kakao.maps.Map | null>(null);
   const [storesData, setStoresData] = useState<any | null>(null);
-  const [analysisCount, setAnalysisCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [mapCenter, setMapCenter] = useState(SEOUL_FIXED);
+  const [mapLevel, setMapLevel] = useState(7);
 
   useEffect(() => {
     setIsMounted(true);
@@ -151,25 +148,32 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
     return Math.ceil(storesData.totalCount / storesData.storeByRegionDtoList.length);
   }, [storesData]);
 
+  // geometry: GeoJSON { type: "Polygon"|"MultiPolygon", coordinates } → WGS84 path 변환
   const memoizedPolygons = useMemo(() => {
     if (!storesData || !storesData.storeByRegionDtoList || !sdkReady) return [];
     const results: any[] = [];
 
     storesData.storeByRegionDtoList.forEach((region: any) => {
-      if (!region?.geometry?.coordinates) return;
-      const rCode = region.adongCd || region.region_code;
-      const rName = region.adongNm || region.region_name;
-      const rCount = region.count || 0;
-      const polygons = region.geometry.type === "MultiPolygon" ? region.geometry.coordinates : [region.geometry.coordinates];
+      const geo = region?.geometry;
+      if (!geo || !geo.coordinates) return;
 
-      polygons.forEach((poly: any, pIdx: number) => {
-        const ring = poly[0];
+      const rCode = region.adongCd;
+      const rName = region.adongNm;
+      const rCount = region.count || 0;
+
+      const rings: any[][] =
+        geo.type === "MultiPolygon"
+          ? (geo.coordinates as any[][][]).map((poly: any[][]) => poly[0])
+          : geo.type === "Polygon"
+            ? [(geo.coordinates as any[][])[0]]
+            : [];
+
+      rings.forEach((ring: any[], pIdx: number) => {
         if (!Array.isArray(ring)) return;
         const path = ring.map(convertToWgs84).filter((p: any) => p !== null) as { lat: number, lng: number }[];
         if (path.length >= 3) {
-          // 폴리곤 중심점 계산
           let pLatSum = 0, pLngSum = 0;
-          path.forEach((pt: any) => { pLatSum += pt.lat; pLngSum += pt.lng; });
+          path.forEach((pt) => { pLatSum += pt.lat; pLngSum += pt.lng; });
           const center = { lat: pLatSum / path.length, lng: pLngSum / path.length };
           results.push({ id: `${rCode}-${pIdx}`, region_code: rCode, region_name: rName, count: rCount, path, center, isHigh: rCount >= avg, isFirst: pIdx === 0 });
         }
@@ -179,37 +183,37 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
     return results;
   }, [storesData, avg, sdkReady]);
 
+  // 폴리곤이 갱신되면 전체 bounds를 계산해 지도 center/level 업데이트
   useEffect(() => {
-    if (!sdkReady || !mapInstance || memoizedPolygons.length === 0) return;
-
-    const performFocus = () => {
-      try {
-        const bounds = new window.kakao.maps.LatLngBounds();
-        memoizedPolygons.forEach(p => {
-          if (p.path) p.path.forEach(pt => bounds.extend(new window.kakao.maps.LatLng(pt.lat, pt.lng)));
-        });
-
-        mapInstance.relayout();
-        // 전체 폴리곤이 화면에 맞게 자동 줌 조정 (level 수동 조작 금지)
-        mapInstance.setBounds(bounds, 30);
-      } catch (e) { console.error("Focus Error:", e); }
-    };
-
-    const tid = setTimeout(performFocus, 300);
-    return () => clearTimeout(tid);
-  }, [storesData, sdkReady, mapInstance, analysisCount]);
-
+    if (memoizedPolygons.length === 0) return;
+    let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+    memoizedPolygons.forEach(p =>
+      p.path.forEach((pt: { lat: number; lng: number }) => {
+        if (pt.lat < minLat) minLat = pt.lat;
+        if (pt.lat > maxLat) maxLat = pt.lat;
+        if (pt.lng < minLng) minLng = pt.lng;
+        if (pt.lng > maxLng) maxLng = pt.lng;
+      })
+    );
+    const cLat = (minLat + maxLat) / 2;
+    const cLng = (minLng + maxLng) / 2;
+    const span = Math.max(maxLat - minLat, maxLng - minLng);
+    const level =
+      span > 1.0 ? 10 :
+        span > 0.5 ? 9 :
+          span > 0.2 ? 8 :
+            span > 0.1 ? 7 :
+              span > 0.05 ? 6 : 5;
+    setMapCenter({ lat: cLat, lng: cLng });
+    setMapLevel(level);
+  }, [memoizedPolygons]);
 
   const handleStartAnalysis = async () => {
     if (selectedRegion == "" || !selectedIndustry) return;
-    // console.log("요청 파라미터:", selectedRegion, selectedIndustry);
     setIsLoading(true);
     try {
       const data = await fetchStoresData(selectedRegion.toString(), selectedIndustry);
-      if (data) {
-        setStoresData(data);
-        setAnalysisCount(prev => prev + 1);
-      }
+      if (data) setStoresData(data);
     } catch (error) {
       console.error("Analysis Error:", error);
     } finally {
@@ -217,23 +221,23 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
     }
   };
 
-  if (!isMounted) return <div className="h-[600px] bg-white flex items-center justify-center font-black">초기화 중...</div>;
+  if (!isMounted) return <div className="h-full bg-white flex items-center justify-center font-black">초기화 중...</div>;
 
   return (
-    <div className="h-[600px] flex flex-col bg-white overflow-hidden font-inter border-b border-slate-200" suppressHydrationWarning>
-      <header className="shrink-0 bg-white border-b border-slate-100 px-8 h-[60px] flex items-center justify-between gap-12 z-40">
-        <div className="flex items-center gap-2 shrink-0">
+    <div className="h-full w-full flex flex-col bg-white overflow-hidden font-inter border-b border-slate-200" suppressHydrationWarning>
+      <header className="shrink-0 bg-white border-b border-slate-100 p-4 md:px-8 md:h-[72px] flex flex-col md:flex-row items-center justify-between gap-4 md:gap-12 z-40">
+        <div className="flex items-center gap-2 shrink-0 self-start md:self-auto w-full md:w-auto">
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">소상공인시장진흥공단</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider whitespace-nowrap">소상공인시장진흥공단</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl">
             <div className="w-2 h-2 rounded-full bg-blue-400" />
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">상권정보</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider whitespace-nowrap">상권정보</span>
           </div>
         </div>
-        <div className="flex-1 flex items-center gap-2 max-w-2xl px-12">
-          <div className="relative flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-3">
+        <div className="flex-1 flex flex-col sm:flex-row w-full md:w-auto items-center gap-2 max-w-2xl md:px-12">
+          <div className="relative flex-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 sm:py-2 flex items-center gap-3">
             <MapPin size={14} className="text-slate-400" />
             <input
               className="w-full bg-transparent text-[12px] font-black text-slate-950 outline-none"
@@ -283,8 +287,8 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
               </div>
             )}
           </div>
-          <ChevronRight size={14} className="text-slate-300" />
-          <div className={`relative flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-3 ${!selectedRegion ? "opacity-40" : ""}`}>
+          <ChevronRight size={14} className="text-slate-300 hidden sm:block rotate-90 sm:rotate-0" />
+          <div className={`relative flex-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 sm:py-2 flex items-center gap-3 ${!selectedRegion ? "opacity-40" : ""}`}>
             <Search size={14} className="text-slate-400" />
             <input
               ref={industryInputRef}
@@ -334,13 +338,13 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
             )}
           </div>
         </div>
-        <button onClick={handleStartAnalysis} disabled={selectedRegion == "" || !selectedIndustry || isLoading} className="shrink-0 h-10 px-8 rounded-xl text-[12px] font-black bg-[#0b1a7d] text-white hover:opacity-90 disabled:bg-slate-100 shadow-md transition-all">{isLoading ? "중..." : "분석"}</button>
+        <button onClick={handleStartAnalysis} disabled={selectedRegion == "" || !selectedIndustry || isLoading} className="shrink-0 w-full md:w-auto h-12 md:h-10 px-8 rounded-xl text-sm font-black bg-[#0b1a7d] text-white hover:bg-indigo-900 disabled:bg-slate-200 disabled:text-slate-400 shadow-md transition-all">{isLoading ? "분석 중..." : "상권 분석 시작"}</button>
       </header>
 
-      <main className="flex-1 flex gap-6 p-6 bg-slate-50 overflow-hidden items-stretch h-[calc(600px-60px)]">
-        <section className="flex-1 rounded-[24px] overflow-hidden border border-slate-200 shadow-xl relative bg-white h-full">
+      <main className="flex-1 flex flex-col md:flex-row gap-4 md:gap-6 p-4 md:p-6 bg-slate-50 overflow-hidden items-stretch h-[calc(100%-140px)] md:h-[calc(100%-72px)]">
+        <section className="flex-1 rounded-[24px] overflow-hidden border border-slate-200 shadow-xl relative bg-white min-h-[400px] md:min-h-0 md:h-full">
           {sdkReady && (
-            <Map onCreate={setMapInstance} center={SEOUL_FIXED} level={7} style={{ width: "100%", height: "100%" }}>
+            <Map center={mapCenter} level={mapLevel} style={{ width: "100%", height: "100%" }}>
               {memoizedPolygons.map((p: any) => (
                 <React.Fragment key={p.id}>
                   <Polygon path={p.path} strokeWeight={3} strokeColor="#0f172a" strokeOpacity={0.8} fillColor={p.isHigh ? "#dc2626" : "#2563eb"} fillOpacity={hoveredRegion === p.region_code ? 0.7 : 0.4} onMouseover={() => setHoveredRegion(p.region_code)} onMouseout={() => setHoveredRegion(null)} />
@@ -350,6 +354,7 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
                         <span className="text-[10px] font-black text-slate-950 leading-tight whitespace-nowrap">{p.region_name}</span>
                         <span className={`text-[9px] font-black ${p.isHigh ? "text-red-700" : "text-blue-700"} mt-0.5`}>{p.count}개</span>
                       </div>
+
                     </CustomOverlayMap>
                   )}
                 </React.Fragment>
@@ -359,7 +364,7 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
           {!sdkReady && <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-400 font-black">로드 중...</div>}
         </section>
 
-        <aside className="w-[340px] shrink-0 flex flex-col gap-4 h-full scrollbar-hide overflow-y-auto">
+        <aside className="w-full md:w-[340px] shrink-0 flex flex-col gap-4 h-auto md:h-full scrollbar-hide overflow-y-auto">
           {storesData ? (
             <div className="bg-white rounded-[24px] border border-slate-200 p-6 shadow-lg space-y-5">
               <div className="flex items-center gap-2 text-slate-950 font-black text-[11px] uppercase tracking-wider"><BarChart3 size={16} /> 분석 데이터</div>
@@ -392,7 +397,7 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
                       <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100">
                         <div className="flex items-center gap-2 text-red-700 font-black text-sm">밀집 최고</div>
                         <span className="text-sm font-black text-slate-950">
-                          {(storesData.mostRegion.adongNm || storesData.mostRegion.region_name) || "상권"} ({storesData.mostRegion.count}개)
+                          {storesData.mostRegion.adongNm || "상권"} ({storesData.mostRegion.count}개)
                         </span>
                       </div>
                     )}
@@ -400,7 +405,7 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
                       <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100">
                         <div className="flex items-center gap-2 text-blue-700 font-black text-sm">밀집 최저</div>
                         <span className="text-sm font-black text-slate-950">
-                          {(storesData.leastRegion.adongNm || storesData.leastRegion.region_name) || "상권"} ({storesData.leastRegion.count}개)
+                          {storesData.leastRegion.adongNm || "상권"} ({storesData.leastRegion.count}개)
                         </span>
                       </div>
                     )}
@@ -417,6 +422,7 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
           )}
         </aside>
       </main>
+      <MarketPredSection storesData={storesData} />
       <style jsx global>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
     </div>
   );

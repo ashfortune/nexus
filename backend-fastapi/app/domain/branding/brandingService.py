@@ -20,9 +20,18 @@ INDUSTRY_CACHE = {
 }
 
 async def initialize_industry_cache(db: AsyncSession):
-    """서버 시작 시 4,000여 개의 업종 데이터를 메모리에 로드하여 경로 계산 속도를 극대화합니다."""
+    """서버 시작 시 4,000여 개의 업종 데이터를 메모리에 로드하며, 기본 ID가 없을 경우 생성합니다."""
     if INDUSTRY_CACHE["initialized"]:
         return
+
+    # [안전장치] 프론트엔드 기본 업종 ID(550e8400-e29b-41d4-a716-446655440000) 존재 확인
+    default_id = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")
+    check_stmt = select(IndustryCategory).where(IndustryCategory.id == default_id)
+    check_res = await db.execute(check_stmt)
+    if not check_res.scalar_one_or_none():
+        print(f"🛠 [System] 기본 업종 ID({default_id})를 생성합니다.")
+        db.add(IndustryCategory(id=default_id, name="초기화/분석전", level=0))
+        await db.commit()
 
     print("🧠 [Cache] 업종 카테고리 데이터를 메모리에 로딩 중...")
     # 임베딩 제외, 경로 계산에 필요한 필드만 가볍게 조회
@@ -37,6 +46,44 @@ async def initialize_industry_cache(db: AsyncSession):
     INDUSTRY_CACHE["map"] = {ind.id: ind for ind in industries}
     INDUSTRY_CACHE["initialized"] = True
     print(f"✅ [Cache] {len(INDUSTRY_CACHE['map'])}개의 업종 데이터 로딩 완료!")
+
+    # [백그라운드] 비어있는 임베딩 자동 채우기 시작
+    import asyncio
+    asyncio.create_task(auto_sync_missing_embeddings())
+
+async def auto_sync_missing_embeddings():
+    """임베딩이 없는 업종을 찾아 백그라운드에서 자동으로 채웁니다."""
+    from app.core.database import AsyncSessionLocal
+    
+    async with AsyncSessionLocal() as db:
+        # 임베딩이 없는 데이터 조회
+        stmt = select(IndustryCategory).where(IndustryCategory.embedding == None)
+        result = await db.execute(stmt)
+        targets = result.scalars().all()
+        
+        if not targets:
+            return
+
+        print(f"⚙️ [Background] {len(targets)}개의 누락된 임베딩을 발견했습니다. 동기화를 시작합니다.")
+        ai_client = get_ai_client("gemini")
+        
+        count = 0
+        for ind in targets:
+            try:
+                vector = await ai_client.embed_text(ind.name)
+                ind.embedding = vector
+                count += 1
+                
+                # 50개 단위로 커밋하여 안정성 확보
+                if count % 50 == 0:
+                    await db.commit()
+                    print(f"⏳ [Background] 임베딩 동기화 중... ({count}/{len(targets)})")
+            except Exception as e:
+                print(f"⚠️ [Background] '{ind.name}' 임베딩 생성 실패: {e}")
+                continue
+        
+        await db.commit()
+        print(f"✨ [Background] 총 {count}개의 업종 임베딩 동기화가 완료되었습니다.")
 
 def get_full_path(ind):
     """캐시된 데이터를 사용하여 업종의 전체 경로를 즉시 반환합니다."""
@@ -54,17 +101,22 @@ def get_full_path(ind):
 
 async def create_new_branding(db: AsyncSession, request: BrandingCreateRequest) :
     """새로운 브랜딩 프로젝트를 생성하고 DB에 저장합니다."""
-    new_branding = Branding(
-        id=uuid.uuid4(),
-        user_id=request.userId or DEFAULT_USER_ID,
-        industry_category_id=request.industryId,
-        title=request.title or "새 브랜딩 프로젝트",
-        current_step="INTERVIEW"
-    )
-    db.add(new_branding)
-    await db.commit()
-    await db.refresh(new_branding)
-    return new_branding
+    try:
+        new_branding = Branding(
+            id=uuid.uuid4(),
+            user_id=request.userId or DEFAULT_USER_ID,
+            industry_category_id=request.industryId,
+            title=request.title or "새 브랜딩 프로젝트",
+            current_step="INTERVIEW"
+        )
+        db.add(new_branding)
+        await db.commit()
+        await db.refresh(new_branding)
+        return new_branding
+    except Exception as e:
+        await db.rollback()
+        print(f"❌ [create_new_branding 에러 상세]: {str(e)}")
+        raise e
 
 async def update_branding_interview(db: AsyncSession, branding_id: uuid.UUID, request: BrandingInterviewRequest):
     """인터뷰 답변을 저장하고 단계를 업데이트합니다."""

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 
-const API_BASE_URL = "http://localhost:8000/api/v1/ai/branding";
+const API_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL + "/api/v1/ai/branding";
 
 interface Message {
   id: number;
