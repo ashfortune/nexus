@@ -469,7 +469,7 @@ async def generate_marketing_assets(db: AsyncSession, identity_id: uuid.UUID):
         identity = result.unique().scalar_one_or_none()
         
         if not identity or not identity.logo_assets:
-            # logger.debug(f"Identity or LogoAssets not found for {identity_id}")
+            print(f"DEBUG: Identity or LogoAssets not found for {identity_id}")
             return None
             
         # 가장 최근에 확정된 로고 사용
