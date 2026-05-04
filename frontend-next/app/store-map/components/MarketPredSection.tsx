@@ -17,6 +17,7 @@ interface PredictionResult {
   open_date: string;
   message: string;
   threshold: number;
+  factors?: string[];
 }
 
 export default function MarketPredSection({ storesData }: { storesData: any }) {
