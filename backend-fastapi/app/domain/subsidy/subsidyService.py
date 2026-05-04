@@ -265,7 +265,7 @@ async def save_subsidy(data: dict, source_url: str, db: AsyncSession):
                      target, how_to_apply, contact, apply_url, source_url, embedding, life_cycle)
                 VALUES
                     (:name, :organization, :region, :industry, :min_age, :max_age,
-                     :max_amount, :deadline, :start_date, :description, :support_content,
+                     :max_amount, CAST(:deadline AS DATE), CAST(:start_date AS DATE), :description, :support_content,
                      :target, :how_to_apply, :contact, :apply_url, :source_url, '{embedding_str}'::vector, :life_cycle)
                 ON CONFLICT (source_url) DO UPDATE SET
                     deadline = EXCLUDED.deadline,
@@ -279,8 +279,8 @@ async def save_subsidy(data: dict, source_url: str, db: AsyncSession):
             """),
             {
                 **data,
-                "deadline": deadline.isoformat() if deadline else None,
-                "start_date": start_date.isoformat() if start_date else None,
+                "deadline": deadline,
+                "start_date": start_date,
                 "source_url": source_url
             }
         )
@@ -293,8 +293,8 @@ async def save_subsidy(data: dict, source_url: str, db: AsyncSession):
 
 async def delete_expired_subsidies(db: AsyncSession):
     await db.execute(
-        text("DELETE FROM subsidies WHERE deadline < :today"),
-        {"today": date.today().isoformat()}
+        text("DELETE FROM subsidies WHERE deadline < CAST(:today AS DATE)"),
+        {"today": date.today()}
     )
     await db.commit()
     print("만료된 지원금 삭제 완료")
