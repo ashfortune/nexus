@@ -1,9 +1,11 @@
 "use server";
 
+const API_BASE_URL = "http://localhost:8080/api/v1"
+
 export async function fetchStoresData(regionCode: string, ksicCode: string) {
   console.log(`[Server Action] Fetching stores for Region: ${regionCode}, KSIC: ${ksicCode}`);
   try {
-    const res = await fetch(`http://127.0.0.1:8080/api/v1/sim/stores?signguCd=${regionCode}&semasKsicCode=${ksicCode}`, {
+    const res = await fetch(`${API_BASE_URL}/sim/stores?signguCd=${regionCode}&semasKsicCode=${ksicCode}`, {
       cache: "no-store",
     });
     if (!res.ok) {

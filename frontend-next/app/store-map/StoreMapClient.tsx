@@ -4,7 +4,7 @@ import React, { useState, useRef, useMemo, useEffect } from "react";
 import { Map, Polygon, CustomOverlayMap } from "react-kakao-maps-sdk";
 import { Search, MapPin, Sparkles, ChevronRight, BarChart3, MousePointer2 } from "lucide-react";
 import { fetchStoresData } from "./actions";
-
+import MarketPredSection from "./components/MarketPredSection";
 // ── 상수 ──
 const SEOUL_FIXED = { lat: 37.5665, lng: 126.978 };
 
@@ -165,8 +165,8 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
         geo.type === "MultiPolygon"
           ? (geo.coordinates as any[][][]).map((poly: any[][]) => poly[0])
           : geo.type === "Polygon"
-          ? [(geo.coordinates as any[][])[0]]
-          : [];
+            ? [(geo.coordinates as any[][])[0]]
+            : [];
 
       rings.forEach((ring: any[], pIdx: number) => {
         if (!Array.isArray(ring)) return;
@@ -200,10 +200,10 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
     const span = Math.max(maxLat - minLat, maxLng - minLng);
     const level =
       span > 1.0 ? 10 :
-      span > 0.5 ? 9 :
-      span > 0.2 ? 8 :
-      span > 0.1 ? 7 :
-      span > 0.05 ? 6 : 5;
+        span > 0.5 ? 9 :
+          span > 0.2 ? 8 :
+            span > 0.1 ? 7 :
+              span > 0.05 ? 6 : 5;
     setMapCenter({ lat: cLat, lng: cLng });
     setMapLevel(level);
   }, [memoizedPolygons]);
@@ -422,6 +422,7 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
           )}
         </aside>
       </main>
+      <MarketPredSection storesData={storesData} />
       <style jsx global>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
     </div>
   );
