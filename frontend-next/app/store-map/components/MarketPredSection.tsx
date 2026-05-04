@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Sparkles, TrendingUp, TrendingDown, Calendar, MapPin, Store, Info, AlertCircle, CheckCircle2, ChevronRight } from "lucide-react";
 
-const FASTAPI_BASE_URL = "http://localhost:8000";
+const FASTAPI_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
 
 const INDUSTRIES = ["노래연습장업", "세탁업", "유흥주점영업", "의원", "인터넷컴퓨터게임시설제공업", "제과점영업", "체력단련장업"];
 
