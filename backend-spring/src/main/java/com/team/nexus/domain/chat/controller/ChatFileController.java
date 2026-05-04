@@ -33,7 +33,11 @@ public class ChatFileController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "category", required = false) String category) {
         String fileUrl = chatFileService.uploadFile(file, category);
-        return ResponseEntity.ok(Map.of("url", "http://localhost:8080" + fileUrl));
+        
+        // Supabase URL(http로 시작)이면 그대로 반환, 아니면 서버 경로로 반환
+        String finalUrl = fileUrl.startsWith("http") ? fileUrl : fileUrl; 
+        
+        return ResponseEntity.ok(Map.of("url", finalUrl));
     }
 
     @Operation(summary = "파일 표시", description = "업로드된 파일을 브라우저에 표시합니다.")
