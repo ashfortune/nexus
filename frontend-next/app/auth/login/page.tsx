@@ -21,10 +21,16 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setAuth } = useAuthStore();
+  const { setAuth, isAuthenticated, _hasHydrated } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (_hasHydrated && isAuthenticated) {
+      router.push('/');
+    }
+  }, [_hasHydrated, isAuthenticated, router]);
 
   const {
     register,

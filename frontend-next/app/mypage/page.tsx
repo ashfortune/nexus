@@ -27,7 +27,7 @@ export default function MyPage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', next: '', confirm: '' });
 
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, _hasHydrated } = useAuthStore();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,6 +91,8 @@ export default function MyPage() {
   };
 
   useEffect(() => {
+    if (!_hasHydrated) return;
+
     if (!isAuthenticated || !user?.id) {
       alert('로그인이 필요한 서비스입니다.');
       router.push('/auth/login');
@@ -98,7 +100,7 @@ export default function MyPage() {
     }
 
     fetchData(user.id);
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, _hasHydrated]);
 
   const fetchData = async (userId: string) => {
     try {

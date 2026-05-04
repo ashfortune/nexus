@@ -41,7 +41,7 @@ const MENU_DATA = [
 ];
 
 export default function Header() {
-  const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const { user, isAuthenticated, clearAuth, _hasHydrated } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -99,7 +99,7 @@ export default function Header() {
         </div>
 
         <nav className="hidden lg:block flex-grow h-full">
-          {mounted ? (
+          {mounted && _hasHydrated ? (
             <ul className="grid grid-cols-6 h-full items-center">
               {MENU_DATA.map((menu) => (
                 <li
@@ -124,11 +124,11 @@ export default function Header() {
           )}
         </nav>
 
-        <div
-          className="w-[100px] lg:w-[160px] shrink-0 flex items-center justify-end gap-3"
-          ref={profileRef}
-        >
-          {mounted ? (
+          <div
+            className="w-[100px] lg:w-[160px] shrink-0 flex items-center justify-end gap-3"
+            ref={profileRef}
+          >
+            {mounted && _hasHydrated ? (
             <>
               {!isAuthenticated ? (
                 <Link
@@ -205,7 +205,7 @@ export default function Header() {
         </div>
       </div>
 
-      {mounted && (
+      {mounted && _hasHydrated && (
         <div
           onMouseLeave={() => setActiveMenu(null)}
           className={`hidden lg:block absolute top-20 left-0 w-full bg-[var(--nexus-surface-lowest)] border-b border-[var(--nexus-outline-variant)] shadow-lg transition-all duration-300 ease-in-out overflow-hidden ${activeMenu ? 'max-h-[250px] opacity-100 py-8' : 'max-h-0 opacity-0 py-0'}`}
