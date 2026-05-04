@@ -1,6 +1,8 @@
 package com.team.nexus.domain.mypage.service;
 
 import com.team.nexus.domain.auth.repository.UserRepository;
+import com.team.nexus.domain.board.repository.BoardRepository;
+import com.team.nexus.domain.comment.repository.CommentRepository;
 import com.team.nexus.domain.grouppurchase.repository.GroupOrderRepository;
 import com.team.nexus.domain.mypage.dto.MyPageResponseDto;
 import com.team.nexus.global.entity.User;
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 public class MyPageServiceImpl implements MyPageService {
 
     private final UserRepository userRepository;
+    private final BoardRepository boardRepository;
+    private final CommentRepository commentRepository;
     private final GroupOrderRepository groupOrderRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -37,11 +41,24 @@ public class MyPageServiceImpl implements MyPageService {
                 .provider(user.getLoginType() == null || user.getLoginType() == 0 ? "local"
                         : user.getLoginType() == 1 ? "google" : "kakao")
                 .profileImage(user.getProfileImage())
-                .posts(java.util.List.of())
-                .comments(java.util.List.of())
+                .posts(boardRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                        .map(b -> MyPageResponseDto.MyPostDto.builder()
+                                .id(b.getId().toString())
+                                .title(b.getTitle())
+                                .createdAt(b.getCreatedAt())
+                                .build())
+                        .collect(Collectors.toList()))
+                .comments(commentRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                        .map(c -> MyPageResponseDto.MyCommentDto.builder()
+                                .id(c.getId().toString())
+                                .content(c.getContent())
+                                .boardTitle(c.getBoard().getTitle())
+                                .createdAt(c.getCreatedAt())
+                                .build())
+                        .collect(Collectors.toList()))
                 .purchases(groupOrderRepository.findAllByUserId(userId).stream()
                         .map(o -> MyPageResponseDto.MyPurchaseDto.builder()
-                                .id(o.getId())
+                                .id(o.getId().toString())
                                 .title(o.getGroupPurchase().getTitle())
                                 .status(o.getGroupPurchase().getStatus())
                                 .createdAt(o.getPaidAt())
