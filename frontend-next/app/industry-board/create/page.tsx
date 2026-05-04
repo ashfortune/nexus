@@ -10,7 +10,11 @@ import {
   Send,
   Briefcase,
   ChevronDown,
-  User
+  User,
+  Lock,
+  Unlock,
+  CheckCircle2,
+  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,9 +49,8 @@ export default function IndustryBoardCreatePage() {
         const urlCategoryId = searchParams.get("categoryId");
         if (urlCategoryId) {
           setSelectedCategoryId(urlCategoryId);
-        } else if (result.data.length > 0) {
-          setSelectedCategoryId(result.data[0].id);
         }
+        // 자동 선택 로직 제거: 사용자가 직접 선택하도록 유도
       }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
@@ -84,7 +87,7 @@ export default function IndustryBoardCreatePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim() || !selectedCategoryId) {
-      alert("모든 필드를 입력해 주세요.");
+      alert("업종을 포함한 모든 필드를 입력해 주세요.");
       return;
     }
 
@@ -93,18 +96,21 @@ export default function IndustryBoardCreatePage() {
       const token = localStorage.getItem("accessToken");
       let uploadedUrls: string[] = [];
 
-      // 1. Image Upload to FastAPI
+      // 1. Image Upload to Spring Boot
       if (imageFiles.length > 0) {
         const formData = new FormData();
         imageFiles.forEach(file => formData.append("files", file));
         
-        const uploadRes = await fetch("http://localhost:8000/api/v1/ai/community/upload", {
+        const uploadRes = await fetch("http://localhost:8080/api/v1/upload/industry", {
           method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          },
           body: formData
         });
         const uploadData = await uploadRes.json();
         if (uploadData.status === "success") {
-          uploadedUrls = uploadData.image_urls;
+          uploadedUrls = uploadData.urls;
         }
       }
 
@@ -156,7 +162,7 @@ export default function IndustryBoardCreatePage() {
           className="flex items-center gap-2 text-zinc-500 hover:text-black transition-all mb-10 group font-black text-xs uppercase tracking-widest"
         >
           <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-          Cancel and Return
+          Go Back
         </button>
 
         <div className="nexus-card bg-white p-8 md:p-14 shadow-2xl shadow-black/5">
@@ -170,26 +176,40 @@ export default function IndustryBoardCreatePage() {
           </header>
 
           <form onSubmit={handleSubmit} className="space-y-12">
-            {/* Industry Selection */}
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Select Industry</label>
-              <div className="relative">
-                <select 
-                  value={selectedCategoryId}
-                  onChange={(e) => setSelectedCategoryId(e.target.value)}
-                  className="w-full h-16 px-8 bg-zinc-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-[var(--nexus-primary)]/10 outline-none transition-all font-black text-zinc-800 appearance-none cursor-pointer"
-                >
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 pointer-events-none" />
+            {/* Industry Selection - Button Group Style like Region Board */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between ml-1">
+                <div className="flex items-center gap-3">
+                  <div className="w-1 h-4 bg-[var(--nexus-primary)] rounded-full" />
+                  <h2 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Industry Selection</h2>
+                </div>
+                {!selectedCategoryId && <span className="text-red-500 animate-pulse text-[10px] font-black uppercase tracking-widest">* Required</span>}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategoryId(cat.id)}
+                    className={cn(
+                      "px-6 py-3 rounded-full font-black text-[13px] transition-all active:scale-95 border-2",
+                      selectedCategoryId === cat.id 
+                        ? "bg-black border-black text-white shadow-xl shadow-black/20" 
+                        : "bg-zinc-50 border-transparent text-zinc-500 hover:bg-white hover:text-black hover:border-zinc-200"
+                    )}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Title */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Post Title</label>
+              <div className="flex items-center gap-3 ml-1">
+                <div className="w-1 h-4 bg-[var(--nexus-primary)] rounded-full" />
+                <h2 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Post Title</h2>
+              </div>
               <input 
                 type="text" 
                 value={title}
@@ -201,7 +221,10 @@ export default function IndustryBoardCreatePage() {
 
             {/* Media Upload */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Media Gallery (Max 5)</label>
+              <div className="flex items-center gap-3 ml-1">
+                <div className="w-1 h-4 bg-[var(--nexus-primary)] rounded-full" />
+                <h2 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Media Gallery (Max 5)</h2>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {previews.map((preview, index) => (
                   <div key={index} className="relative aspect-square rounded-3xl overflow-hidden group border-2 border-zinc-100">
@@ -229,7 +252,10 @@ export default function IndustryBoardCreatePage() {
 
             {/* Content */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Description</label>
+              <div className="flex items-center gap-3 ml-1">
+                <div className="w-1 h-4 bg-[var(--nexus-primary)] rounded-full" />
+                <h2 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Description</h2>
+              </div>
               <textarea 
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
@@ -238,39 +264,47 @@ export default function IndustryBoardCreatePage() {
               />
             </div>
 
-            {/* Anonymous Toggle */}
-            <div className="flex items-center gap-4 p-6 bg-zinc-50 rounded-[2rem]">
-              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[var(--nexus-primary)] shadow-sm">
-                <User className="w-6 h-6" />
+            {/* Bottom Actions - Refactored to match other boards */}
+            <div className="p-8 md:p-12 flex flex-col md:flex-row md:items-center justify-between gap-8 bg-zinc-50/30 -mx-8 md:-mx-14 -mb-8 md:-mb-14 mt-12 border-t border-zinc-100">
+              <div className="flex items-center gap-6">
+                <button 
+                  type="button"
+                  onClick={() => setIsAnonymous(!isAnonymous)}
+                  className={cn(
+                    "flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95",
+                    isAnonymous 
+                      ? "bg-black text-white shadow-xl shadow-black/20" 
+                      : "bg-white text-zinc-400 hover:text-black border border-zinc-100"
+                  )}
+                >
+                  {isAnonymous ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                  익명으로 작성
+                  {isAnonymous && <CheckCircle2 className="w-3.5 h-3.5 text-[var(--nexus-primary)]" />}
+                </button>
+                <div className="hidden md:flex items-center gap-2 text-zinc-300">
+                  <Info className="w-4 h-4" />
+                  <span className="text-[10px] font-bold">작성 가이드라인을 준수해 주세요.</span>
+                </div>
               </div>
-              <div className="flex-1">
-                <h4 className="font-black text-zinc-900 text-sm">익명으로 작성</h4>
-                <p className="text-xs font-medium text-zinc-500">작성자 정보가 숨겨집니다.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsAnonymous(!isAnonymous)}
-                className={cn(
-                  "w-14 h-8 rounded-full transition-all relative",
-                  isAnonymous ? "bg-[var(--nexus-primary)]" : "bg-zinc-200"
-                )}
-              >
-                <div className={cn(
-                  "absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-md",
-                  isAnonymous ? "left-7" : "left-1"
-                )} />
-              </button>
-            </div>
 
-            {/* Submit */}
-            <button 
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-20 bg-black text-white rounded-[2rem] font-black text-lg flex items-center justify-center gap-4 hover:bg-zinc-800 transition-all active:scale-[0.98] shadow-2xl shadow-black/20 disabled:opacity-50"
-            >
-              {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6" />}
-              POST TO INDUSTRY BOARD
-            </button>
+              <div className="flex items-center gap-4">
+                <button 
+                  type="button"
+                  onClick={() => router.back()}
+                  className="px-8 py-4 text-xs font-black text-zinc-400 hover:text-black uppercase tracking-widest"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting || !title.trim() || !content.trim() || !selectedCategoryId}
+                  className="flex items-center gap-3 bg-[var(--nexus-primary)] text-white px-12 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all hover:translate-y-[-2px] active:scale-95 shadow-2xl shadow-[var(--nexus-primary)]/30 disabled:grayscale disabled:opacity-20"
+                >
+                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                  {isSubmitting ? "Publishing..." : "Post Now"}
+                </button>
+              </div>
+            </div>
           </form>
         </div>
       </div>

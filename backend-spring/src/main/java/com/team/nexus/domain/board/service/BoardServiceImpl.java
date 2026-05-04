@@ -154,6 +154,13 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public void createPost(BoardCreateRequestDto requestDto, User user) {
+        // 업종별 게시판인 경우 업종 카테고리 필수 체크
+        if ("INDUSTRY".equals(requestDto.getCategoryName())) {
+            if (requestDto.getIndustryCategoryId() == null || requestDto.getIndustryCategoryId().isEmpty()) {
+                throw new IllegalArgumentException("업종을 선택해야 합니다.");
+            }
+        }
+
         Board board = Board.builder()
                 .title(requestDto.getTitle())
                 .content(requestDto.getContent())
@@ -218,6 +225,12 @@ public class BoardServiceImpl implements BoardService {
         board.setRegionName(request.getRegionName());
         board.setCategoryName(request.getCategoryName());
         board.setIsAnonymous(request.getIsAnonymous());
+
+        if (request.getIndustryCategoryId() != null) {
+            com.team.nexus.global.entity.IndustryCategory industryCategory = industryCategoryRepository.findById(request.getIndustryCategoryId())
+                    .orElseThrow(() -> new IllegalArgumentException("해당 업종 카테고리가 존재하지 않습니다."));
+            board.setIndustryCategory(industryCategory);
+        }
 
         board.getImages().clear();
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {

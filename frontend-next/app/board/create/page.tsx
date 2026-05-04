@@ -65,8 +65,11 @@ export default function BoardCreatePage() {
       if (images.length > 0) {
         const formData = new FormData();
         images.forEach(file => formData.append("files", file));
-        const uploadResponse = await fetch("http://localhost:8000/api/v1/ai/community/upload", {
+        const uploadResponse = await fetch("http://localhost:8080/api/v1/upload/free", {
           method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          },
           body: formData,
         });
         const uploadResult = await uploadResponse.json();
@@ -105,6 +108,14 @@ export default function BoardCreatePage() {
   return (
     <div className="min-h-screen bg-[var(--nexus-bg)] py-12 px-6 pb-32">
       <div className="max-w-4xl mx-auto">
+        <button 
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-zinc-500 hover:text-black transition-all mb-10 group font-black text-xs uppercase tracking-widest"
+        >
+          <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+          Go Back
+        </button>
+
         <header className="mb-14 space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--nexus-primary-container)] text-[var(--nexus-primary)] text-[10px] font-black uppercase tracking-widest rounded-full">
             <Plus className="w-3.5 h-3.5" />

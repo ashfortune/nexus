@@ -14,6 +14,7 @@ public class BoardUpdateRequestDto {
     private String content;
     private String regionName;
     private String categoryName;
+    private java.util.UUID industryCategoryId;
     private Boolean isAnonymous;
     private List<String> imageUrls;
 }

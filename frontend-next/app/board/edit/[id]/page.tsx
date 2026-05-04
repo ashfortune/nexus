@@ -89,8 +89,11 @@ export default function BoardEditPage() {
       if (newImages.length > 0) {
         const formData = new FormData();
         newImages.forEach(file => formData.append("files", file));
-        const uploadResponse = await fetch("http://localhost:8000/api/v1/ai/community/upload", {
+        const uploadResponse = await fetch("http://localhost:8080/api/v1/upload/free", {
           method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          },
           body: formData,
         });
         const uploadResult = await uploadResponse.json();

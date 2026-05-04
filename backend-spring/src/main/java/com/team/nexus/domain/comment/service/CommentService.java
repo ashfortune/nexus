@@ -10,4 +10,5 @@ public interface CommentService {
     void createComment(UUID boardId, CommentCreateRequestDto requestDto, String email);
     void deleteComment(UUID commentId, String email);
     void updateComment(UUID commentId, String content, String email);
+    void reportComment(UUID commentId);
 }

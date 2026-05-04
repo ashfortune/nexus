@@ -40,9 +40,13 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         Comment parent = null;
-        if (requestDto.getParentId() != null) {
-            parent = commentRepository.findById(requestDto.getParentId())
-                    .orElseThrow(() -> new IllegalArgumentException("부모 댓글을 찾을 수 없습니다."));
+        if (requestDto.getParentId() != null && !requestDto.getParentId().trim().isEmpty()) {
+            try {
+                parent = commentRepository.findById(UUID.fromString(requestDto.getParentId()))
+                        .orElseThrow(() -> new IllegalArgumentException("부모 댓글을 찾을 수 없습니다."));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("유효하지 않은 부모 댓글 ID입니다.");
+            }
         }
 
         Comment comment = Comment.builder()
@@ -88,6 +92,23 @@ public class CommentServiceImpl implements CommentService {
         commentRepository.save(comment);
     }
 
+    @Override
+    @Transactional
+    public void reportComment(UUID commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+        
+        int newCount = comment.getReportCount() + 1;
+        comment.setReportCount(newCount);
+        
+        // 신고 3회 이상 시 자동 삭제 처리
+        if (newCount >= 3) {
+            comment.setContent("신고 누적으로 삭제된 댓글입니다.");
+        }
+        
+        commentRepository.save(comment);
+    }
+
     private CommentResponseDto convertToDto(Comment comment) {
         return CommentResponseDto.builder()
                 .id(comment.getId())
@@ -95,7 +116,7 @@ public class CommentServiceImpl implements CommentService {
                 .author(comment.getUser() != null ? comment.getUser().getNickname() : "알 수 없음")
                 .authorId(comment.getUser() != null ? comment.getUser().getId() : null)
                 .createdAt(comment.getCreatedAt())
-                .reportCount(0)
+                .reportCount(comment.getReportCount())
                 .children(comment.getChildren().stream().map(this::convertToDto).collect(Collectors.toList()))
                 .build();
     }

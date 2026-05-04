@@ -266,6 +266,7 @@ CREATE TABLE comments (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     parent_comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    report_count INT DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

@@ -32,7 +32,7 @@ public class SecurityConfig {
             .cors(org.springframework.security.config.Customizer.withDefaults())
             .csrf(AbstractHttpConfigurer::disable) // API 서버이므로 CSRF 비활성화
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/api/v1/status/**", "/login/oauth2/**", "/oauth2/**").permitAll()
+                .requestMatchers("/api/v1/auth/**", "/api/v1/status/**", "/login/oauth2/**", "/oauth2/**", "/uploads/**", "/api/v1/upload/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/board/**", "/api/v1/region-board/**", "/api/v1/industry-board/**", "/api/v1/industry-categories/**", "/api/v1/comments/**", "/api/v1/comm/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/error").permitAll()
                 .anyRequest().authenticated()

@@ -87,8 +87,11 @@ export default function BoardCreatePage() {
           formData.append("files", file);
         });
 
-        const uploadResponse = await fetch("http://localhost:8000/api/v1/ai/community/upload", {
+        const uploadResponse = await fetch("http://localhost:8080/api/v1/upload/region", {
           method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          },
           body: formData,
         });
         const uploadResult = await uploadResponse.json();
@@ -97,7 +100,7 @@ export default function BoardCreatePage() {
         }
       }
 
-      const response = await fetch("http://localhost:8080/api/v1/region-board", {
+      const response = await fetch("http://localhost:8080/api/v1/board", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -108,6 +111,7 @@ export default function BoardCreatePage() {
           content,
           isAnonymous,
           regionName,
+          categoryName: "REGION",
           imageUrls
         })
       });

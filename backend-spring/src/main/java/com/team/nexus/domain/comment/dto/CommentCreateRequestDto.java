@@ -10,5 +10,5 @@ import java.util.UUID;
 @Builder
 public class CommentCreateRequestDto {
     private String content;
-    private UUID parentId;
+    private String parentId;
 }

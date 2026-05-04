@@ -290,6 +290,8 @@ export default function BoardDetailPage() {
         body: JSON.stringify({
           title: editTitle,
           content: editContent,
+          categoryName: "REGION",
+          regionName: post?.regionName,
           isAnonymous: post?.author === "익명",
           imageUrls: post?.imageUrls
         })
@@ -432,7 +434,11 @@ export default function BoardDetailPage() {
                 <div className="space-y-8 mb-16">
                   {post.imageUrls.map((url, idx) => (
                     <div key={idx} className="rounded-[3rem] overflow-hidden shadow-2xl shadow-black/5 ring-8 ring-zinc-50">
-                      <img src={url} alt={`Post ${idx}`} className="w-full h-auto object-cover" />
+                      <img 
+                        src={url.startsWith('http') ? url : `http://localhost:8080${url}`} 
+                        alt={`Post ${idx}`} 
+                        className="w-full h-auto object-cover" 
+                      />
                     </div>
                   ))}
                 </div>
@@ -512,36 +518,38 @@ export default function BoardDetailPage() {
             </div>
           </div>
 
-          <div className="space-y-6">
-            {comments.length > 0 ? (
-              comments.map((comment) => (
-                <CommentItem 
-                  key={comment.id}
-                  comment={comment}
-                  onReport={handleReportComment}
-                  onReply={setReplyTargetId}
-                  replyTargetId={replyTargetId}
-                  replyContent={replyContent}
-                  onReplyContentChange={setReplyContent}
-                  onReplySubmit={handleCommentSubmit}
-                  onDelete={handleDeleteComment}
-                  isSubmitting={isSubmitting}
-                  formatDate={formatDate}
-                  editingCommentId={editingCommentId}
-                  onSetEditingCommentId={setEditingCommentId}
-                  editCommentContent={editCommentContent}
-                  onSetEditCommentContent={setEditCommentContent}
-                  onUpdate={handleUpdateComment}
-                />
-              ))
-            ) : (
-              <div className="nexus-card border-2 border-dashed border-zinc-100 p-20 text-center bg-white/50">
-                <div className="w-16 h-16 bg-white rounded-3xl shadow-xl shadow-black/[0.03] mx-auto mb-6 flex items-center justify-center">
-                  <MessageSquare className="w-8 h-8 text-zinc-200" />
+          <div className="nexus-card bg-white overflow-hidden shadow-2xl shadow-black/5">
+            <div className="divide-y divide-zinc-50">
+              {comments.length > 0 ? (
+                comments.map((comment) => (
+                  <CommentItem 
+                    key={comment.id}
+                    comment={comment}
+                    onReport={handleReportComment}
+                    onReply={setReplyTargetId}
+                    replyTargetId={replyTargetId}
+                    replyContent={replyContent}
+                    onReplyContentChange={setReplyContent}
+                    onReplySubmit={handleCommentSubmit}
+                    onDelete={handleDeleteComment}
+                    isSubmitting={isSubmitting}
+                    formatDate={formatDate}
+                    editingCommentId={editingCommentId}
+                    onSetEditingCommentId={setEditingCommentId}
+                    editCommentContent={editCommentContent}
+                    onSetEditCommentContent={setEditCommentContent}
+                    onUpdate={handleUpdateComment}
+                  />
+                ))
+              ) : (
+                <div className="p-20 text-center bg-zinc-50/30">
+                  <div className="w-16 h-16 bg-white rounded-3xl shadow-xl shadow-black/[0.03] mx-auto mb-6 flex items-center justify-center">
+                    <MessageSquare className="w-8 h-8 text-zinc-200" />
+                  </div>
+                  <p className="text-zinc-400 font-black text-sm tracking-tighter italic">가장 먼저 대화를 시작해 보세요!</p>
                 </div>
-                <p className="text-zinc-400 font-black text-sm tracking-tighter italic">가장 먼저 대화를 시작해 보세요!</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </section>
 
@@ -667,39 +675,76 @@ function CommentItem({
 
   return (
     <div className={cn(
-      "nexus-card bg-white overflow-hidden transition-all",
-      isChild ? "ml-8 md:ml-16 border-l-4 border-zinc-50" : ""
+      "transition-all",
+      isChild ? "mt-3" : "bg-white overflow-hidden"
     )}>
-      <div className="p-6 md:p-8">
-        <div className="flex gap-4 md:gap-6">
-          <div className="w-12 h-12 rounded-2xl bg-zinc-100 flex items-center justify-center border border-zinc-50 shrink-0">
-            <User className="w-6 h-6 text-zinc-400" />
+      <div className={cn(
+        "relative p-6 md:p-10 transition-all",
+        isChild ? "bg-zinc-50/50 rounded-[2rem] border border-zinc-100/50 mx-6 md:mx-10 mb-4" : "",
+        comment.reportCount > 0 && "bg-red-50/50 border-red-100 ring-1 ring-red-100"
+      )}>
+        {/* Reported Status Header */}
+        {comment.reportCount > 0 && (
+          <div className="flex items-center gap-2 mb-4 px-4 py-2 bg-red-50 border border-red-100 rounded-xl w-fit">
+            <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">
+              신고가 {comment.reportCount}회 누적된 댓글입니다
+            </span>
           </div>
+        )}
+
+        {/* Connector Line - Adjusted for integrated layout */}
+        {isChild && (
+          <div className="absolute -left-3 md:-left-5 top-0 bottom-0 flex flex-col items-center">
+            <div className="w-[2px] h-full border-l-2 border-zinc-100/60" />
+          </div>
+        )}
+
+        <div className="flex gap-4 md:gap-6">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white flex items-center justify-center border border-zinc-100 shrink-0 shadow-sm">
+            <User className="w-5 h-5 md:w-6 md:h-6 text-zinc-400" />
+          </div>
+          
           <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[15px] font-black text-zinc-900 flex items-center gap-2">
+                <div className="text-[14px] md:text-[15px] font-black text-zinc-900 flex items-center gap-2">
                   {comment.author}
-                  {comment.reportCount > 0 && <span className="text-[8px] bg-red-50 text-red-400 px-1.5 py-0.5 rounded uppercase">Flagged</span>}
+                  {isChild && <CornerDownRight className="w-3.5 h-3.5 text-[var(--nexus-primary)]/40" />}
+                  {comment.reportCount > 0 && <span className="text-[8px] bg-red-50 text-red-400 px-1.5 py-0.5 rounded uppercase tracking-tighter">Flagged</span>}
                 </div>
                 <div className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{formatDate(comment.createdAt)}</div>
               </div>
-              <div className="flex items-center gap-3">
+              
+              <div className="flex items-center gap-4">
                 {!isDeleted && !isMine && (
-                  <button onClick={() => onReport(comment.id)} className="text-[10px] font-black text-zinc-300 hover:text-red-500 transition-colors uppercase tracking-widest">Report</button>
+                  <button 
+                    onClick={() => onReport(comment.id)} 
+                    className="flex items-center gap-1.5 text-[10px] font-black text-zinc-300 hover:text-red-500 transition-all uppercase tracking-widest group/report"
+                  >
+                    <Flag className="w-3.5 h-3.5 transition-transform group-hover/report:scale-110" />
+                    Report
+                  </button>
                 )}
                 {isMine && !isDeleted && (
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     <button 
                       onClick={() => {
                         onSetEditingCommentId(comment.id);
                         onSetEditCommentContent(comment.content);
                       }}
-                      className="text-[10px] font-black text-zinc-300 hover:text-black transition-colors uppercase tracking-widest"
+                      className="flex items-center gap-1.5 text-[10px] font-black text-zinc-300 hover:text-black transition-colors uppercase tracking-widest"
                     >
+                      <Edit2 className="w-3.5 h-3.5" />
                       Edit
                     </button>
-                    <button onClick={() => onDelete(comment.id)} className="text-[10px] font-black text-zinc-300 hover:text-red-500 transition-colors uppercase tracking-widest">Delete</button>
+                    <button 
+                      onClick={() => onDelete(comment.id)} 
+                      className="flex items-center gap-1.5 text-[10px] font-black text-zinc-300 hover:text-red-500 transition-colors uppercase tracking-widest"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete
+                    </button>
                   </div>
                 )}
               </div>
@@ -710,15 +755,18 @@ function CommentItem({
                 <textarea 
                   value={editCommentContent}
                   onChange={(e) => onSetEditCommentContent(e.target.value)}
-                  className="w-full p-6 bg-zinc-50 rounded-2xl border-2 border-transparent focus:bg-white focus:border-[var(--nexus-primary)]/10 outline-none transition-all font-medium text-base text-zinc-800 resize-none"
+                  className="w-full p-6 bg-white rounded-2xl border-2 border-zinc-100 focus:border-[var(--nexus-primary)]/10 outline-none transition-all font-medium text-base text-zinc-800 resize-none shadow-inner"
                 />
                 <div className="flex justify-end gap-2">
                   <button onClick={() => onSetEditingCommentId(null)} className="px-4 py-2 font-black text-[10px] text-zinc-400 uppercase tracking-widest">Cancel</button>
-                  <button onClick={() => onUpdate(comment.id)} className="bg-black text-white px-6 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest">Save Changes</button>
+                  <button onClick={() => onUpdate(comment.id)} className="bg-black text-white px-6 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-black/10">Save Changes</button>
                 </div>
               </div>
             ) : (
-              <p className={cn("text-[16px] font-medium leading-relaxed whitespace-pre-wrap", isDeleted ? "text-zinc-300 italic" : "text-zinc-700")}>
+              <p className={cn(
+                "text-[15px] md:text-[16px] font-medium leading-relaxed whitespace-pre-wrap", 
+                isDeleted ? "text-zinc-300 italic" : "text-zinc-700"
+              )}>
                 {comment.content}
               </p>
             )}
@@ -729,7 +777,7 @@ function CommentItem({
                   onClick={() => onReply(replyTargetId === comment.id ? null : comment.id)}
                   className="flex items-center gap-2 text-[10px] font-black text-[var(--nexus-primary)] uppercase tracking-widest hover:opacity-70 transition-opacity"
                 >
-                  <CornerDownRight className="w-3.5 h-3.5" />
+                  <MessageSquare className="w-3.5 h-3.5" />
                   {replyTargetId === comment.id ? "Cancel Reply" : "Reply"}
                 </button>
               </div>
@@ -737,15 +785,15 @@ function CommentItem({
           </div>
         </div>
 
-        {/* Reply Input */}
+        {/* Reply Input Area */}
         {replyTargetId === comment.id && (
-          <div className="mt-8 pl-16">
+          <div className="mt-8 pl-12 md:pl-16">
             <div className="relative group">
               <textarea 
                 value={replyContent}
                 onChange={(e) => onReplyContentChange(e.target.value)}
-                placeholder="답글을 남겨주세요..."
-                className="w-full min-h-[100px] p-6 bg-zinc-50 rounded-[2rem] border-2 border-transparent focus:bg-white focus:border-[var(--nexus-primary)]/10 outline-none transition-all font-medium text-base text-zinc-800 resize-none"
+                placeholder="따뜻한 답글을 남겨주세요..."
+                className="w-full min-h-[120px] p-6 bg-white rounded-[2rem] border-2 border-zinc-100 focus:border-[var(--nexus-primary)]/10 outline-none transition-all font-medium text-base text-zinc-800 resize-none shadow-xl shadow-black/[0.02]"
               />
               <button 
                 onClick={() => onReplySubmit(comment.id)}
@@ -759,9 +807,9 @@ function CommentItem({
         )}
       </div>
 
-      {/* Children Comments */}
+      {/* Nested Replies Rendering - Unified indentation */}
       {comment.children && comment.children.length > 0 && (
-        <div className="bg-zinc-50/30">
+        <div className={cn("pb-2", !isChild && "ml-8 md:ml-16")}>
           {comment.children.map((child: any) => (
             <CommentItem 
               key={child.id}
@@ -779,7 +827,7 @@ function CommentItem({
               editingCommentId={editingCommentId}
               onSetEditingCommentId={onSetEditingCommentId}
               editCommentContent={editCommentContent}
-              onSetEditCommentContent={setEditCommentContent}
+              onSetEditCommentContent={onSetEditCommentContent}
               onUpdate={onUpdate}
             />
           ))}

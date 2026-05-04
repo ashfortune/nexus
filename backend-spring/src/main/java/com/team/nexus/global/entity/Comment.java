@@ -45,6 +45,10 @@ public class Comment {
     @Column(name = "created_at", updatable = false)
     private java.time.LocalDateTime createdAt;
 
+    @Column(name = "report_count", nullable = false)
+    @Builder.Default
+    private int reportCount = 0;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = java.time.LocalDateTime.now();

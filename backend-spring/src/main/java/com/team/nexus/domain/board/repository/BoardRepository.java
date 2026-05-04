@@ -17,34 +17,36 @@ public interface BoardRepository extends JpaRepository<Board, UUID> {
     Page<Board> findAllByLikeCountGreaterThanEqual(int likeCount, Pageable pageable);
     Page<Board> findByRegionNameAndLikeCountGreaterThanEqual(String regionName, int likeCount, Pageable pageable);
     java.util.List<Board> findTop3ByRegionNameOrderByViewCountDesc(String regionName);
-    // --- 자유게시판 전용 (regionName IS NULL) ---
-    @Query("SELECT b FROM Board b WHERE b.regionName IS NULL")
+    // --- 자유게시판 전용 (categoryName = 'FREE') ---
+    @Query("SELECT b FROM Board b WHERE b.categoryName = 'FREE'")
     Page<Board> findFreeBoards(Pageable pageable);
 
-    @Query("SELECT b FROM Board b WHERE b.regionName IS NULL AND (" +
+    @Query("SELECT b FROM Board b WHERE b.categoryName = 'FREE' AND (" +
             "LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(b.content) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "(b.isAnonymous = false AND LOWER(b.user.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))))")
     Page<Board> findFreeBoardByKeywordAll(@Param("keyword") String keyword, Pageable pageable);
 
-    @Query("SELECT b FROM Board b WHERE b.regionName IS NULL AND LOWER(b.title) LIKE LOWER(CONCAT('%', :title, '%'))")
+    @Query("SELECT b FROM Board b WHERE b.categoryName = 'FREE' AND LOWER(b.title) LIKE LOWER(CONCAT('%', :title, '%'))")
     Page<Board> findFreeBoardByTitle(@Param("title") String title, Pageable pageable);
 
-    @Query("SELECT b FROM Board b WHERE b.regionName IS NULL AND b.isAnonymous = false AND LOWER(b.user.nickname) LIKE LOWER(CONCAT('%', :nickname, '%'))")
+    @Query("SELECT b FROM Board b WHERE b.categoryName = 'FREE' AND b.isAnonymous = false AND LOWER(b.user.nickname) LIKE LOWER(CONCAT('%', :nickname, '%'))")
     Page<Board> findFreeBoardByPublicUserNickname(@Param("nickname") String nickname, Pageable pageable);
 
-    // --- 지역별 게시판 전용 (regionName IS NOT NULL) ---
-    Page<Board> findByRegionNameOrderByCreatedAtDesc(String regionName, Pageable pageable);
+    // --- 지역별 게시판 전용 (categoryName = 'REGION') ---
+    @Query("SELECT b FROM Board b WHERE b.categoryName = 'REGION' AND b.regionName = :regionName")
+    Page<Board> findByRegionNameOrderByCreatedAtDesc(@Param("regionName") String regionName, Pageable pageable);
 
-    @Query("SELECT b FROM Board b WHERE b.regionName = :regionName AND (" +
+    @Query("SELECT b FROM Board b WHERE b.categoryName = 'REGION' AND b.regionName = :regionName AND (" +
             "LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(b.content) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "(b.isAnonymous = false AND LOWER(b.user.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))))")
     Page<Board> findByRegionNameAndKeywordAll(@Param("regionName") String regionName, @Param("keyword") String keyword, Pageable pageable);
 
-    Page<Board> findByRegionNameAndTitleContainingOrderByCreatedAtDesc(String regionName, String title, Pageable pageable);
+    @Query("SELECT b FROM Board b WHERE b.categoryName = 'REGION' AND b.regionName = :regionName AND LOWER(b.title) LIKE LOWER(CONCAT('%', :title, '%'))")
+    Page<Board> findByRegionNameAndTitleContainingOrderByCreatedAtDesc(@Param("regionName") String regionName, @Param("title") String title, Pageable pageable);
 
-    @Query("SELECT b FROM Board b WHERE b.regionName = :regionName AND " +
+    @Query("SELECT b FROM Board b WHERE b.categoryName = 'REGION' AND b.regionName = :regionName AND " +
             "b.isAnonymous = false AND LOWER(b.user.nickname) LIKE LOWER(CONCAT('%', :nickname, '%'))")
     Page<Board> findByRegionNameAndPublicUserNickname(@Param("regionName") String regionName, @Param("nickname") String nickname, Pageable pageable);
 
