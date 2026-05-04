@@ -1,6 +1,5 @@
 package com.team.nexus.domain.chat.controller;
 
-import com.team.nexus.domain.chat.service.ChatFileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +10,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,17 +22,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*", allowCredentials = "true")
 public class ChatFileController {
-
-    private final ChatFileService chatFileService;
-
-    @Operation(summary = "파일 업로드", description = "채팅 중 파일을 업로드합니다.")
-    @PostMapping("/upload")
-    public ResponseEntity<Map<String, String>> uploadFile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "category", required = false) String category) {
-        String fileUrl = chatFileService.uploadFile(file, category);
-        return ResponseEntity.ok(Map.of("url", "http://localhost:8080" + fileUrl));
-    }
 
     @Operation(summary = "파일 표시", description = "업로드된 파일을 브라우저에 표시합니다.")
     @GetMapping("/display/{*fileName}")
