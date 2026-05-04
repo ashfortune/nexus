@@ -27,13 +27,12 @@ public class GroupPurchaseFileController {
 
     private final GroupPurchaseFileService groupPurchaseFileService;
 
-    @Operation(summary = "파일 업로드", description = "공동구매 관련 파일을 업로드합니다.")
     @PostMapping("/upload")
     public ResponseEntity<Map<String, String>> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "category", required = false) String category) {
         String fileUrl = groupPurchaseFileService.uploadFile(file, category);
-        return ResponseEntity.ok(Map.of("url", "http://localhost:8080" + fileUrl));
+        return ResponseEntity.ok(Map.of("url", fileUrl));
     }
 
     @Operation(summary = "파일 표시", description = "업로드된 파일을 브라우저에 표시합니다.")

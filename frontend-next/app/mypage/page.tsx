@@ -30,22 +30,46 @@ export default function MyPage() {
     if (!file) return;
 
     const userId = localStorage.getItem('userId');
+    const token = localStorage.getItem('accessToken');
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('files', file);
 
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/mypage/profile-image/${userId}`, {
+      // 1. Upload to Supabase via UploadController
+      const uploadResponse = await fetch('http://localhost:8080/api/v1/upload/profiles', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
       });
-      const result = await response.json();
-      if (result.status === 'success') {
-        alert('프로필 이미지가 변경되었습니다.');
-        fetchData(userId!);
+      const uploadResult = await uploadResponse.json();
+
+      if (uploadResult.status === 'success' && uploadResult.urls.length > 0) {
+        const imageUrl = uploadResult.urls[0];
+        
+        // 2. Update user profile with the new URL
+        const updateResponse = await fetch(`http://localhost:8080/api/v1/mypage/profile-image/${userId}`, {
+          method: 'PATCH',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ imageUrl }),
+        });
+        
+        const updateResult = await updateResponse.json();
+        if (updateResult.status === 'success') {
+          alert('프로필 이미지가 변경되었습니다.');
+          fetchData(userId!);
+        } else {
+          alert(updateResult.message || '프로필 정보 업데이트에 실패했습니다.');
+        }
       } else {
-        alert(result.message || '업로드에 실패했습니다.');
+        alert(uploadResult.message || '업로드에 실패했습니다.');
       }
     } catch (error) {
+      console.error('Profile upload error:', error);
       alert('오류가 발생했습니다.');
     }
   };
@@ -181,7 +205,7 @@ export default function MyPage() {
                 <div className="w-full h-full bg-[var(--nexus-surface-container)] rounded-3xl flex items-center justify-center overflow-hidden shadow-inner border-2 border-white">
                   {data.profileImage ? (
                     <img
-                      src={`http://localhost:8080${data.profileImage}`}
+                      src={data.profileImage.startsWith('http') ? data.profileImage : `http://localhost:8080${data.profileImage}`}
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />

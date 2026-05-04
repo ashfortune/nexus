@@ -1,0 +1,6 @@
+Mon May 04 21:20:51 KST 2026 - CustomOAuth2UserService.loadUser started for: google
+Mon May 04 21:20:51 KST 2026 - CustomOAuth2UserService.loadUser completed for: moonkm00@gmail.com
+Mon May 04 21:20:51 KST 2026 - Redirecting to: http://localhost:3000/auth/oauth-callback?token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtb29ua20wMEBnbWFpbC5jb20iLCJ1c2VySWQiOiI5ZGY2Y2FlNC1kYzRlLTRmN2YtYmNlYS0yNmYwMjhjNDYwMDMiLCJ1c2VyVHlwZSI6MSwiaWF0IjoxNzc3ODk3MjUxLCJleHAiOjE3Nzc5ODM2NTF9.YmD69XOX-2w0m5O8Wfe3qgRmiIXBZICOcDQ16i7fwVs&userId=9df6cae4-dc4e-4f7f-bcea-26f028c46003&nickname=%EA%B7%B8%EB%83%A5%ED%96%89%EC%9A%B4&provider=google
+Mon May 04 21:23:04 KST 2026 - CustomOAuth2UserService.loadUser started for: google
+Mon May 04 21:23:04 KST 2026 - CustomOAuth2UserService.loadUser completed for: moonkm00@gmail.com
+Mon May 04 21:23:04 KST 2026 - Redirecting to: http://localhost:3000/auth/oauth-callback?token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtb29ua20wMEBnbWFpbC5jb20iLCJ1c2VySWQiOiI5ZGY2Y2FlNC1kYzRlLTRmN2YtYmNlYS0yNmYwMjhjNDYwMDMiLCJ1c2VyVHlwZSI6MSwiaWF0IjoxNzc3ODk3Mzg0LCJleHAiOjE3Nzc5ODM3ODR9.5-6TP4SbkoDIoX_41afH0m8ZvCy--fOQ8SzKSj_9z-I&userId=9df6cae4-dc4e-4f7f-bcea-26f028c46003&nickname=%EA%B7%B8%EB%83%A5%ED%96%89%EC%9A%B4&provider=google

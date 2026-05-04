@@ -56,7 +56,7 @@ public class MyPageServiceImpl implements MyPageService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        user.setUserType(1); // 1: 사업가 회원
+        user.setUserType(1);
         user.setBizNo(bizNo);
         userRepository.save(user);
     }
@@ -87,32 +87,12 @@ public class MyPageServiceImpl implements MyPageService {
 
     @Override
     @Transactional
-    public void uploadProfileImage(UUID userId, org.springframework.web.multipart.MultipartFile file) {
+    public void updateProfileImage(UUID userId, String imageUrl) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        try {
-            // Spring Boot 실행 경로 기준 uploads 폴더 사용
-            String uploadDir = "uploads/profiles/";
-            java.io.File dir = new java.io.File(uploadDir);
-            if (!dir.exists())
-                dir.mkdirs();
-
-            String originalFilename = file.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
-            String savedFilename = UUID.randomUUID().toString() + extension;
-            java.nio.file.Path path = java.nio.file.Paths.get(uploadDir + savedFilename).toAbsolutePath().normalize();
-
-            java.nio.file.Files.copy(file.getInputStream(), path, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-
-            // GroupPurchaseFileController의 display 엔드포인트를 통해 접근하도록 경로 설정
-            user.setProfileImage("/api/v1/group-purchases/files/display/profiles/" + savedFilename);
-            userRepository.save(user);
-        } catch (java.io.IOException e) {
-            throw new RuntimeException("프로필 이미지 업로드 중 오류가 발생했습니다: " + e.getMessage());
-        }
+        user.setProfileImage(imageUrl);
+        userRepository.save(user);
+        log.info("User {} profile image updated to: {}", userId, imageUrl);
     }
 }

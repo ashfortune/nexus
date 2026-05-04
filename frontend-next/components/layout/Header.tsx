@@ -193,7 +193,7 @@ export default function Header() {
                   >
                     {profileImage ? (
                       <img
-                        src={`http://localhost:8080${profileImage}`}
+                        src={profileImage.startsWith('http') ? profileImage : `http://localhost:8080${profileImage}`}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />

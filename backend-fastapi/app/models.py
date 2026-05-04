@@ -60,6 +60,7 @@ class IndustryCategory(Base):
     license_mappings: Mapped[List["LicenseIndustryMapping"]] = relationship(
         back_populates="category"
     )
+    boards: Mapped[List["Board"]] = relationship(back_populates="industry_category")
 
 
 class EquipmentPrice(Base):
@@ -131,6 +132,9 @@ class User(Base):
     labor_contracts: Mapped[List["LaborContract"]] = relationship(back_populates="user")
     created_chat_rooms: Mapped[List["ChatRoom"]] = relationship(back_populates="creator")
     checklist_progresses: Mapped[List["ChecklistProgress"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    board_likes: Mapped[List["BoardLike"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -510,6 +514,9 @@ class Board(Base):
     like_count: Mapped[Optional[int]] = mapped_column(Integer, server_default=text("0"))
     image_url: Mapped[Optional[str]] = mapped_column(String(255))
     is_anonymous: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text("false"))
+    industry_category_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("industry_categories.id", ondelete="SET NULL")
+    )
     created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
 
     # Relationships
@@ -541,9 +548,6 @@ class BoardLike(Base):
     # Relationships
     board: Mapped["Board"] = relationship(back_populates="likes")
     user: Mapped["User"] = relationship(back_populates="board_likes")
-    comments: Mapped[List["Comment"]] = relationship(
-        back_populates="board", cascade="all, delete-orphan"
-    )
 
 
 class Comment(Base):

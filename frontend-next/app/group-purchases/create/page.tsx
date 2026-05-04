@@ -292,11 +292,10 @@ export default function GroupBuyCreatePage() {
 
       if (selectedFile) {
         const uploadFormData = new FormData();
-        uploadFormData.append('file', selectedFile);
-        uploadFormData.append('category', 'product-images');
+        uploadFormData.append('files', selectedFile);
 
         const uploadRes = await fetch(
-          process.env.NEXT_PUBLIC_API_URL + '/api/v1/group-purchases/files/upload',
+          process.env.NEXT_PUBLIC_API_URL + '/api/v1/upload/purchase',
           {
             method: 'POST',
             body: uploadFormData,
@@ -305,7 +304,9 @@ export default function GroupBuyCreatePage() {
 
         if (uploadRes.ok) {
           const data = await uploadRes.json();
-          finalImageUrl = data.url;
+          if (data.urls && data.urls.length > 0) {
+            finalImageUrl = data.urls[0];
+          }
         }
       }
 

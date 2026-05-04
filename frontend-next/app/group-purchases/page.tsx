@@ -188,8 +188,9 @@ export default function GroupBuyListPage() {
                   <div className="relative h-56">
                     <img
                       src={
-                        gb.imageUrl ||
-                        'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=800&auto=format&fit=crop'
+                        gb.imageUrl 
+                          ? (gb.imageUrl.startsWith('http') ? gb.imageUrl : `http://localhost:8080${gb.imageUrl}`)
+                          : 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=800&auto=format&fit=crop'
                       }
                       alt={gb.itemName}
                       className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
