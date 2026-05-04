@@ -67,7 +67,7 @@ export default function BoardCreatePage() {
       if (images.length > 0) {
         const formData = new FormData();
         images.forEach(file => formData.append("files", file));
-        const uploadResponse = await api.post("/api/v1/upload", formData);
+        const uploadResponse = await api.post("/api/v1/upload/free", formData);
         const uploadResult = await uploadResponse.json();
         if (uploadResult.status === "success") imageUrls = uploadResult.urls;
       }
