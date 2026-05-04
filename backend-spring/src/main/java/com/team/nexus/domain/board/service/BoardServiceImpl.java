@@ -28,7 +28,7 @@ public class BoardServiceImpl implements BoardService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final com.team.nexus.domain.board.repository.BoardLikeRepository boardLikeRepository;
-    private final com.team.nexus.domain.board.repository.IndustryCategoryRepository industryCategoryRepository;
+    private final com.team.nexus.domain.license.repository.IndustryCategoryRepository industryCategoryRepository;
 
     @Override
     @Transactional(readOnly = true)

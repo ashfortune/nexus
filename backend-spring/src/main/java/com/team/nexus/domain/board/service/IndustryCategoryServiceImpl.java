@@ -1,7 +1,7 @@
 package com.team.nexus.domain.board.service;
 
 import com.team.nexus.domain.board.dto.IndustryCategoryResponseDto;
-import com.team.nexus.domain.board.repository.IndustryCategoryRepository;
+import com.team.nexus.domain.license.repository.IndustryCategoryRepository;
 import com.team.nexus.global.entity.IndustryCategory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
