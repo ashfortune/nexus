@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mail, ChevronRight, AlertCircle, ArrowLeft, Key, Copy, CheckCircle2 } from 'lucide-react';
@@ -32,28 +33,18 @@ export default function FindPasswordPage() {
     resolver: zodResolver(findPasswordSchema),
   });
 
+
   const onSubmit = async (data: FindPasswordFormValues) => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_API_URL + '/api/v1/auth/reset-password',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        }
-      );
-
+      const response = await api.post('/api/v1/auth/reset-password', data);
       const result = await response.json();
 
       if (response.ok && result.status === 'success') {
         setTempPassword(result.data.temporaryPassword);
       } else {
-        const msg =
-          result.message || '비밀번호 재설정 중 오류가 발생했습니다. 이메일을 다시 확인해 주세요.';
+        const msg = result.message || '비밀번호 재설정 중 오류가 발생했습니다. 이메일을 다시 확인해 주세요.';
         setErrorMessage(msg);
       }
     } catch (error: any) {

@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -33,18 +34,19 @@ export default function GroupBuyListPage() {
     return () => clearInterval(timer);
   }, []);
 
+
   // API 호출
   useEffect(() => {
     setIsLoading(true);
-    const params = new URLSearchParams();
-    if (searchKeyword) params.append('itemName', searchKeyword);
-    if (selectedRegion && selectedRegion !== '전체') params.append('region', selectedRegion);
+    const params: Record<string, string> = {};
+    if (searchKeyword) params.itemName = searchKeyword;
+    if (selectedRegion && selectedRegion !== '전체') params.region = selectedRegion;
 
-    const url = params.toString()
-      ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/group-purchases/search?${params.toString()}`
-      : process.env.NEXT_PUBLIC_API_URL + '/api/v1/group-purchases';
+    const endpoint = Object.keys(params).length > 0 
+      ? '/api/v1/group-purchases/search' 
+      : '/api/v1/group-purchases';
 
-    fetch(url)
+    api.get(endpoint, { params })
       .then((res) => res.json())
       .then((data) => {
         setGroupBuys(data);

@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface Post {
   id: string;
@@ -64,21 +66,15 @@ export default function BoardPage() {
   const fetchPosts = async (page: number, tab: 'all' | 'popular' = 'all', keyword: string = "", type: string = "all", region: string = "gyeonggi") => {
     setIsLoading(true);
     try {
-      const baseUrl = "http://localhost:8080/api/v1/region-board";
-      let url = tab === "popular" ? `${baseUrl}/popular` : baseUrl;
-      
-      const params = new URLSearchParams();
-      params.append("page", page.toString());
-      params.append("size", "10");
-      if (keyword) {
-        params.append("keyword", keyword);
-        params.append("type", type);
-      }
-      
       const regionName = regions.find(r => r.id === region)?.name || "경기도";
-      params.append("region", regionName);
-
-      const response = await fetch(`${url}?${params.toString()}`);
+      const response = await api.get(tab === "popular" ? "/api/v1/region-board/popular" : "/api/v1/region-board", {
+        params: {
+          page: String(page),
+          size: "10",
+          region: regionName,
+          ...(keyword && { keyword, type })
+        }
+      });
       const result = await response.json();
       
       if (result.status === "success") {
@@ -103,8 +99,8 @@ export default function BoardPage() {
   };
 
   const handleCreatePost = () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
+    const { isAuthenticated } = useAuthStore.getState();
+    if (!isAuthenticated) {
       alert("로그인이 필요한 서비스입니다. 로그인 페이지로 이동합니다.");
       router.push("/auth/login");
       return;

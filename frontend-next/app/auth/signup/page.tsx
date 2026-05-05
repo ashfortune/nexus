@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -17,6 +18,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useAuthStore } from '@/store/useAuthStore';
 import DaumPostcode from 'react-daum-postcode';
 
 import { cn } from '@/lib/utils';
@@ -62,11 +64,18 @@ export default function SignupPage() {
   const [selectedType, setSelectedType] = useState<number | null>(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [agreedPolicies, setAgreedPolicies] = useState<number[]>([]);
+  const { isAuthenticated, _hasHydrated } = useAuthStore();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (_hasHydrated && isAuthenticated) {
+      router.push('/');
+    }
+  }, [_hasHydrated, isAuthenticated, router]);
 
   const {
     register,
@@ -125,19 +134,13 @@ export default function SignupPage() {
 
   const onSignupSubmit = async (data: SignupFormValues) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          nickname: data.nickname,
-          address: data.address,
-          userType: data.userType,
-          bizNo: data.bizNo,
-        }),
+      const response = await api.post('/api/v1/auth/signup', {
+        email: data.email,
+        password: data.password,
+        nickname: data.nickname,
+        address: data.address,
+        userType: data.userType,
+        bizNo: data.bizNo,
       });
 
       const result = await response.json();

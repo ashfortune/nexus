@@ -1,9 +1,11 @@
 'use client';
 
+import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL + '/api/v1/ai/branding';
+const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
+const API_BASE_PATH = '/api/v1/ai/branding';
 
 interface Logo {
   id: string;
@@ -35,8 +37,8 @@ export default function BrandingAssetsSection({
     setIsGenerating(true);
     try {
       const targetId = identity?.identityId || identity?.id;
-      const response = await fetch(`${API_BASE_URL}/identity/${targetId}/assets`, {
-        method: 'POST',
+      const response = await api.post(`${API_BASE_PATH}/identity/${targetId}/assets`, null, {
+        baseUrl: FASTAPI_URL,
       });
       const result = await response.json();
 
@@ -45,7 +47,7 @@ export default function BrandingAssetsSection({
           ...a,
           imageUrl: a.imageUrl.startsWith('http')
             ? a.imageUrl
-            : `${process.env.NEXT_PUBLIC_FASTAPI_URL}${a.imageUrl}`,
+            : `${FASTAPI_URL}${a.imageUrl}`,
         }));
         setAssets(newAssets);
       } else {
@@ -61,7 +63,8 @@ export default function BrandingAssetsSection({
 
   const handleDownload = async (url: string, filename: string) => {
     try {
-      const response = await fetch(url);
+      // 이미지 다운로드는 인증이 필요할 수 있으므로 api.get 사용
+      const response = await api.get(url);
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');

@@ -15,6 +15,8 @@ import {
   Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function BoardCreatePage() {
   const router = useRouter();
@@ -73,8 +75,8 @@ export default function BoardCreatePage() {
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
+      const { isAuthenticated } = useAuthStore.getState();
+      if (!isAuthenticated) {
         alert("로그인이 필요합니다.");
         router.push("/auth/login");
         return;
@@ -83,37 +85,19 @@ export default function BoardCreatePage() {
       let imageUrls: string[] = [];
       if (images.length > 0) {
         const formData = new FormData();
-        images.forEach(file => {
-          formData.append("files", file);
-        });
-
-        const uploadResponse = await fetch("http://localhost:8080/api/v1/upload/region", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
-          body: formData,
-        });
+        images.forEach(file => formData.append("files", file));
+        const uploadResponse = await api.post("/api/v1/upload/region", formData);
         const uploadResult = await uploadResponse.json();
-        if (uploadResult.status === "success") {
-          imageUrls = uploadResult.urls;
-        }
+        if (uploadResult.status === "success") imageUrls = uploadResult.urls;
       }
 
-      const response = await fetch("http://localhost:8080/api/v1/board", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title,
-          content,
-          isAnonymous,
-          regionName,
-          categoryName: "REGION",
-          imageUrls
-        })
+      const response = await api.post("/api/v1/board", {
+        title,
+        content,
+        isAnonymous,
+        regionName,
+        categoryName: "REGION",
+        imageUrls
       });
 
       const result = await response.json();

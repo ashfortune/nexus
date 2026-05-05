@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, Mail, Eye, EyeOff, ChevronRight, AlertCircle } from 'lucide-react';
@@ -9,6 +10,7 @@ import * as z from 'zod';
 
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useAuthStore } from '@/store/useAuthStore';
 
 // --- Validation Schema ---
 const loginSchema = z.object({
@@ -20,9 +22,16 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setAuth, isAuthenticated, _hasHydrated } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (_hasHydrated && isAuthenticated) {
+      router.push('/');
+    }
+  }, [_hasHydrated, isAuthenticated, router]);
 
   const {
     register,
@@ -36,48 +45,41 @@ export default function LoginPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
+      const response = await api.post('/api/v1/auth/login', data);
       const result = await response.json();
-      // console.log("Login Result:", result);
 
       if (response.ok && result.status === 'success') {
-        const data = result.data;
-        const accessToken = data.accessToken;
-        const nickname = data.nickname;
-        const userId = data.userId || data.id; // fallback to 'id' if 'userId' is missing
+        const authData = result.data;
+        const accessToken = authData.accessToken;
+        const nickname = authData.nickname;
+        const userId = authData.userId || authData.id;
 
         if (!userId) {
-          console.error('User ID is missing in the response:', data);
+          console.error('User ID is missing in the response:', authData);
         }
 
-        // 로컬 스토리지에 토큰 및 권한 정보 저장
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('nickname', nickname);
-        localStorage.setItem('userType', data.userType.toString());
-        localStorage.setItem('profileImage', data.profileImage || '');
-        if (userId) localStorage.setItem('userId', userId);
+        // Zustand 스토어에 인증 정보 저장 (localStorage 저장은 persist 미들웨어가 자동 처리)
+        setAuth({
+          id: userId,
+          email: authData.email || '',
+          nickname: nickname,
+          userType: Number(authData.userType),
+          profileImage: authData.profileImage || ''
+        }, accessToken);
 
-        // 헤더에 로그인 상태 변경 이벤트 알림 (수정된 Header.tsx 반영)
-        window.dispatchEvent(new Event('login-status-change'));
+        // 기존 호환성을 위해 localStorage에 직접 저장 (필요한 경우에만 유지)
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('userId', userId);
+        localStorage.setItem('nickname', nickname);
 
         // 페이지 이동
         router.push('/');
-        router.refresh(); // 최신 상태 반영을 위해 권장
+        router.refresh(); 
       } else {
-        // 서버 응답이 에러인 경우 (4xx, 5xx)
-        const msg =
-          result.message || '로그인 중 오류가 발생했습니다. 이메일과 비밀번호를 확인해 주세요.';
+        const msg = result.message || '로그인 중 오류가 발생했습니다. 이메일과 비밀번호를 확인해 주세요.';
         setErrorMessage(msg);
       }
     } catch (error: any) {
-      // 네트워크 오류 또는 기타 예외 상황
       setErrorMessage('서버와 통신 중 오류가 발생했습니다. 네트워크 상태를 확인해 주세요.');
     } finally {
       setIsLoading(false);
@@ -197,7 +199,7 @@ export default function LoginPage() {
             {/* Social Login Buttons */}
             <div className="grid grid-cols-2 gap-3 mt-6">
               <a
-                href={process.env.NEXT_PUBLIC_API_URL + '/oauth2/authorization/google'}
+                href={(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') + '/oauth2/authorization/google'}
                 className="h-12 flex items-center justify-center gap-2 border border-zinc-200 rounded-2xl hover:bg-zinc-50 transition-all active:scale-[0.98] group"
               >
                 <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
@@ -206,7 +208,7 @@ export default function LoginPage() {
                 </span>
               </a>
               <a
-                href={process.env.NEXT_PUBLIC_API_URL + '/oauth2/authorization/kakao'}
+                href={(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') + '/oauth2/authorization/kakao'}
                 className="h-12 flex items-center justify-center gap-2 bg-[#FEE500] rounded-2xl hover:bg-[#FDD835] transition-all active:scale-[0.98] group"
               >
                 <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">

@@ -17,6 +17,8 @@ import {
   Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface Category {
   id: string;
@@ -42,7 +44,7 @@ export default function IndustryBoardCreatePage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/v1/industry-categories/main");
+      const response = await api.get("/api/v1/industry-categories/main");
       const result = await response.json();
       if (result.status === "success") {
         setCategories(result.data);
@@ -50,7 +52,6 @@ export default function IndustryBoardCreatePage() {
         if (urlCategoryId) {
           setSelectedCategoryId(urlCategoryId);
         }
-        // 자동 선택 로직 제거: 사용자가 직접 선택하도록 유도
       }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
@@ -93,7 +94,13 @@ export default function IndustryBoardCreatePage() {
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("accessToken");
+      const { isAuthenticated } = useAuthStore.getState();
+      if (!isAuthenticated) {
+        alert("로그인이 필요합니다.");
+        router.push("/auth/login");
+        return;
+      }
+
       let uploadedUrls: string[] = [];
 
       // 1. Image Upload to Spring Boot
@@ -101,34 +108,21 @@ export default function IndustryBoardCreatePage() {
         const formData = new FormData();
         imageFiles.forEach(file => formData.append("files", file));
         
-        const uploadRes = await fetch("http://localhost:8080/api/v1/upload/industry", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
-          body: formData
-        });
-        const uploadData = await uploadRes.json();
+        const uploadResponse = await api.post("/api/v1/upload/industry", formData);
+        const uploadData = await uploadResponse.json();
         if (uploadData.status === "success") {
           uploadedUrls = uploadData.urls;
         }
       }
 
       // 2. Create Post in Spring Boot
-      const response = await fetch("http://localhost:8080/api/v1/board", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title,
-          content,
-          categoryName: "INDUSTRY",
-          industryCategoryId: selectedCategoryId,
-          isAnonymous,
-          imageUrls: uploadedUrls
-        })
+      const response = await api.post("/api/v1/board", {
+        title,
+        content,
+        categoryName: "INDUSTRY",
+        industryCategoryId: selectedCategoryId,
+        isAnonymous,
+        imageUrls: uploadedUrls
       });
 
       const result = await response.json();

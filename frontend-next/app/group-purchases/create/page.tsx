@@ -1,5 +1,7 @@
 'use client';
 
+import { api } from '@/lib/api';
+import { useAuthStore } from '@/store/useAuthStore';
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Image as ImageIcon, Check } from 'lucide-react';
@@ -237,6 +239,7 @@ const regionData: { [key: string]: string[] } = {
   제주특별자치도: ['서귀포시', '제주시'],
 };
 
+
 export default function GroupBuyCreatePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -256,6 +259,9 @@ export default function GroupBuyCreatePage() {
     endDate: '',
     description: '',
   });
+
+  const { user } = useAuthStore.getState();
+  const currentUserId = user?.id || '';
 
   useEffect(() => {
     if (selectedProvince) {
@@ -294,13 +300,9 @@ export default function GroupBuyCreatePage() {
         const uploadFormData = new FormData();
         uploadFormData.append('files', selectedFile);
 
-        const uploadRes = await fetch(
-          process.env.NEXT_PUBLIC_API_URL + '/api/v1/upload/purchase',
-          {
-            method: 'POST',
-            body: uploadFormData,
-          }
-        );
+        const uploadRes = await api.post('/api/v1/group-purchases/files/upload', uploadFormData, {
+          headers: {} // Let browser handle boundary
+        });
 
         if (uploadRes.ok) {
           const data = await uploadRes.json();
@@ -310,25 +312,16 @@ export default function GroupBuyCreatePage() {
         }
       }
 
-      const userId = localStorage.getItem('userId') || 'd38bc69d-9660-4e11-a50d-9ee90ff38673';
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/group-purchases?userId=${userId}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...formData,
-            region: `${selectedProvince} ${selectedCity}`,
-            imageUrl: finalImageUrl,
-            itemPrice: parseInt(formData.itemPrice),
-            targetCount: parseInt(formData.targetCount),
-            endDate: formData.endDate.includes('T') ? formData.endDate : `${formData.endDate}:00`,
-          }),
-        }
-      );
+      const response = await api.post('/api/v1/group-purchases', {
+        ...formData,
+        region: `${selectedProvince} ${selectedCity}`,
+        imageUrl: finalImageUrl,
+        itemPrice: parseInt(formData.itemPrice),
+        targetCount: parseInt(formData.targetCount),
+        endDate: formData.endDate.includes('T') ? formData.endDate : `${formData.endDate}:00`,
+      }, {
+        params: { userId: currentUserId }
+      });
 
       if (response.ok) {
         alert('공동구매가 성공적으로 등록되었습니다!');

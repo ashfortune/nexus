@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import AnalysisReport from '../components/predict/AnalysisReport';
 import { LineChart, LayoutDashboard, Database, AlertCircle, RefreshCcw } from 'lucide-react';
@@ -13,13 +14,14 @@ const PredictPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+
   const fetchAnalysis = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_FASTAPI_URL + '/api/v1/ai/prediction/analysis'
-      );
+      const response = await api.get('/api/v1/ai/prediction/analysis', {
+        baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000'
+      });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || '데이터를 불러오는 중 오류가 발생했습니다.');

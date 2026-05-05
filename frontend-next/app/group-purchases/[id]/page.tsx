@@ -1,5 +1,7 @@
 'use client';
 
+import { api } from '@/lib/api';
+import { useAuthStore } from '@/store/useAuthStore';
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ShoppingBag, ChevronLeft } from 'lucide-react';
@@ -25,6 +27,7 @@ interface GroupBuy {
   creatorId: string;
 }
 
+
 export default function GroupBuyDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -38,13 +41,11 @@ export default function GroupBuyDetailPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  const currentUserId =
-    typeof window !== 'undefined'
-      ? localStorage.getItem('userId') || 'd38bc69d-9660-4e11-a50d-9ee90ff38673'
-      : '';
+  const { user } = useAuthStore.getState();
+  const currentUserId = user?.id || '';
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/group-purchases/${params.id}`)
+    api.get(`/api/v1/group-purchases/${params.id}`)
       .then((res) => res.json())
       .then((data) => {
         setGb(data);
@@ -87,9 +88,9 @@ export default function GroupBuyDetailPage() {
     if (!gb || timeLeft.isExpired) return;
 
     try {
-      const checkRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/group-purchases/${params.id}/check-participation?userId=${currentUserId}`
-      );
+      const checkRes = await api.get(`/api/v1/group-purchases/${params.id}/check-participation`, {
+        params: { userId: currentUserId }
+      });
       const isParticipated = await checkRes.json();
 
       if (isParticipated) {
@@ -104,7 +105,7 @@ export default function GroupBuyDetailPage() {
 
     if (provider === 'TOSS') {
       try {
-        const configRes = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/config');
+        const configRes = await api.get('/api/v1/config');
         const configData = await configRes.json();
         const clientKey = configData.tossClientKey;
 
@@ -142,12 +143,9 @@ export default function GroupBuyDetailPage() {
     }
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/group-purchases/${gb.id}?userId=${currentUserId}`,
-        {
-          method: 'DELETE',
-        }
-      );
+      const response = await api.delete(`/api/v1/group-purchases/${gb.id}`, {
+        params: { userId: currentUserId }
+      });
 
       if (response.ok) {
         alert('공동구매가 취소되었습니다.');

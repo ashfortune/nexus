@@ -1,8 +1,11 @@
 'use client';
 
+import { api } from '@/lib/api';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useState, useRef, useEffect } from 'react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL + '/api/v1/ai/branding';
+const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
+const API_BASE_PATH = '/api/v1/ai/branding';
 
 interface Message {
   id: number;
@@ -44,20 +47,20 @@ export default function InterviewSection({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const { user } = useAuthStore.getState();
+
   // 1. 컴포넌트 마운트 시 브랜딩 프로젝트 생성
   useEffect(() => {
     if (initialProjectId) return; // 이미 프로젝트가 있으면 생성 건너뜀
 
     const initProject = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            industryId: '550e8400-e29b-41d4-a716-446655440000', // 초기 기본값
-            title: '새로운 창업 프로젝트',
-            userId: localStorage.getItem('userId'),
-          }),
+        const response = await api.post(`${API_BASE_PATH}/`, {
+          industryId: '550e8400-e29b-41d4-a716-446655440000', // 초기 기본값
+          title: '새로운 창업 프로젝트',
+          userId: user?.id,
+        }, {
+          baseUrl: FASTAPI_URL,
         });
         const result = await response.json();
         if (result.success) {
@@ -68,7 +71,7 @@ export default function InterviewSection({
       }
     };
     initProject();
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -86,13 +89,11 @@ export default function InterviewSection({
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/${projectId}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: userContent,
-          history: messages.map((m) => ({ role: m.role, content: m.content })),
-        }),
+      const response = await api.post(`${API_BASE_PATH}/${projectId}/chat`, {
+        message: userContent,
+        history: messages.map((m) => ({ role: m.role, content: m.content })),
+      }, {
+        baseUrl: FASTAPI_URL,
       });
 
       const result = await response.json();
@@ -127,8 +128,8 @@ export default function InterviewSection({
 
     setIsGeneratingBranding(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/${projectId}/naming`, {
-        method: 'POST',
+      const response = await api.post(`${API_BASE_PATH}/${projectId}/naming`, null, {
+        baseUrl: FASTAPI_URL,
       });
       const result = await response.json();
 
