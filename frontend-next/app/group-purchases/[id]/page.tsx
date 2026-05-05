@@ -190,8 +190,9 @@ export default function GroupBuyDetailPage() {
             <div className="relative rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white">
               <img
                 src={
-                  gb.imageUrl ||
-                  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1200&auto=format&fit=crop'
+                  gb.imageUrl 
+                    ? (gb.imageUrl.startsWith('http') ? gb.imageUrl : `http://localhost:8080${gb.imageUrl}`)
+                    : 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1200&auto=format&fit=crop'
                 }
                 alt={gb.itemName}
                 className="w-full h-auto object-cover aspect-video"

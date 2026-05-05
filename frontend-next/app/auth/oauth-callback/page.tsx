@@ -58,20 +58,3 @@ export default function OAuthCallbackPage() {
     </div>
   );
 }
-
-export default function OAuthCallbackPage() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
-      <Suspense
-        fallback={
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-black/10 border-t-black rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-zinc-500 font-medium">로그인 처리 중입니다...</p>
-          </div>
-        }
-      >
-        <OAuthCallbackContent />
-      </Suspense>
-    </div>
-  );
-}

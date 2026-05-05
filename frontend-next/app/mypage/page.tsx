@@ -35,7 +35,7 @@ export default function MyPage() {
 
     const userId = user?.id;
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('files', file);
 
     try {
       const response = await api.post(`/api/v1/mypage/profile-image/${userId}`, formData);
@@ -44,9 +44,10 @@ export default function MyPage() {
         alert('프로필 이미지가 변경되었습니다.');
         fetchData(userId!);
       } else {
-        alert(result.message || '업로드에 실패했습니다.');
+        alert(uploadResult.message || '업로드에 실패했습니다.');
       }
     } catch (error) {
+      console.error('Profile upload error:', error);
       alert('오류가 발생했습니다.');
     }
   };

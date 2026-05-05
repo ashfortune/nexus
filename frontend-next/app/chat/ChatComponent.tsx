@@ -397,17 +397,17 @@ const ChatComponent = () => {
   const uploadRoomImage = async (file: File): Promise<string | null> => {
     setIsUploading(true);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('files', file);
 
     try {
-      const response = await api.post('/api/v1/chat/files/upload', formData, {
+      const response = await api.post('/api/v1/upload/chat', formData, {
         params: { category: 'chat-rooms' },
         headers: {} // Forcing FormData boundary logic
       });
 
       if (response.ok) {
         const data = await response.json();
-        return data.url;
+        return data.urls[0];
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -424,7 +424,7 @@ const ChatComponent = () => {
     }
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('files', file);
 
     try {
       console.log('Uploading file...');
@@ -580,7 +580,7 @@ const ChatComponent = () => {
                 >
                   {room.imageUrl ? (
                     <img
-                      src={room.imageUrl}
+                      src={room.imageUrl.startsWith('http') ? room.imageUrl : `http://localhost:8080${room.imageUrl}`}
                       alt={room.title}
                       className="w-full h-full object-cover"
                     />
@@ -664,7 +664,7 @@ const ChatComponent = () => {
                 <div className="w-10 h-10 bg-[var(--nexus-surface-low)] rounded-xl flex items-center justify-center font-bold text-[var(--nexus-primary)] overflow-hidden border border-[var(--nexus-surface-container)]">
                   {activeRoom.imageUrl ? (
                     <img
-                      src={activeRoom.imageUrl}
+                      src={activeRoom.imageUrl.startsWith('http') ? activeRoom.imageUrl : `http://localhost:8080${activeRoom.imageUrl}`}
                       alt={activeRoom.title}
                       className="w-full h-full object-cover"
                     />
@@ -803,7 +803,7 @@ const ChatComponent = () => {
                         >
                           {msg.senderProfileImageUrl ? (
                             <img
-                              src={msg.senderProfileImageUrl}
+                              src={msg.senderProfileImageUrl.startsWith('http') ? msg.senderProfileImageUrl : `http://localhost:8080${msg.senderProfileImageUrl}`}
                               alt={msg.senderNickname}
                               className="w-full h-full object-cover"
                             />
@@ -834,10 +834,10 @@ const ChatComponent = () => {
                           {msg.type === 'IMAGE' && msg.fileUrl ? (
                             <div className="flex flex-col">
                               <img
-                                src={msg.fileUrl}
+                                src={msg.fileUrl.startsWith('http') ? msg.fileUrl : `http://localhost:8080${msg.fileUrl}`}
                                 alt="Shared Image"
                                 className="w-full max-h-[300px] object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                onClick={() => setSelectedImageUrl(msg.fileUrl!)}
+                                onClick={() => setSelectedImageUrl(msg.fileUrl!.startsWith('http') ? msg.fileUrl! : `http://localhost:8080${msg.fileUrl}`)}
                               />
                               <div className="px-4 py-2 text-[11px] opacity-70">{msg.message}</div>
                             </div>
@@ -1180,7 +1180,7 @@ const ChatComponent = () => {
             <div className="p-8 text-center">
               <div className="w-20 h-20 bg-[var(--nexus-surface-low)] rounded-3xl mx-auto mb-6 flex items-center justify-center text-[var(--nexus-primary)] overflow-hidden shadow-inner border border-[var(--nexus-surface-container)]">
                 {joiningRoom.imageUrl ? (
-                  <img src={joiningRoom.imageUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={joiningRoom.imageUrl.startsWith('http') ? joiningRoom.imageUrl : `http://localhost:8080${joiningRoom.imageUrl}`} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <Users size={40} />
                 )}

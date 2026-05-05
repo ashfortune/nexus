@@ -298,8 +298,7 @@ export default function GroupBuyCreatePage() {
 
       if (selectedFile) {
         const uploadFormData = new FormData();
-        uploadFormData.append('file', selectedFile);
-        uploadFormData.append('category', 'product-images');
+        uploadFormData.append('files', selectedFile);
 
         const uploadRes = await api.post('/api/v1/group-purchases/files/upload', uploadFormData, {
           headers: {} // Let browser handle boundary
@@ -307,7 +306,9 @@ export default function GroupBuyCreatePage() {
 
         if (uploadRes.ok) {
           const data = await uploadRes.json();
-          finalImageUrl = data.url;
+          if (data.urls && data.urls.length > 0) {
+            finalImageUrl = data.urls[0];
+          }
         }
       }
 

@@ -86,16 +86,16 @@ public class MyPageController {
         }
     }
 
-    @Operation(summary = "프로필 이미지 업로드", description = "사용자의 프로필 이미지를 업로드하고 경로를 저장합니다.")
-    @PostMapping("/profile-image/{userId}")
-    public ResponseEntity<Map<String, Object>> uploadProfileImage(
+    @Operation(summary = "프로필 이미지 URL 업데이트", description = "이미 업로드된 이미지의 URL을 사용자의 프로필로 저장합니다.")
+    @PatchMapping("/profile-image/{userId}")
+    public ResponseEntity<Map<String, Object>> updateProfileImage(
             @PathVariable UUID userId,
-            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+            @RequestBody Map<String, String> request) {
         Map<String, Object> response = new HashMap<>();
         try {
-            myPageService.uploadProfileImage(userId, file);
+            myPageService.updateProfileImage(userId, request.get("imageUrl"));
             response.put("status", "success");
-            response.put("message", "프로필 이미지가 성공적으로 업로드되었습니다.");
+            response.put("message", "프로필 이미지가 성공적으로 변경되었습니다.");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("status", "error");

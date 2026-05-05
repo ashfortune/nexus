@@ -9,5 +9,5 @@ public interface MyPageService {
     void upgradeToBusiness(UUID userId, String bizNo);
     void unregister(UUID userId);
     void changePassword(UUID userId, String currentPassword, String newPassword);
-    void uploadProfileImage(UUID userId, org.springframework.web.multipart.MultipartFile file);
+    void updateProfileImage(UUID userId, String imageUrl);
 }
