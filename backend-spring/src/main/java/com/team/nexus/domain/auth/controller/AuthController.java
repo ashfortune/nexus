@@ -1,10 +1,6 @@
 package com.team.nexus.domain.auth.controller;
 
-import com.team.nexus.domain.auth.dto.LoginRequestDto;
-import com.team.nexus.domain.auth.dto.LoginResponseDto;
-import com.team.nexus.domain.auth.dto.PasswordResetRequestDto;
-import com.team.nexus.domain.auth.dto.PasswordResetResponseDto;
-import com.team.nexus.domain.auth.dto.SignupRequestDto;
+import com.team.nexus.domain.auth.dto.*;
 import com.team.nexus.domain.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

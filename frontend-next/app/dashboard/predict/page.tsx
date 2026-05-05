@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import AnalysisReport from '../components/predict/AnalysisReport';
 import { LineChart, LayoutDashboard, Database, AlertCircle, RefreshCcw } from 'lucide-react';
@@ -13,11 +14,14 @@ const PredictPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+
   const fetchAnalysis = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:8000/api/v1/ai/prediction/analysis');
+      const response = await api.get('/api/v1/ai/prediction/analysis', {
+        baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000'
+      });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || '데이터를 불러오는 중 오류가 발생했습니다.');
@@ -48,12 +52,12 @@ const PredictPage = () => {
               <h1 className="text-4xl font-bold tracking-tight">매출 예측 및 분석 리포트</h1>
             </div>
             <p className="text-white/60 max-w-2xl text-lg">
-              데이터베이스에 적재된 매출 내역을 바탕으로 한 심층 분석 결과입니다. 
-              지수평활법(SES)과 이동평균(MA)을 활용하여 내일의 성과를 예측합니다.
+              데이터베이스에 적재된 매출 내역을 바탕으로 한 심층 분석 결과입니다. 지수평활법(SES)과
+              이동평균(MA)을 활용하여 내일의 성과를 예측합니다.
             </p>
           </div>
-          
-          <button 
+
+          <button
             onClick={fetchAnalysis}
             disabled={isLoading}
             className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all disabled:opacity-50"
@@ -66,7 +70,9 @@ const PredictPage = () => {
         {isLoading ? (
           <div className="h-[60vh] flex flex-col items-center justify-center space-y-6">
             <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-indigo-400 font-medium text-lg">AI가 데이터를 심층 분석하고 있습니다...</p>
+            <p className="text-indigo-400 font-medium text-lg">
+              AI가 데이터를 심층 분석하고 있습니다...
+            </p>
           </div>
         ) : error ? (
           <div className="h-[50vh] bg-white/5 border border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center p-12 text-center">
@@ -78,7 +84,7 @@ const PredictPage = () => {
               {error} <br />
               분석을 위해 먼저 과거 매출 데이터를 업로드해 주세요.
             </p>
-            <Link 
+            <Link
               href="/dashboard/upload"
               className="flex items-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold transition-all shadow-xl shadow-indigo-600/20"
             >
@@ -88,7 +94,7 @@ const PredictPage = () => {
           </div>
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
-             <AnalysisReport result={analysisResult} />
+            <AnalysisReport data={analysisResult} />
           </div>
         )}
       </div>

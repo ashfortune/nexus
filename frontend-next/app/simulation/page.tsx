@@ -1,23 +1,19 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import SimSearchStep from "./SimSearchStep";
-import SimResultStep from "./SimResultStep";
-import {
-  fetchSearchList,
-  fetchRealEstate,
-  fetchEquipPrice,
-} from "./api";
+import React, { useEffect, useState } from 'react';
+import SimSearchStep from './SimSearchStep';
+import SimResultStep from './SimResultStep';
+import { fetchSearchList, fetchRealEstate, fetchEquipPrice } from './api';
 import {
   SimSearchListDto,
   SimIndustCatsDto,
   SimRegCodesDto,
   ProcessedRealEstateDto,
   EquipPriceResponseDto,
-} from "./types";
-import { Sparkles, Info } from "lucide-react";
+} from './types';
+import { Sparkles, Info } from 'lucide-react';
 
-type Step = "search" | "result";
+type Step = 'search' | 'result';
 
 export default function SimulationPage() {
   const [mounted, setMounted] = useState(false);
@@ -30,7 +26,7 @@ export default function SimulationPage() {
   const [equipData, setEquipData] = useState<EquipPriceResponseDto | null>(null);
   const [selectedIndust, setSelectedIndust] = useState<SimIndustCatsDto | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<SimRegCodesDto | null>(null);
-  const [step, setStep] = useState<Step>("search");
+  const [step, setStep] = useState<Step>('search');
 
   useEffect(() => {
     setMounted(true);
@@ -40,10 +36,7 @@ export default function SimulationPage() {
       .finally(() => setListLoading(false));
   }, []);
 
-  const handleSubmit = async (
-    industry: SimIndustCatsDto,
-    region: SimRegCodesDto
-  ) => {
+  const handleSubmit = async (industry: SimIndustCatsDto, region: SimRegCodesDto) => {
     setSelectedIndust(industry);
     setSelectedRegion(region);
     setSimLoading(true);
@@ -56,16 +49,16 @@ export default function SimulationPage() {
       ]);
       setRealEstateList(reList);
       setEquipData(eq);
-      setStep("result");
+      setStep('result');
     } catch (err: unknown) {
-      setSimError(err instanceof Error ? err.message : "시뮬레이션 요청 실패");
+      setSimError(err instanceof Error ? err.message : '시뮬레이션 요청 실패');
     } finally {
       setSimLoading(false);
     }
   };
 
   const handleBack = () => {
-    setStep("search");
+    setStep('search');
     setSimError(null);
   };
 
@@ -84,7 +77,9 @@ export default function SimulationPage() {
           </div>
         </div>
         <div className="text-center space-y-2">
-          <p className="text-sm font-bold text-[var(--nexus-primary)] tracking-widest uppercase opacity-40">Initializing Nexus Engine</p>
+          <p className="text-sm font-bold text-[var(--nexus-primary)] tracking-widest uppercase opacity-40">
+            Initializing Nexus Engine
+          </p>
           <p className="text-lg font-light opacity-60">업종·지역 목록을 분석하고 있습니다...</p>
         </div>
       </div>
@@ -117,11 +112,16 @@ export default function SimulationPage() {
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] bg-red-900/90 border border-red-500/50 text-red-100 px-5 py-3 rounded-2xl flex items-center gap-3 shadow-2xl backdrop-blur-md">
           <span className="text-lg">⚠️</span>
           <span className="text-sm font-medium">{simError}</span>
-          <button className="ml-2 text-xl leading-none opacity-60 hover:opacity-100" onClick={() => setSimError(null)}>×</button>
+          <button
+            className="ml-2 text-xl leading-none opacity-60 hover:opacity-100"
+            onClick={() => setSimError(null)}
+          >
+            ×
+          </button>
         </div>
       )}
 
-      {step === "search" && (
+      {step === 'search' && (
         <SimSearchStep
           industList={searchList?.indust_cats ?? []}
           regionList={searchList?.reg_codes ?? []}
@@ -130,7 +130,7 @@ export default function SimulationPage() {
         />
       )}
 
-      {step === "result" && equipData && selectedIndust && selectedRegion && (
+      {step === 'result' && equipData && selectedIndust && selectedRegion && (
         <SimResultStep
           industName={selectedIndust.industryName}
           regionLabel={`${selectedRegion.cityName} ${selectedRegion.countyName}`}

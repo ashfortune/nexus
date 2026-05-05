@@ -2,6 +2,14 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'checkstyle'
+}
+
+checkstyle {
+    toolVersion = "10.12.5"
+    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    ignoreFailures = true // 일단 에러가 나도 빌드는 되게 설정 (경고 위주)
+    maxWarnings = 0
 }
 
 group = 'com.team.nexus'

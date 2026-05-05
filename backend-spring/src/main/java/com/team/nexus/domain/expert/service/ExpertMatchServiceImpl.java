@@ -139,7 +139,7 @@ public class ExpertMatchServiceImpl implements ExpertMatchService {
                                         .expertName(exp.getName())
                                         .expertPhone(exp.getPhone() != null ? exp.getPhone() : "010-1234-5678")
                                         .expertPortfolio(exp.getPortfolioText())
-                                        .matchReason("NEXUS에서 추천하는 분야별 최고 전문가입니다.")
+                                        .matchReason("고객님의 요구사항과 연관된 전문 분야를 보유하고 있어 특별히 선정된 추천 전문가입니다.")
                                         .rating(exp.getRating() != null ? exp.getRating() : 5.0)
                                         .build());
                             }

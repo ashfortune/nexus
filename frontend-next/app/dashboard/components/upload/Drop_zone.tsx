@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useCallback } from 'react';
 import { Upload, FileText, X, CheckCircle2, FileSpreadsheet } from 'lucide-react';
@@ -45,18 +45,18 @@ const DropZone: React.FC<DropZoneProps> = ({ onFilesSelected, isLoading }) => {
   const validateAndSetFile = (file: File) => {
     // CSV 형식 체크 (확장자 기반)
     if (!file.name.endsWith('.csv')) {
-      setErrorMsg("CSV 형식만 지원합니다.");
+      setErrorMsg('CSV 형식만 지원합니다.');
       return;
     }
-    
+
     if (file.size > 10 * 1024 * 1024) {
-      setErrorMsg("파일 용량은 10MB 이하이어야 합니다.");
+      setErrorMsg('파일 용량은 10MB 이하이어야 합니다.');
       return;
     }
 
     setFile(file);
     setErrorMsg(null);
-    
+
     if (onFilesSelected) {
       onFilesSelected([file]);
     }
@@ -74,8 +74,8 @@ const DropZone: React.FC<DropZoneProps> = ({ onFilesSelected, isLoading }) => {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`relative min-h-[320px] flex flex-col items-center justify-center p-10 rounded-[2.5rem] border-2 border-dashed transition-all duration-500 ${
-          isDragging 
-            ? 'border-indigo-500 bg-indigo-500/10 scale-[1.02]' 
+          isDragging
+            ? 'border-indigo-500 bg-indigo-500/10 scale-[1.02]'
             : 'border-white/10 bg-white/5 hover:border-white/20'
         } ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}
       >
@@ -93,9 +93,13 @@ const DropZone: React.FC<DropZoneProps> = ({ onFilesSelected, isLoading }) => {
                 <Upload size={32} />
               </div>
               <h4 className="text-2xl font-bold text-white mb-3">CSV 파일을 드래그하거나 클릭</h4>
-              <p className="text-white/40 font-medium">매출 데이터 분석을 위해 CSV 파일을 업로드해주세요.</p>
+              <p className="text-white/40 font-medium">
+                매출 데이터 분석을 위해 CSV 파일을 업로드해주세요.
+              </p>
               <div className="mt-6 px-4 py-2 bg-white/5 rounded-full border border-white/10">
-                <p className="text-xs text-indigo-300 font-bold uppercase tracking-widest">Only CSV Supported</p>
+                <p className="text-xs text-indigo-300 font-bold uppercase tracking-widest">
+                  Only CSV Supported
+                </p>
               </div>
             </div>
           </>
@@ -111,14 +115,14 @@ const DropZone: React.FC<DropZoneProps> = ({ onFilesSelected, isLoading }) => {
                   <p className="text-white/40 text-xs">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={clearFile}
                 className="p-2 hover:bg-white/10 rounded-full text-white/40 hover:text-white transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="mt-8 flex items-center justify-center gap-2 text-green-400 text-sm font-bold">
               <CheckCircle2 size={18} />
               선택됨: 분석 준비 완료
@@ -126,9 +130,11 @@ const DropZone: React.FC<DropZoneProps> = ({ onFilesSelected, isLoading }) => {
           </div>
         )}
       </div>
-      
+
       {errorMsg && (
-        <p className="mt-4 text-red-400 text-sm text-center font-medium animate-bounce">{errorMsg}</p>
+        <p className="mt-4 text-red-400 text-sm text-center font-medium animate-bounce">
+          {errorMsg}
+        </p>
       )}
     </div>
   );

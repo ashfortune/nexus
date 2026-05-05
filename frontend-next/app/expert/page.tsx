@@ -17,6 +17,8 @@ export default function ExpertMatchPage() {
   const [requestContent, setRequestContent] = useState('');
   const [loadingText, setLoadingText] = useState('');
   const [result, setResult] = useState<any>(null);
+  const [selectedExpert, setSelectedExpert] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCategorySelect = (category: any) => {
     setSelectedCategory(category);
@@ -239,7 +241,13 @@ export default function ExpertMatchPage() {
                           >
                             전화 상담
                           </a>
-                          <button className="px-6 py-3 bg-[var(--nexus-surface-container-highest)] text-[var(--nexus-on-bg)] font-bold text-md rounded-xl hover:bg-[var(--nexus-surface-container-high)] transition-colors active:scale-95 shrink-0">
+                          <button 
+                            onClick={() => {
+                              setSelectedExpert(expert);
+                              setIsModalOpen(true);
+                            }}
+                            className="px-6 py-3 bg-[var(--nexus-surface-container-highest)] text-[var(--nexus-on-bg)] font-bold text-md rounded-xl hover:bg-[var(--nexus-surface-container-high)] transition-colors active:scale-95 shrink-0"
+                          >
                             상세 보기
                           </button>
                         </div>
@@ -280,6 +288,70 @@ export default function ExpertMatchPage() {
         )}
 
       </div>
+
+      {/* Expert Detail Modal */}
+      {isModalOpen && selectedExpert && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
+          <div className="relative bg-[var(--nexus-surface-lowest)] w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="h-32 bg-gradient-to-r from-[var(--nexus-primary)] to-[var(--nexus-secondary)]" />
+            <div className="px-10 pb-10">
+              <div className="relative -mt-12 mb-6">
+                <div className="w-24 h-24 rounded-3xl bg-[var(--nexus-surface-lowest)] border-[5px] border-[var(--nexus-surface-lowest)] shadow-xl overflow-hidden">
+                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedExpert.expertName}&backgroundColor=cfe6f2`} alt="Expert" className="w-full h-full object-cover" />
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h2 className="text-3xl font-black text-[var(--nexus-on-bg)] mb-2">{selectedExpert.expertName}</h2>
+                  <div className="flex items-center gap-4">
+                    <span className="text-[var(--nexus-primary)] font-bold text-lg">{selectedExpert.expertPhone || '010-XXXX-XXXX'}</span>
+                    <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-sm font-bold border border-amber-100">★ {selectedExpert.rating || '5.0'}</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-10 h-10 rounded-full bg-[var(--nexus-surface-container)] flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-bold text-[var(--nexus-outline)] uppercase tracking-widest mb-3">전문가 포트폴리오</h4>
+                  <div className="bg-[var(--nexus-surface)] p-6 rounded-2xl border border-[var(--nexus-outline-variant)] text-[var(--nexus-on-bg)] font-medium leading-relaxed whitespace-pre-wrap">
+                    {selectedExpert.expertPortfolio}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-bold text-[var(--nexus-primary)] uppercase tracking-widest mb-3">AI 매칭 인사이트</h4>
+                  <div className="bg-[var(--nexus-primary)]/5 p-6 rounded-2xl border border-[var(--nexus-primary)]/10 text-[var(--nexus-primary)] font-semibold italic">
+                    "{selectedExpert.matchReason}"
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-10 flex gap-4">
+                <a 
+                  href={`tel:${selectedExpert.expertPhone}`}
+                  className="flex-1 py-5 bg-[var(--nexus-primary)] text-white font-bold text-center rounded-2xl shadow-lg shadow-[var(--nexus-primary)]/20 hover:opacity-90 transition-all"
+                >
+                  지금 바로 상담하기
+                </a>
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 py-5 bg-[var(--nexus-surface-container-highest)] text-[var(--nexus-on-bg)] font-bold rounded-2xl hover:bg-gray-200 transition-all"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

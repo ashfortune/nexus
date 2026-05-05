@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Builder
@@ -22,6 +23,7 @@ public class ChecklistResponseDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class StepDto {
+        private UUID progressId;
         private Short orderNum;
         private String place;
         private String task;

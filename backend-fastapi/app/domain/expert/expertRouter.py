@@ -4,7 +4,7 @@ from app.core.database import get_db
 from app.domain.expert.expertSchema import ExpertMatchRequestBase, ExpertMatchResponse
 from app.domain.expert.expertService import match_expert_service
 
-router = APIRouter(prefix="/api/v1/ai/experts", tags=["Expert Matching"])
+router = APIRouter(tags=["Expert Matching"])
 
 @router.post("/match", response_model=ExpertMatchResponse)
 async def match_expert(

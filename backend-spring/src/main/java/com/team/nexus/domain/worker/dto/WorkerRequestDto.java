@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class WorkerRequestDto {
     private int employeeCount;
-    private Double dailyWorkHours;
+    private double dailyWorkHours;
     private int weeklyWorkDays;
     private int hourlyWage;
     private String employeeType;

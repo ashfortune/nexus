@@ -24,12 +24,6 @@ public class User {
     @Column(name = "nickname")
     private String nickname;
 
-    @Column(name = "name")
-    private String name;
-
-    @Column(name = "phone")
-    private String phone;
-
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
@@ -49,6 +43,20 @@ public class User {
     @Column(name = "login_type")
     private Integer loginType;
 
+    @Column(name = "profile_image")
+    private String profileImage;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private java.time.LocalDateTime createdAt;
+
+    @Column(name = "deleted_at")
+    private java.time.LocalDateTime deletedAt;
+
+    @Builder.Default
+    @Column(name = "is_suspended")
+    private Boolean isSuspended = false;
+
+    @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL)
+    @Builder.Default
+    private java.util.List<ExpertMatchRequest> expertMatchRequests = new java.util.ArrayList<>();
 }

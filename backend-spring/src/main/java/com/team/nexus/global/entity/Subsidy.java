@@ -42,7 +42,7 @@ public class Subsidy {
     @Column(name = "apply_url", length = 500)
     private String applyUrl;
 
-    @Transient
+    @Column(name = "embedding", columnDefinition = "vector")
     private double[] embedding;
 
     @Column(name = "updated_at", insertable = false, updatable = false)

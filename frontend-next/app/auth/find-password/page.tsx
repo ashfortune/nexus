@@ -1,26 +1,19 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { 
-  Mail, 
-  ChevronRight,
-  AlertCircle,
-  ArrowLeft,
-  Key,
-  Copy,
-  CheckCircle2
-} from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { api } from '@/lib/api';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Mail, ChevronRight, AlertCircle, ArrowLeft, Key, Copy, CheckCircle2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
-import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 // --- Validation Schema ---
 const findPasswordSchema = z.object({
-  email: z.string().email("유효한 이메일 형식이 아닙니다."),
+  email: z.string().email('유효한 이메일 형식이 아닙니다.'),
 });
 
 type FindPasswordFormValues = z.infer<typeof findPasswordSchema>;
@@ -40,28 +33,22 @@ export default function FindPasswordPage() {
     resolver: zodResolver(findPasswordSchema),
   });
 
+
   const onSubmit = async (data: FindPasswordFormValues) => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const response = await fetch("http://localhost:8080/api/v1/auth/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
+      const response = await api.post('/api/v1/auth/reset-password', data);
       const result = await response.json();
 
-      if (response.ok && result.status === "success") {
+      if (response.ok && result.status === 'success') {
         setTempPassword(result.data.temporaryPassword);
       } else {
-        const msg = result.message || "비밀번호 재설정 중 오류가 발생했습니다. 이메일을 다시 확인해 주세요.";
+        const msg = result.message || '비밀번호 재설정 중 오류가 발생했습니다. 이메일을 다시 확인해 주세요.';
         setErrorMessage(msg);
       }
     } catch (error: any) {
-      setErrorMessage("서버와 통신 중 오류가 발생했습니다. 네트워크 상태를 확인해 주세요.");
+      setErrorMessage('서버와 통신 중 오류가 발생했습니다. 네트워크 상태를 확인해 주세요.');
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +74,10 @@ export default function FindPasswordPage() {
         <div className="bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden">
           <div className="p-8">
             <div className="flex items-center gap-2 mb-6">
-              <Link href="/auth/login" className="p-2 hover:bg-zinc-50 rounded-full transition-colors text-zinc-400 hover:text-black">
+              <Link
+                href="/auth/login"
+                className="p-2 hover:bg-zinc-50 rounded-full transition-colors text-zinc-400 hover:text-black"
+              >
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <h2 className="text-xl font-bold text-zinc-900">비밀번호 찾기</h2>
@@ -96,7 +86,8 @@ export default function FindPasswordPage() {
             {!tempPassword ? (
               <>
                 <p className="text-sm text-zinc-500 mb-8 leading-relaxed">
-                  가입하신 이메일 주소를 입력하시면<br />
+                  가입하신 이메일 주소를 입력하시면
+                  <br />
                   로그인에 필요한 <strong>임시 비밀번호</strong>를 발급해 드립니다.
                 </p>
 
@@ -107,12 +98,12 @@ export default function FindPasswordPage() {
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-400" />
                       <input
-                        {...register("email")}
+                        {...register('email')}
                         type="email"
                         placeholder="example@email.com"
                         className={cn(
-                          "w-full h-12 pl-12 pr-4 bg-zinc-50 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all",
-                          errors.email ? "border-red-200" : "border-zinc-200 focus:border-black"
+                          'w-full h-12 pl-12 pr-4 bg-zinc-50 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all',
+                          errors.email ? 'border-red-200' : 'border-zinc-200 focus:border-black'
                         )}
                       />
                     </div>
@@ -170,13 +161,18 @@ export default function FindPasswordPage() {
                     className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-white rounded-xl transition-all text-zinc-400 hover:text-black border border-transparent hover:border-zinc-100 shadow-sm"
                     title="비밀번호 복사"
                   >
-                    {copied ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
+                    {copied ? (
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <Copy className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
 
                 <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
                   <p className="text-xs text-amber-700 leading-relaxed">
-                    <span className="font-bold">주의:</span> 발급된 비밀번호는 보안을 위해 로그인 후 즉시 회원정보 수정 페이지에서 변경하시는 것을 권장합니다.
+                    <span className="font-bold">주의:</span> 발급된 비밀번호는 보안을 위해 로그인 후
+                    즉시 회원정보 수정 페이지에서 변경하시는 것을 권장합니다.
                   </p>
                 </div>
 
@@ -193,7 +189,7 @@ export default function FindPasswordPage() {
 
           <div className="bg-zinc-50/80 p-6 border-t border-zinc-100 text-center">
             <p className="text-sm text-zinc-500">
-              도움이 필요하신가요?{" "}
+              도움이 필요하신가요?{' '}
               <Link href="/support" className="text-zinc-900 font-semibold hover:underline">
                 고객센터 문의
               </Link>

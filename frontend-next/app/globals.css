@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: var(--nexus-bg);
@@ -13,25 +13,25 @@
   --nexus-surface-container: #dbf1fe;
   --nexus-surface-container-high: #d5ecf8;
   --nexus-surface-container-highest: #cfe6f2;
-  
+
   --nexus-primary: #0b1a7d;
   --nexus-on-primary: #ffffff;
   --nexus-primary-container: #283593;
   --nexus-on-primary-container: #9aa5ff;
-  
+
   --nexus-secondary: #0060a8;
   --nexus-on-secondary: #ffffff;
   --nexus-secondary-container: #47a1ff;
   --nexus-on-secondary-container: #003663;
-  
+
   --nexus-tertiary: #003129;
   --nexus-tertiary-container: #00493e;
   --nexus-tertiary-fixed: #68fadd;
-  
+
   --nexus-error: #ba1a1a;
   --nexus-outline: #767683;
   --nexus-outline-variant: #c6c5d4;
-  
+
   --nexus-space-xs: 4px;
   --nexus-space-sm: 8px;
   --nexus-space-md: 16px;
@@ -59,6 +59,17 @@ body {
 /* Base Utility Classes */
 .nexus-no-line {
   border: none !important;
+}
+
+.nexus-glass {
+  background: var(--nexus-glass-bg);
+  backdrop-filter: blur(var(--nexus-glass-blur));
+  -webkit-backdrop-filter: blur(var(--nexus-glass-blur));
+}
+
+.nexus-card {
+  background: var(--nexus-surface-lowest);
+  border-radius: 16px;
 }
 
 .nexus-glass {

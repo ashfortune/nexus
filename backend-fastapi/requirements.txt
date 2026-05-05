@@ -23,3 +23,9 @@ numpy
 statsmodels
 google-genai>=1.0.0
 apscheduler
+supabase
+xgboost
+langchain-google-genai
+langchain-postgres
+pypdf
+ruff

@@ -39,8 +39,18 @@ public class Comment {
     private Comment parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<Comment> children = new ArrayList<>();
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     private java.time.LocalDateTime createdAt;
+
+    @Column(name = "report_count", nullable = false)
+    @Builder.Default
+    private int reportCount = 0;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = java.time.LocalDateTime.now();
+    }
 }

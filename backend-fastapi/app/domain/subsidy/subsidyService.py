@@ -1,24 +1,65 @@
-import requests
 import os
 import re
-from datetime import date, timedelta, datetime
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
-from app.core.ai_client import GeminiClient
+from datetime import date, datetime, timedelta
+
+import requests
 from dotenv import load_dotenv
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.ai_client import GeminiClient
 
 load_dotenv()
 
 SMES_API_URL = "https://www.smes.go.kr/fnct/apiReqst/extPblancInfo"
 SMES_TOKEN = os.getenv("SMES_API_TOKEN")
 
+
 def get_embedding(text_input: str):
     return GeminiClient._local_model.encode(text_input).tolist()
 
 
 def extract_region_from_name(name: str) -> str | None:
-    match = re.match(r'^[\[\(]([^\]\)]+)[\]\)]', name)
+    match = re.match(r"^[\[\(]([^\]\)]+)[\]\)]", name)
     return match.group(1) if match else None
+
+
+REGION_KEYWORDS = [
+    "서울",
+    "부산",
+    "대구",
+    "인천",
+    "광주",
+    "대전",
+    "울산",
+    "세종",
+    "경기",
+    "강원",
+    "충북",
+    "충남",
+    "전북",
+    "전남",
+    "경북",
+    "경남",
+    "제주",
+    "서울특별시",
+    "부산광역시",
+    "대구광역시",
+    "인천광역시",
+    "광주광역시",
+    "대전광역시",
+    "울산광역시",
+    "세종특별자치시",
+    "경기도",
+    "강원도",
+    "충청북도",
+    "충청남도",
+    "전라북도",
+    "전라남도",
+    "경상북도",
+    "경상남도",
+    "제주특별자치도",
+]
 
 
 def classify_life_cycle(item: dict) -> str:
@@ -100,6 +141,7 @@ def parse_subsidy(item: dict) -> tuple:
         "life_cycle": classify_life_cycle(item),
     }, source_url
 
+
 async def get_subsidy_by_id(db: AsyncSession, subsidy_id):
     result = await db.execute(
         text("""
@@ -109,24 +151,51 @@ async def get_subsidy_by_id(db: AsyncSession, subsidy_id):
              FROM subsidies
              WHERE id = :id
              """),
-        {"id": str(subsidy_id)}
+        {"id": str(subsidy_id)},
     )
     return result.fetchone()
 
+
 async def get_subsidies(
-        db: AsyncSession,
-        region: str = None,
-        query: str = None,
-        life_cycle: str = None,
-        page: int = 1,
-        size: int = 10
+    db: AsyncSession,
+    region: str = None,
+    query: str = None,
+    life_cycle: str = None,
+    page: int = 1,
+    size: int = 10,
 ):
     conditions = ["is_active = true"]
     params = {}
 
     if region:
-        conditions.append("(region ILIKE :region OR region IS NULL)")
+        region_text_expr = """
+            COALESCE(region, '') || ' ' ||
+            COALESCE(name, '') || ' ' ||
+            COALESCE(description, '') || ' ' ||
+            COALESCE(support_content, '') || ' ' ||
+            COALESCE(target, '')
+        """
+
+        other_region_conditions = []
+        for idx, keyword in enumerate(REGION_KEYWORDS):
+            if keyword == region:
+                continue
+
+            key = f"region_kw_{idx}"
+            other_region_conditions.append(f"{region_text_expr} NOT ILIKE :{key}")
+            params[key] = f"%{keyword}%"
+
+        no_other_region_sql = " AND ".join(other_region_conditions)
+
+        conditions.append(f"""
+            (
+                {region_text_expr} ILIKE :region
+                OR {region_text_expr} ILIKE :nationwide
+                OR ({no_other_region_sql})
+            )
+        """)
         params["region"] = f"%{region}%"
+        params["nationwide"] = "%전국%"
 
     if life_cycle:
         conditions.append("life_cycle = :life_cycle")
@@ -137,7 +206,20 @@ async def get_subsidies(
     if query:
         query_embedding = get_embedding(query)
         embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
-        order = f"ORDER BY embedding <=> '{embedding_str}'::vector"
+
+        order = f"""
+            ORDER BY
+                CASE
+                    WHEN name ILIKE :query_exact THEN 0
+                    WHEN support_content ILIKE :query_exact THEN 1
+                    WHEN description ILIKE :query_exact THEN 2
+                    WHEN target ILIKE :query_exact THEN 3
+                    ELSE 4
+                END,
+                embedding <=> '{embedding_str}'::vector
+        """
+
+        params["query_exact"] = f"%{query}%"
     else:
         order = "ORDER BY deadline ASC NULLS LAST"
 
@@ -167,9 +249,9 @@ async def fetch_subsidies_from_api():
     today = date.today().strftime("%Y%m%d")
     params = {
         "token": SMES_TOKEN,
-        "strDt": yesterday, #초기 DB 저장시에는 strDt: "20200101" 돌리고 이후에는 yesterday로 변경
+        "strDt": yesterday,  # 초기 DB 저장시에는 strDt: "20200101" 돌리고 이후에는 yesterday로 변경
         "endDt": today,
-        "html": "no"
+        "html": "no",
     }
     try:
         response = requests.get(SMES_API_URL, params=params, timeout=120)
@@ -217,7 +299,7 @@ async def save_subsidy(data: dict, source_url: str, db: AsyncSession):
                      target, how_to_apply, contact, apply_url, source_url, embedding, life_cycle)
                 VALUES
                     (:name, :organization, :region, :industry, :min_age, :max_age,
-                     :max_amount, :deadline, :start_date, :description, :support_content,
+                     :max_amount, CAST(:deadline AS DATE), CAST(:start_date AS DATE), :description, :support_content,
                      :target, :how_to_apply, :contact, :apply_url, :source_url, '{embedding_str}'::vector, :life_cycle)
                 ON CONFLICT (source_url) DO UPDATE SET
                     deadline = EXCLUDED.deadline,
@@ -229,7 +311,7 @@ async def save_subsidy(data: dict, source_url: str, db: AsyncSession):
                     life_cycle = EXCLUDED.life_cycle,
                     updated_at = NOW()
             """),
-            {**data, "deadline": deadline, "start_date": start_date, "source_url": source_url}
+            {**data, "deadline": deadline, "start_date": start_date, "source_url": source_url},
         )
         await db.commit()
         return True
@@ -240,8 +322,7 @@ async def save_subsidy(data: dict, source_url: str, db: AsyncSession):
 
 async def delete_expired_subsidies(db: AsyncSession):
     await db.execute(
-        text("DELETE FROM subsidies WHERE deadline < :today"),
-        {"today": date.today()}
+        text("DELETE FROM subsidies WHERE deadline < CAST(:today AS DATE)"), {"today": date.today()}
     )
     await db.commit()
     print("만료된 지원금 삭제 완료")

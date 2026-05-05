@@ -15,4 +15,5 @@ public class UserSummaryDto {
     private UUID id;
     private String nickname;
     private String email;
+    private String profileImage;
 }

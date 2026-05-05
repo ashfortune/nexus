@@ -8,7 +8,7 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 40%, #16213e 100%);
   color: #fff;
-  font-family: "Inter", "Apple SD Gothic Neo", sans-serif;
+  font-family: 'Inter', 'Apple SD Gothic Neo', sans-serif;
 }
 
 /* ═══════════════ HERO SECTION ═══════════════ */
@@ -105,7 +105,9 @@
   font-size: 1rem;
   color: #fff;
   outline: none;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
   box-sizing: border-box;
 }
 
@@ -243,7 +245,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ═══════════════ PREVIEW SECTION ═══════════════ */
@@ -296,7 +300,9 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   padding: 28px;
-  transition: transform 0.25s, border-color 0.25s;
+  transition:
+    transform 0.25s,
+    border-color 0.25s;
 }
 
 .previewCard:hover {

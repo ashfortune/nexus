@@ -11,9 +11,9 @@ public class FastApiClient {
 
     private final WebClient webClient;
 
-    public FastApiClient(WebClient.Builder webClientBuilder) {
-        // FastAPI 서버 주소 (8000)
-        this.webClient = webClientBuilder.baseUrl("http://localhost:8000").build();
+    public FastApiClient(WebClient.Builder webClientBuilder, 
+                         @org.springframework.beans.factory.annotation.Value("${fastapi.url:http://localhost:8000}") String fastApiUrl) {
+        this.webClient = webClientBuilder.baseUrl(fastApiUrl).build();
     }
 
     /**
@@ -39,19 +39,17 @@ public class FastApiClient {
                 .retrieve()
                 .bodyToMono(Map.class);
     }
+
     /**
-     * FastAPI 서버로 전문가 AI 매칭 요청
+     * 전문가 매칭 요청
      */
     public Mono<Map> requestExpertMatch(String categoryId, String requestContent) {
-        java.util.Map<String, String> body = new java.util.HashMap<>();
-        if (categoryId != null) {
-            body.put("industry_category_id", categoryId);
-        }
-        body.put("request_content", requestContent);
-
         return this.webClient.post()
                 .uri("/api/v1/ai/experts/match")
-                .bodyValue(body)
+                .bodyValue(Map.of(
+                    "industry_category_id", categoryId,
+                    "request_content", requestContent
+                ))
                 .retrieve()
                 .bodyToMono(Map.class);
     }

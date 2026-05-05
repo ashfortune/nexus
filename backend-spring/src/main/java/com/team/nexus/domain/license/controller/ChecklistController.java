@@ -1,6 +1,8 @@
 package com.team.nexus.domain.license.controller;
 
-import com.team.nexus.domain.license.dto.*;
+import com.team.nexus.domain.license.dto.ChecklistProgressDto;
+import com.team.nexus.domain.license.dto.ChecklistRequestDto;
+import com.team.nexus.domain.license.dto.ChecklistResponseDto;
 import com.team.nexus.domain.license.service.LicenseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

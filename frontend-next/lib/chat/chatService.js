@@ -11,8 +11,12 @@ export class ChatService {
     this.onMessageReceived = onMessageReceived;
     this.onConnected = onConnected;
 
+    const apiHost = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const wsProtocol = apiHost.startsWith('https') ? 'wss' : 'ws';
+    const brokerURL = `${apiHost.replace(/^https?/, wsProtocol)}/ws-nexus`;
+
     this.client = new Client({
-      brokerURL: 'ws://localhost:8080/ws-nexus',
+      brokerURL: brokerURL,
       debug: (str) => console.log(str),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
@@ -55,9 +59,9 @@ export class ChatService {
         message: message,
         type: type,
         fileUrl: fileUrl,
-        fileName: fileName
+        fileName: fileName,
       };
-      
+
       this.client.publish({
         destination: '/app/chat/send',
         body: JSON.stringify(payload),

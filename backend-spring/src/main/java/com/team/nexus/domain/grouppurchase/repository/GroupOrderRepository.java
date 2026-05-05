@@ -13,4 +13,5 @@ public interface GroupOrderRepository extends JpaRepository<GroupOrder, String> 
     boolean existsByGroupPurchaseIdAndUserId(@org.springframework.data.repository.query.Param("gpId") UUID gpId, @org.springframework.data.repository.query.Param("userId") UUID userId);
     
     List<GroupOrder> findAllByGroupPurchaseId(UUID gpId);
+    List<GroupOrder> findAllByUserId(UUID userId);
 }

@@ -2,8 +2,6 @@ package com.team.nexus.domain.chat.controller;
 
 import com.team.nexus.domain.chat.dto.ChatMessageRequestDto;
 import com.team.nexus.domain.chat.service.ChatService;
-import com.team.nexus.global.entity.ChatMessage;
-import com.team.nexus.global.entity.ChatRoom;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

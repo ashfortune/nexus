@@ -40,14 +40,22 @@ async def match_expert_service(db: AsyncSession, request_content: str, category_
         
     experts_context = "\n\n".join(expert_info_list)
     
-    system_instruction = """당신은 스타트업을 위한 전문 매칭 컨설턴트(AI)입니다. 
-창업자의 요구사항과 검색된 전문가 후보 3명의 정보를 바탕으로, 각각의 전문가를 왜 추천하는지 친절하고 전문적인 말투로 1~2줄의 매칭 사유를 작성하세요.
-반드시 제공된 후보 3명을 모두 포함하여 정확히 3개의 객체를 가진 JSON 배열 형식을 반환하세요.
-백틱(`)이나 추가 설명 없이 JSON 배열만 반환하세요.
+    system_instruction = """당신은 스타트업과 소상공인을 위한 AI 전문 매칭 컨설턴트입니다. 
+창업자의 요구사항과 검색된 전문가 3명의 정보를 바탕으로, 각 전문가별 맞춤 추천 사유를 작성하세요.
+
+[준수 사항]
+1. 반드시 전문가 후보 리스트에 제공된 '실제 전문가 ID(UUID)'를 "matched_expert_id" 값으로 사용하세요. 예시에 있는 "ID1" 등을 그대로 쓰면 절대 안 됩니다.
+2. 각 전문가의 '포트폴리오 및 이력' 데이터를 참고하여 해당 전문가만의 독특한 강점을 언급하세요.
+3. 창업자의 요구사항과 전문가의 경력이 어떻게 매칭되는지 구체적으로 기술하세요.
+4. 사유는 1~2줄 내외로, 신뢰감 있고 전문적인 톤을 유지하세요.
+5. 반드시 제공된 후보 3명 모두에 대해 각각 다른 사유를 작성하여 정확히 3개의 JSON 객체를 포함한 배열을 반환하세요.
+6. 백틱(`)이나 추가 설명 없이 순수 JSON 배열만 반환하세요.
+
+[출력 형식 예시]
 [
-  { "matched_expert_id": "첫번째전문가ID", "expert_name": "이름1", "match_reason": "추천사유1" },
-  { "matched_expert_id": "두번째전문가ID", "expert_name": "이름2", "match_reason": "추천사유2" },
-  { "matched_expert_id": "세번째전문가ID", "expert_name": "이름3", "match_reason": "추천사유3" }
+  { "matched_expert_id": "제공된-실제-UUID-1", "expert_name": "이름1", "match_reason": "경험과 강점을 포함한 구체적 사유1" },
+  { "matched_expert_id": "제공된-실제-UUID-2", "expert_name": "이름2", "match_reason": "경험과 강점을 포함한 구체적 사유2" },
+  { "matched_expert_id": "제공된-실제-UUID-3", "expert_name": "이름3", "match_reason": "경험과 강점을 포함한 구체적 사유3" }
 ]"""
 
     chat_history = [
@@ -56,6 +64,7 @@ async def match_expert_service(db: AsyncSession, request_content: str, category_
     
     # 4. LLM 답변 생성 (Gemini)
     response_text = await ai_client.generate_response(system_instruction, chat_history)
+    print(f"DEBUG: AI Expert Match Response: {response_text}")
     
     # 5. JSON 파싱 및 데이터 보강 (실명/전화번호 추가)
     try:
@@ -65,15 +74,20 @@ async def match_expert_service(db: AsyncSession, request_content: str, category_
             matches = json.loads(json_str)
             
             # DB 데이터와 매칭하여 추가 정보(실명, 전화번호) 부여
-            expert_map = {str(exp.id): exp for exp in top_experts}
+            expert_id_map = {str(exp.id): exp for exp in top_experts}
+            expert_name_map = {exp.name: exp for exp in top_experts}
             
             enriched_matches = []
             for m in matches:
                 exp_id = m.get("matched_expert_id")
-                if exp_id in expert_map:
-                    exp = expert_map[exp_id]
+                exp_name = m.get("expert_name")
+                
+                # 1. ID로 찾기 시도, 실패 시 2. 이름으로 찾기 시도
+                exp = expert_id_map.get(exp_id) or expert_name_map.get(exp_name)
+                
+                if exp:
                     enriched_matches.append({
-                        "matched_expert_id": exp_id,
+                        "matched_expert_id": str(exp.id),
                         "expert_name": exp.name,
                         "expert_phone": exp.phone if exp.phone else "연락처 미등록",
                         "match_reason": m.get("match_reason"),
@@ -87,11 +101,13 @@ async def match_expert_service(db: AsyncSession, request_content: str, category_
                 for exp in top_experts:
                     if len(enriched_matches) >= 3: break
                     if str(exp.id) not in existing_ids:
+                        # 동적 폴백 메시지 생성
+                        short_portfolio = (exp.portfolio_text[:30] + "...") if len(exp.portfolio_text) > 30 else exp.portfolio_text
                         enriched_matches.append({
                             "matched_expert_id": str(exp.id),
                             "expert_name": exp.name,
                             "expert_phone": exp.phone if exp.phone else "연락처 미등록",
-                            "match_reason": "사용자 요구사항과 유사한 포트폴리오를 보유하여 추가로 추천해 드립니다.",
+                            "match_reason": f"{short_portfolio} 관련 전문 지식을 보유하고 있어 추가로 추천드립니다.",
                             "rating": exp.rating,
                             "portfolio": exp.portfolio_text
                         })
@@ -103,13 +119,14 @@ async def match_expert_service(db: AsyncSession, request_content: str, category_
         print(f"RAG Parsing Error: {e}")
         fallback_matches = []
         for exp in top_experts:
+            # 동적 폴백 메시지 생성 (최악의 경우에도 개별화)
+            short_portfolio = (exp.portfolio_text[:30] + "...") if len(exp.portfolio_text) > 30 else exp.portfolio_text
             fallback_matches.append({
                 "matched_expert_id": str(exp.id), 
                 "expert_name": exp.name,
                 "expert_phone": exp.phone if exp.phone else "연락처 미등록",
-                "match_reason": "시스템 자동 추천 전문가입니다.",
+                "match_reason": f"{short_portfolio} 분야의 전문적인 커리어를 바탕으로 선정한 추천 전문가입니다.",
                 "rating": exp.rating,
                 "portfolio": exp.portfolio_text
             })
         return {"matches": fallback_matches}
-

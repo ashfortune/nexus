@@ -1,0 +1,26 @@
+[tool.ruff]
+# 대상 파이썬 버전
+target-version = "py311"
+
+# 린트 규칙 설정
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (임포트 정렬)
+    "C90", # mccabe (코드 복잡도)
+    "B",   # flake8-bugbear
+]
+ignore = []
+
+# 한 줄 최대 길이
+line-length = 100
+
+[tool.ruff.mccabe]
+max-complexity = 10
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

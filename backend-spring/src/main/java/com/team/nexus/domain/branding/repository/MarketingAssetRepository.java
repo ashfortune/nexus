@@ -3,6 +3,7 @@ package com.team.nexus.domain.branding.repository;
 import com.team.nexus.global.entity.BrandIdentity;
 import com.team.nexus.global.entity.MarketingAsset;
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.util.List;
 import java.util.UUID;
 
