@@ -17,7 +17,9 @@ public class ExpertMatchResDto {
     public static class MatchedExpertInfo {
         private UUID matchedExpertId;
         private String expertName;
+        private String expertPhone;
         private String expertPortfolio;
         private String matchReason;
+        private Double rating;
     }
 }

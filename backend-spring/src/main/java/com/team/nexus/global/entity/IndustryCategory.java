@@ -39,7 +39,7 @@ public class IndustryCategory {
     @Column(name = "ksic_code", length = 20)
     private String ksicCode;
 
-    @Column(name = "embedding", columnDefinition = "vector(768)")
+    @Transient // pgvector 타입과의 호환성 문제로 자바 엔티티에서는 제외합니다.
     private double[] embedding;
 
     @Column(name = "created_at", insertable = false, updatable = false)

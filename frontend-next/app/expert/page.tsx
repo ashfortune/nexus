@@ -214,18 +214,35 @@ export default function ExpertMatchPage() {
                     </div>
 
                     <div className="pt-12 pb-6 px-8 border-b border-[var(--nexus-surface-container-highest)]">
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                        <div>
-                          <h3 className="text-2xl font-black text-[var(--nexus-on-bg)] flex items-center gap-3">
-                            {expert.expertName}
-                          </h3>
-                          <p className="text-[var(--nexus-outline)] font-medium mt-1 text-sm line-clamp-2">
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-2xl font-black text-[var(--nexus-on-bg)]">
+                              {expert.expertName}
+                            </h3>
+                            <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-md text-xs font-bold border border-amber-100">
+                              ★ {expert.rating || '5.0'}
+                            </div>
+                          </div>
+                          <p className="text-[var(--nexus-primary)] font-bold text-sm flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--nexus-primary)]" />
+                            {expert.expertPhone || '010-XXXX-XXXX'}
+                          </p>
+                          <p className="text-[var(--nexus-outline)] font-medium mt-2 text-sm leading-relaxed">
                             {expert.expertPortfolio}
                           </p>
                         </div>
-                        <button className="px-6 py-3 bg-[var(--nexus-on-bg)] text-white font-bold text-md rounded-xl hover:bg-black transition-colors shadow-lg active:scale-95 shrink-0">
-                          상담 예약
-                        </button>
+                        <div className="flex flex-col gap-2">
+                          <a 
+                            href={`tel:${expert.expertPhone}`}
+                            className="px-6 py-3 bg-[var(--nexus-primary)] text-white font-bold text-center text-md rounded-xl hover:opacity-90 transition-all shadow-lg active:scale-95 shrink-0"
+                          >
+                            전화 상담
+                          </a>
+                          <button className="px-6 py-3 bg-[var(--nexus-surface-container-highest)] text-[var(--nexus-on-bg)] font-bold text-md rounded-xl hover:bg-[var(--nexus-surface-container-high)] transition-colors active:scale-95 shrink-0">
+                            상세 보기
+                          </button>
+                        </div>
                       </div>
                     </div>
 

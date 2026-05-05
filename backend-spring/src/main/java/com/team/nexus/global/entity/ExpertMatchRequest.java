@@ -15,8 +15,7 @@ import java.util.UUID;
 public class ExpertMatchRequest {
 
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
@@ -36,7 +35,7 @@ public class ExpertMatchRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "matched_expert_id")
-    private ExpertProfile matchedExpert;
+    private Expert matchedExpert;
 
     @Column(name = "match_reason", columnDefinition = "TEXT")
     private String matchReason; // AI Generated Reason

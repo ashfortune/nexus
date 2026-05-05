@@ -58,6 +58,8 @@ class User(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     nickname: Mapped[Optional[str]] = mapped_column(String(255))
+    name: Mapped[Optional[str]] = mapped_column(String(50))
+    phone: Mapped[Optional[str]] = mapped_column(String(20))
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     passwd: Mapped[str] = mapped_column(String(255), nullable=False)
     user_type: Mapped[Optional[int]] = mapped_column(Integer, server_default=text("0"))
@@ -99,6 +101,22 @@ class Branding(Base):
     user: Mapped["User"] = relationship(back_populates="brandings")
     industry_category: Mapped["IndustryCategory"] = relationship(back_populates="brandings")
     identities: Mapped[List["BrandIdentity"]] = relationship(back_populates="branding", cascade="all, delete-orphan")
+
+class Expert(Base):
+    __tablename__ = "experts"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    phone: Mapped[Optional[str]] = mapped_column(String(20))
+    email: Mapped[Optional[str]] = mapped_column(String(100))
+    industry_category_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("industry_categories.id"))
+    portfolio_text: Mapped[Optional[str]] = mapped_column(Text)
+    rating: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION, server_default=text("0.0"))
+    embedding: Mapped[Optional[Vector]] = mapped_column(Vector(768))
+    created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+
+    # Relationships
+    industry_category: Mapped[Optional["IndustryCategory"]] = relationship()
 
 class BrandIdentity(Base):
     __tablename__ = "brand_identities"

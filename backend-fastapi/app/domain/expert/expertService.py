@@ -14,29 +14,28 @@ async def match_expert_service(db: AsyncSession, request_content: str, category_
     
     # 2. Vector DB (pgvector) 검색 (Raw SQL)
     sql_query = """
-        SELECT ep.id, ep.portfolio_text, ep.rating, u.nickname
-        FROM expert_profiles ep
-        JOIN users u ON ep.user_id = u.id
+        SELECT e.id, e.portfolio_text, e.rating, e.name, e.phone
+        FROM experts e
     """
     params = {"vector": vector_str}
     
     if category_id:
-        sql_query += " WHERE ep.industry_category_id = :cat_id "
+        sql_query += " WHERE e.industry_category_id = :cat_id "
         params["cat_id"] = category_id
         
-    sql_query += " ORDER BY ep.embedding <=> CAST(:vector AS vector) LIMIT 3"
+    sql_query += " ORDER BY e.embedding <=> CAST(:vector AS vector) LIMIT 3"
     
     result = await db.execute(text(sql_query), params)
     top_experts = result.fetchall()
     
     if not top_experts:
-        return {"matched_expert_id": None, "match_reason": "선택하신 분야에 아직 등록된 전문가가 없습니다."}
+        return {"matches": [], "message": "선택하신 분야에 아직 등록된 전문가가 없습니다."}
     
     # 3. RAG 프롬프트 구성
     expert_info_list = []
     for exp in top_experts:
         expert_info_list.append(
-            f"[전문가: {exp.nickname} (ID: {str(exp.id)})]\n포트폴리오 및 이력: {exp.portfolio_text}\n평점: {exp.rating or '평가 없음'}"
+            f"[전문가: {exp.name} (ID: {str(exp.id)})]\n포트폴리오 및 이력: {exp.portfolio_text}\n평점: {exp.rating or '평가 없음'}"
         )
         
     experts_context = "\n\n".join(expert_info_list)
@@ -56,43 +55,61 @@ async def match_expert_service(db: AsyncSession, request_content: str, category_
     ]
     
     # 4. LLM 답변 생성 (Gemini)
-    print(f"DEBUG: Vector search returned {len(top_experts)} experts.")
     response_text = await ai_client.generate_response(system_instruction, chat_history)
-    print(f"DEBUG: AI Raw Response: {response_text}")
     
-    # 5. JSON 파싱
+    # 5. JSON 파싱 및 데이터 보강 (실명/전화번호 추가)
     try:
-        # LLM 응답에서 JSON 배열 부분만 정규식으로 추출
         json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
         if json_match:
             json_str = json_match.group()
             matches = json.loads(json_str)
             
-            # 3명이 안 될 경우, 부족한 만큼 상위 전문가를 fallback으로 채움
-            if len(matches) < 3:
-                print(f"DEBUG: AI returned only {len(matches)} matches. Filling with fallback.")
-                existing_ids = {m.get("matched_expert_id") for m in matches}
+            # DB 데이터와 매칭하여 추가 정보(실명, 전화번호) 부여
+            expert_map = {str(exp.id): exp for exp in top_experts}
+            
+            enriched_matches = []
+            for m in matches:
+                exp_id = m.get("matched_expert_id")
+                if exp_id in expert_map:
+                    exp = expert_map[exp_id]
+                    enriched_matches.append({
+                        "matched_expert_id": exp_id,
+                        "expert_name": exp.name,
+                        "expert_phone": exp.phone if exp.phone else "연락처 미등록",
+                        "match_reason": m.get("match_reason"),
+                        "rating": exp.rating,
+                        "portfolio": exp.portfolio_text
+                    })
+            
+            # 3명이 안 될 경우 fallback
+            if len(enriched_matches) < 3:
+                existing_ids = {m.get("matched_expert_id") for m in enriched_matches}
                 for exp in top_experts:
-                    if len(matches) >= 3: break
+                    if len(enriched_matches) >= 3: break
                     if str(exp.id) not in existing_ids:
-                        matches.append({
+                        enriched_matches.append({
                             "matched_expert_id": str(exp.id),
-                            "expert_name": exp.nickname,
-                            "match_reason": "사용자 요구사항과 유사한 포트폴리오를 보유하여 추가로 추천해 드립니다."
+                            "expert_name": exp.name,
+                            "expert_phone": exp.phone if exp.phone else "연락처 미등록",
+                            "match_reason": "사용자 요구사항과 유사한 포트폴리오를 보유하여 추가로 추천해 드립니다.",
+                            "rating": exp.rating,
+                            "portfolio": exp.portfolio_text
                         })
             
-            return {"matches": matches}
+            return {"matches": enriched_matches}
         else:
             raise ValueError("JSON 배열 형식을 찾을 수 없음")
     except Exception as e:
-        print(f"RAG Parsing Error: {e}\nRaw Response: {response_text}")
-        # 파싱 실패 시, 벡터 검색 상위 3명을 기본으로 추천
+        print(f"RAG Parsing Error: {e}")
         fallback_matches = []
         for exp in top_experts:
             fallback_matches.append({
                 "matched_expert_id": str(exp.id), 
-                "expert_name": exp.nickname,
-                "match_reason": "고객님의 요구사항과 이력서가 유사하여 시스템이 자동으로 추천해 드립니다."
+                "expert_name": exp.name,
+                "expert_phone": exp.phone if exp.phone else "연락처 미등록",
+                "match_reason": "시스템 자동 추천 전문가입니다.",
+                "rating": exp.rating,
+                "portfolio": exp.portfolio_text
             })
         return {"matches": fallback_matches}
 

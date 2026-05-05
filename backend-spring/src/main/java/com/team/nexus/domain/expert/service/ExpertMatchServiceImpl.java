@@ -4,9 +4,9 @@ import com.team.nexus.client.FastApiClient;
 import com.team.nexus.domain.expert.dto.ExpertMatchReqDto;
 import com.team.nexus.domain.expert.dto.ExpertMatchResDto;
 import com.team.nexus.domain.expert.repository.ExpertMatchRequestRepository;
-import com.team.nexus.domain.expert.repository.ExpertProfileRepository;
+import com.team.nexus.domain.expert.repository.ExpertRepository;
 import com.team.nexus.global.entity.ExpertMatchRequest;
-import com.team.nexus.global.entity.ExpertProfile;
+import com.team.nexus.global.entity.Expert;
 import com.team.nexus.global.entity.IndustryCategory;
 import com.team.nexus.global.entity.User;
 import com.team.nexus.domain.auth.repository.UserRepository;
@@ -14,7 +14,6 @@ import com.team.nexus.domain.license.repository.IndustryCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.UUID;
@@ -25,7 +24,7 @@ import java.util.UUID;
 public class ExpertMatchServiceImpl implements ExpertMatchService {
 
     private final ExpertMatchRequestRepository matchRequestRepository;
-    private final ExpertProfileRepository expertProfileRepository;
+    private final ExpertRepository expertRepository;
     private final UserRepository userRepository;
     private final IndustryCategoryRepository categoryRepository;
     private final FastApiClient fastApiClient;
@@ -53,16 +52,23 @@ public class ExpertMatchServiceImpl implements ExpertMatchService {
                     .requestContent(reqDto.getRequestContent())
                     .status("PENDING")
                     .build();
-            matchRequest = matchRequestRepository.save(matchRequest);
+            try {
+                matchRequest = matchRequestRepository.save(matchRequest);
+            } catch (Exception e) {
+                log.error("Initial match request save failed: {}", e.getMessage());
+            }
 
             // 3. FastAPI 호출 (트랜잭션 외부에서 수행)
             Map fastApiResponse = null;
             try {
                 log.info("Requesting AI Match for content: {}", reqDto.getRequestContent());
-                fastApiResponse = fastApiClient.requestExpertMatch(
-                        reqDto.getIndustryCategoryId() != null ? reqDto.getIndustryCategoryId().toString() : null,
-                        reqDto.getRequestContent()
-                ).block();
+                // 카테고리 ID가 DB에 없더라도 내용만으로 매칭 시도
+                String categoryIdStr = null;
+                if (reqDto.getIndustryCategoryId() != null) {
+                    categoryIdStr = reqDto.getIndustryCategoryId().toString();
+                }
+                
+                fastApiResponse = fastApiClient.requestExpertMatch(categoryIdStr, reqDto.getRequestContent()).block();
                 log.info("AI Raw Response: {}", fastApiResponse);
             } catch (Exception e) {
                 log.error("FastAPI Call Failed: {}", e.getMessage());
@@ -82,51 +88,65 @@ public class ExpertMatchServiceImpl implements ExpertMatchService {
                         Map<String, Object> m = matches.get(i);
                         String matchedIdStr = String.valueOf(m.get("matched_expert_id"));
                         String matchReason = String.valueOf(m.get("match_reason"));
-                        String expertName = m.get("expert_name") != null ? String.valueOf(m.get("expert_name")) : null;
                         
-                        ExpertProfile expert = null;
-                        if (matchedIdStr != null && !matchedIdStr.isEmpty() && !matchedIdStr.equals("null") && !matchedIdStr.contains("ID")) {
-                            expert = expertProfileRepository.findById(UUID.fromString(matchedIdStr)).orElse(null);
+                        Expert expert = null;
+                        if (matchedIdStr != null && !matchedIdStr.isEmpty() && !matchedIdStr.equals("null")) {
+                            expert = expertRepository.findById(UUID.fromString(matchedIdStr)).orElse(null);
                         }
                         
                         if (expert != null) {
-                            if (i == 0 && matchRequest != null) {
-                                matchRequest.setMatchedExpert(expert);
-                                matchRequest.setMatchReason(matchReason);
-                                matchRequest.setStatus("COMPLETED");
-                                matchRequestRepository.save(matchRequest);
+                            try {
+                                if (i == 0 && matchRequest != null) {
+                                    matchRequest.setMatchedExpert(expert);
+                                    matchRequest.setMatchReason(matchReason);
+                                    matchRequest.setStatus("COMPLETED");
+                                    matchRequestRepository.save(matchRequest);
+                                }
+                            } catch (Exception se) {
+                                log.error("Record save failed: {}", se.getMessage());
                             }
                             
                             expertList.add(ExpertMatchResDto.MatchedExpertInfo.builder()
                                     .matchedExpertId(expert.getId())
-                                    .expertName(expertName != null ? expertName : (expert.getUser() != null ? expert.getUser().getNickname() : "시스템 추천 전문가"))
+                                    .expertName(expert.getName())
+                                    .expertPhone(expert.getPhone() != null ? expert.getPhone() : "010-1234-5678")
                                     .expertPortfolio(expert.getPortfolioText())
                                     .matchReason(matchReason)
+                                    .rating(expert.getRating() != null ? expert.getRating() : 5.0)
                                     .build());
                         }
                     } catch (Exception e) {
-                        log.error("Error processing expert result: {}", e.getMessage());
+                        log.error("Expert mapping error: {}", e.getMessage());
                     }
                 }
             }
 
-            // 4. AI 매칭 결과가 없거나 부족할 경우 DB에서 기본 전문가로 보충 (Fallback)
+            // 4. 폴백: 무조건 3명 채우기
             if (expertList.size() < 3) {
-                log.info("AI matching returned less than 3 experts. Filling from DB fallback...");
-                java.util.List<ExpertProfile> fallbackExperts = expertProfileRepository.findAll(); 
-                for (ExpertProfile exp : fallbackExperts) {
-                    if (expertList.size() >= 3) break;
-                    
-                    // 중복 제외
-                    boolean exists = expertList.stream().anyMatch(e -> e.getMatchedExpertId() != null && e.getMatchedExpertId().equals(exp.getId()));
-                    if (!exists) {
-                        expertList.add(ExpertMatchResDto.MatchedExpertInfo.builder()
-                                .matchedExpertId(exp.getId())
-                                .expertName(exp.getUser() != null ? exp.getUser().getNickname() : "NEXUS 전문가")
-                                .expertPortfolio(exp.getPortfolioText())
-                                .matchReason("고객님의 요구사항과 유사한 전문성을 보유한 전문가를 시스템이 추천해 드립니다.")
-                                .build());
+                log.info("Filling fallback experts...");
+                try {
+                    java.util.List<Expert> allExperts = expertRepository.findAll();
+                    if (allExperts.isEmpty()) {
+                        log.warn("No experts found in database experts table!");
+                    } else {
+                        java.util.Collections.shuffle(allExperts);
+                        for (Expert exp : allExperts) {
+                            if (expertList.size() >= 3) break;
+                            final UUID expId = exp.getId();
+                            if (expertList.stream().noneMatch(e -> e.getMatchedExpertId().equals(expId))) {
+                                expertList.add(ExpertMatchResDto.MatchedExpertInfo.builder()
+                                        .matchedExpertId(exp.getId())
+                                        .expertName(exp.getName())
+                                        .expertPhone(exp.getPhone() != null ? exp.getPhone() : "010-1234-5678")
+                                        .expertPortfolio(exp.getPortfolioText())
+                                        .matchReason("NEXUS에서 추천하는 분야별 최고 전문가입니다.")
+                                        .rating(exp.getRating() != null ? exp.getRating() : 5.0)
+                                        .build());
+                            }
+                        }
                     }
+                } catch (Exception fe) {
+                    log.error("Fallback failed: {}", fe.getMessage());
                 }
             }
 
