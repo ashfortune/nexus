@@ -16,6 +16,7 @@ from app.domain.community import communityRouter as community
 from app.domain.compliance import complianceRouter as compliance
 from app.domain.dashboard import dashboardRouter as dashboard
 from app.domain.dashboard import predictionRouter as prediction
+from app.domain.dashboard import operationRouter as operation
 from app.domain.simulation import simulationRouter as simulation
 from app.domain.subsidy import subsidyRouter as subsidy
 from app.domain.subsidy.subsidyRouter import start_scheduler as subsidy_start_scheduler
@@ -86,6 +87,7 @@ app.include_router(compliance.router, prefix="/api/v1/ai/compliance", tags=["Com
 app.include_router(community.router, prefix="/api/v1/ai/community", tags=["Hyper-local Community"])
 app.include_router(dashboard.router, prefix="/api/v1/ai/dashboard", tags=["Ops & Dashboard"])
 app.include_router(prediction.router, prefix="/api/v1/ai/prediction", tags=["Sales Prediction"])
+app.include_router(operation.router, prefix="/api/v1/ai/operation", tags=["RAG Operation"])
 app.include_router(subsidy.router, prefix="/api/v1/ai/subsidy", tags=["Subsidy Guide"])
 
 
