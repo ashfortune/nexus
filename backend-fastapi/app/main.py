@@ -10,6 +10,7 @@ from sqlalchemy import text
 from app.core.ai_client import get_ai_client
 from app.core.database import AsyncSessionLocal, get_db
 from app.domain.auth import authRouter as auth
+from app.domain.expert import expertRouter as expert
 from app.domain.branding import brandingRouter as branding
 from app.domain.branding.brandingService import initialize_industry_cache
 from app.domain.community import communityRouter as community
@@ -34,7 +35,7 @@ async def lifespan(app: FastAPI):
     async with AsyncSessionLocal() as db:
         await initialize_industry_cache(db)
 
-    # 3. 지원금찾기 데이터 오전 3시 스케쥴
+    # 3. 지원금찾기 데이터 오전 3시 스케쥴 (필요 시 복구)
     subsidy_start_scheduler(get_db)
 
     print("✨ 모든 초기화가 완료되었습니다. 서비스를 시작합니다.")
@@ -81,6 +82,7 @@ SPRING_BOOT_URL = os.getenv("SPRING_BOOT_URL", "http://localhost:8080")
 
 # 도메인별 라우터 등록
 app.include_router(auth.router, prefix="/api/v1/ai/auth", tags=["Authentication"])
+app.include_router(expert.router, prefix="/api/v1/ai/experts", tags=["Expert Matching"])
 app.include_router(branding.router, prefix="/api/v1/ai/branding", tags=["AI Branding"])
 app.include_router(simulation.router, prefix="/api/v1/ai/simulation", tags=["Startup Simulation"])
 app.include_router(compliance.router, prefix="/api/v1/ai/compliance", tags=["Compliance & Policy"])

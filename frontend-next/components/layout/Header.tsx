@@ -35,7 +35,7 @@ const MENU_DATA = [
       { name: '자유 게시판', href: '/board' },
       { name: '지역별 게시판', href: '/region-board' },
       { name: '업종별 게시판', href: '/industry-board' },
-      { name: '전문가 매칭', href: '#' },
+      { name: '전문가 매칭', href: '/expert' },
     ],
   },
   { id: 'group-purchases', title: '공동구매', hasSub: false, href: '/group-purchases' },

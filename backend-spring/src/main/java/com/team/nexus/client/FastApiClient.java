@@ -39,4 +39,5 @@ public class FastApiClient {
                 .retrieve()
                 .bodyToMono(Map.class);
     }
+
 }

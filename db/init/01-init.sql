@@ -386,3 +386,30 @@ CREATE TABLE IF NOT EXISTS administrative_boundaries (
 
 CREATE INDEX IF NOT EXISTS idx_administrative_boundaries_adm_cd
     ON administrative_boundaries (adm_cd);
+
+---------------------------------------
+-- 9. 전문가 추천 및 매칭 모듈 (AI Expert)
+---------------------------------------
+
+CREATE TABLE experts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(50) NOT NULL,
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    industry_category_id UUID REFERENCES industry_categories(id),
+    portfolio_text TEXT,
+    rating DOUBLE PRECISION DEFAULT 0.0,
+    embedding VECTOR(768),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE expert_match_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    industry_category_id UUID REFERENCES industry_categories(id),
+    request_content TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, MATCHED, COMPLETED, FAILED
+    matched_expert_id UUID REFERENCES experts(id),
+    match_reason TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);

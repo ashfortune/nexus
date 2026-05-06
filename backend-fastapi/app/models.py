@@ -359,20 +359,11 @@ class Subsidy(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     organization: Mapped[str] = mapped_column(String(100), nullable=False)
-    region: Mapped[Optional[str]] = mapped_column(String(100))
-    industry: Mapped[Optional[str]] = mapped_column(String(100))
-    min_age: Mapped[Optional[int]] = mapped_column(SmallInteger)
-    max_age: Mapped[Optional[int]] = mapped_column(SmallInteger)
-    max_amount: Mapped[Optional[int]] = mapped_column(Integer)
-    deadline: Mapped[Optional[datetime.date]] = mapped_column(Date)
-    start_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
+    max_amount: Mapped[Optional[str]] = mapped_column(String(50))
+    deadline: Mapped[Optional[str]] = mapped_column(String(50))
     description: Mapped[Optional[str]] = mapped_column(Text)
-    support_content: Mapped[Optional[str]] = mapped_column(Text)
-    target: Mapped[Optional[str]] = mapped_column(Text)
-    how_to_apply: Mapped[Optional[str]] = mapped_column(Text)
-    contact: Mapped[Optional[str]] = mapped_column(Text)
-    apply_url: Mapped[Optional[str]] = mapped_column(Text)
-    source_url: Mapped[Optional[str]] = mapped_column(String(500), unique=True)
+    eligibility: Mapped[Optional[str]] = mapped_column(Text)
+    apply_url: Mapped[Optional[str]] = mapped_column(String(500))
     embedding: Mapped[Optional[list]] = mapped_column(Vector(768))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
     created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
@@ -707,3 +698,34 @@ class AdministrativeBoundary(Base):
     adm_cd: Mapped[str] = mapped_column(String(20), nullable=False)
     adm_nm: Mapped[str] = mapped_column(String(100), nullable=False)
     boundary: Mapped[Optional[dict]] = mapped_column(JSON, nullable=False)
+
+
+class Expert(Base):
+    __tablename__ = "experts"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    phone: Mapped[Optional[str]] = mapped_column(String(20))
+    email: Mapped[Optional[str]] = mapped_column(String(100))
+    industry_category_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("industry_categories.id")
+    )
+    portfolio_text: Mapped[Optional[str]] = mapped_column(Text)
+    rating: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION, server_default=text("0.0"))
+    embedding: Mapped[Optional[Vector]] = mapped_column(Vector(768))
+    created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+
+
+class ExpertMatchRequest(Base):
+    __tablename__ = "expert_match_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    requester_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    industry_category_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("industry_categories.id")
+    )
+    request_content: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[Optional[str]] = mapped_column(String(20), server_default=text("'PENDING'"))
+    matched_expert_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("experts.id"))
+    match_reason: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))

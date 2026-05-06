@@ -167,9 +167,12 @@ export default function Home() {
                 <span className="px-3 py-1 rounded-full border border-current text-[10px] font-bold opacity-40">
                   공동 구매 영역
                 </span>
-                <span className="px-3 py-1 rounded-full border border-current text-[10px] font-bold opacity-40">
-                  전문가 매칭 영역
-                </span>
+                <Link 
+                  href="/expert"
+                  className="px-3 py-1 rounded-full border border-[var(--nexus-primary)] text-[10px] font-bold text-[var(--nexus-primary)] hover:bg-[var(--nexus-primary)] hover:text-white transition-all"
+                >
+                  전문가 매칭 서비스 체험하기
+                </Link>
               </div>
             </div>
 
