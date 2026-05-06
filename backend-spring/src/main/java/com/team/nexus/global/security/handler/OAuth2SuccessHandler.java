@@ -53,6 +53,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .queryParam("token", token)
                     .queryParam("userId", user.getId().toString())
                     .queryParam("nickname", user.getNickname())
+                    .queryParam("email", user.getEmail())
+                    .queryParam("userType", user.getUserType())
                     .queryParam("provider", provider)
                     .build()
                     .encode(java.nio.charset.StandardCharsets.UTF_8) // 명시적 인코딩 추가

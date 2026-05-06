@@ -38,13 +38,25 @@ export default function MyPage() {
     formData.append('files', file);
 
     try {
-      const response = await api.post(`/api/v1/mypage/profile-image/${userId}`, formData);
-      const result = await response.json();
-      if (result.status === 'success') {
-        alert('프로필 이미지가 변경되었습니다.');
-        fetchData(userId!);
+      // 1단계: 실제 파일 업로드 (Supabase Storage)
+      const uploadResponse = await api.post('/api/v1/upload/profiles', formData);
+      const uploadResult = await uploadResponse.json();
+      
+      if (uploadResult.status === 'success' && uploadResult.urls && uploadResult.urls.length > 0) {
+        const imageUrl = uploadResult.urls[0];
+        
+        // 2단계: DB의 프로필 이미지 경로 업데이트
+        const response = await api.patch(`/api/v1/mypage/profile-image/${userId}`, { imageUrl });
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          alert('프로필 이미지가 변경되었습니다.');
+          fetchData(userId!);
+        } else {
+          alert(result.message || '업로드에 실패했습니다.');
+        }
       } else {
-        alert(uploadResult.message || '업로드에 실패했습니다.');
+        alert('이미지 서버 업로드에 실패했습니다.');
       }
     } catch (error) {
       console.error('Profile upload error:', error);
@@ -101,7 +113,7 @@ export default function MyPage() {
     }
 
     fetchData(user.id);
-  }, [isAuthenticated, user, router, _hasHydrated]);
+  }, [isAuthenticated, user?.id, router, _hasHydrated]);
 
   const fetchData = async (userId: string) => {
     try {
@@ -109,6 +121,8 @@ export default function MyPage() {
       const result = await response.json();
       if (result.status === 'success') {
         setData(result.data);
+        // 전역 상태 및 로컬 스토리지 업데이트
+        useAuthStore.getState().updateUser({ profileImage: result.data.profileImage || '' });
         localStorage.setItem('profileImage', result.data.profileImage || '');
         window.dispatchEvent(new Event('login-status-change'));
       }
@@ -173,7 +187,7 @@ export default function MyPage() {
                 <div className="w-full h-full bg-[var(--nexus-surface-container)] rounded-3xl flex items-center justify-center overflow-hidden shadow-inner border-2 border-white">
                   {data.profileImage ? (
                     <img
-                      src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${data.profileImage}`}
+                      src={data.profileImage.startsWith('http') ? data.profileImage : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${data.profileImage}`}
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />

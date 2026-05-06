@@ -39,7 +39,7 @@ export default function ExpertMatchPage() {
       // TODO: 실제 유저 ID로 교체 필요
       const dummyUserId = '123e4567-e89b-12d3-a456-426614174000'; 
       
-      const response = await fetch('http://localhost:8080/api/v1/experts/match', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/experts/match`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -113,7 +113,7 @@ export default function BoardPage() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--nexus-primary-container)] text-[var(--nexus-primary)] rounded-full text-xs font-black tracking-widest uppercase">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--nexus-surface-container)] text-[var(--nexus-primary)] rounded-full text-xs font-black tracking-widest uppercase">
               <TrendingUp className="w-4 h-4" />
               Nexus Community
             </div>
@@ -257,7 +257,7 @@ export default function BoardPage() {
                                 {post.title}
                               </span>
                               {post.commentCount > 0 && (
-                                <span className="flex items-center gap-1 text-[var(--nexus-primary)] text-xs font-black bg-[var(--nexus-primary-container)] px-2 py-0.5 rounded-full">
+                                <span className="flex items-center gap-1 text-[var(--nexus-primary)] text-xs font-black bg-[var(--nexus-surface-container)] px-2 py-0.5 rounded-full">
                                   <MessageSquare className="w-3 h-3" />
                                   {post.commentCount}
                                 </span>
@@ -268,7 +268,7 @@ export default function BoardPage() {
                       </td>
                       <td className="py-7 px-6 text-center">
                         <div className="flex items-center justify-center gap-2 text-zinc-600 font-black text-sm">
-                          <div className="w-7 h-7 rounded-lg bg-zinc-100 flex items-center justify-center text-[var(--nexus-primary)] group-hover:bg-[var(--nexus-primary-container)] transition-colors">
+                          <div className="w-7 h-7 rounded-lg bg-zinc-100 flex items-center justify-center text-[var(--nexus-primary)] group-hover:bg-[var(--nexus-surface-container)] transition-colors">
                             <User className="w-3.5 h-3.5" />
                           </div>
                           {post.author}

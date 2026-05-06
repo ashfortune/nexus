@@ -323,7 +323,7 @@ export default function IndustryBoardDetailPage() {
           <div className="p-8 md:p-14">
             <header className="mb-14 pb-14 border-b border-zinc-50">
               <div className="flex items-center gap-3 mb-8">
-                <span className="px-3 py-1 bg-[var(--nexus-primary-container)] text-[var(--nexus-primary)] text-[10px] font-black uppercase tracking-widest rounded-full">
+                <span className="px-3 py-1 bg-[var(--nexus-surface-container)] text-[var(--nexus-primary)] text-[10px] font-black uppercase tracking-widest rounded-full">
                   <Briefcase className="w-3 h-3 inline-block mr-1 -mt-0.5" />
                   {post.industryCategoryName}
                 </span>
@@ -346,7 +346,7 @@ export default function IndustryBoardDetailPage() {
 
               <div className="flex flex-wrap items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center border border-zinc-50 transition-colors">
+                  <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center border border-zinc-50 group-hover:bg-[var(--nexus-surface-container)] transition-colors">
                     <User className="w-6 h-6 text-[var(--nexus-primary)]" />
                   </div>
                   <div>

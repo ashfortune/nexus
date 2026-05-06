@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/experts")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${frontend.url:http://localhost:3000}")
 public class ExpertMatchController {
 
     private final ExpertMatchService expertMatchService;

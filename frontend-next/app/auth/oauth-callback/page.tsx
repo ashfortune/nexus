@@ -2,19 +2,31 @@
 
 import React, { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
 
 function OAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setAuth } = useAuthStore();
 
   useEffect(() => {
     const token = searchParams.get('token');
     const provider = searchParams.get('provider');
     const userId = searchParams.get('userId');
     const nickname = searchParams.get('nickname');
+    const email = searchParams.get('email');
+    const userType = searchParams.get('userType');
 
     if (token) {
-      // 로컬 스토리지에 정보 저장
+      // Zustand 스토어 상태 업데이트 (로그인 유지 핵심)
+      setAuth({
+        id: userId || '',
+        nickname: nickname || '',
+        email: email || '',
+        userType: Number(userType) || 1
+      }, token);
+
+      // 로컬 스토리지에 정보 저장 (백업용)
       localStorage.setItem('accessToken', token);
       if (userId) localStorage.setItem('userId', userId);
       if (nickname) localStorage.setItem('nickname', nickname);
