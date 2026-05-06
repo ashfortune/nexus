@@ -1,0 +1,18 @@
+services:
+  nexus-db:
+    image: pgvector/pgvector:pg16
+    container_name: nexus-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: nexus_db
+      POSTGRES_USER: human2team
+      POSTGRES_PASSWORD: human2team
+    volumes:
+      - ./docker-data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    restart: always
+
+networks:
+  default:
+    name: nexus-network

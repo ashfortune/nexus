@@ -40,17 +40,4 @@ public class FastApiClient {
                 .bodyToMono(Map.class);
     }
 
-    /**
-     * 전문가 매칭 요청
-     */
-    public Mono<Map> requestExpertMatch(String categoryId, String requestContent) {
-        return this.webClient.post()
-                .uri("/api/v1/ai/experts/match")
-                .bodyValue(Map.of(
-                    "industry_category_id", categoryId,
-                    "request_content", requestContent
-                ))
-                .retrieve()
-                .bodyToMono(Map.class);
-    }
 }

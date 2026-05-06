@@ -11,17 +11,16 @@ from app.core.ai_client import get_ai_client
 from app.core.database import AsyncSessionLocal, get_db
 from app.domain.auth import authRouter as auth
 from app.domain.expert import expertRouter as expert
-# from app.domain.branding import brandingRouter as branding
-# from app.domain.branding.brandingService import initialize_industry_cache
+from app.domain.branding import brandingRouter as branding
+from app.domain.branding.brandingService import initialize_industry_cache
 from app.domain.community import communityRouter as community
-# from app.domain.compliance import complianceRouter as compliance
-# from app.domain.dashboard import dashboardRouter as dashboard
-# from app.domain.dashboard import predictionRouter as prediction
-# from app.domain.dashboard import operationRouter as operation
-# from app.domain.simulation import simulationRouter as simulation
-# from app.domain.subsidy import subsidyRouter as subsidy
-# from app.domain.subsidy.subsidyRouter import start_scheduler as subsidy_start_scheduler
-
+from app.domain.compliance import complianceRouter as compliance
+from app.domain.dashboard import dashboardRouter as dashboard
+from app.domain.dashboard import predictionRouter as prediction
+from app.domain.dashboard import operationRouter as operation
+from app.domain.simulation import simulationRouter as simulation
+from app.domain.subsidy import subsidyRouter as subsidy
+from app.domain.subsidy.subsidyRouter import start_scheduler as subsidy_start_scheduler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -32,11 +31,11 @@ async def lifespan(app: FastAPI):
     get_ai_client("gemini")
 
     # 2. 업종 카테고리 데이터 캐싱 (필요 시 복구)
-    # async with AsyncSessionLocal() as db:
-    #     await initialize_industry_cache(db)
+    async with AsyncSessionLocal() as db:
+        await initialize_industry_cache(db)
 
     # 3. 지원금찾기 데이터 오전 3시 스케쥴 (필요 시 복구)
-    # subsidy_start_scheduler(get_db)
+    subsidy_start_scheduler(get_db)
 
     print("✨ 모든 초기화가 완료되었습니다. 서비스를 시작합니다.")
     yield
@@ -83,14 +82,14 @@ SPRING_BOOT_URL = os.getenv("SPRING_BOOT_URL", "http://localhost:8080")
 # 도메인별 라우터 등록
 app.include_router(auth.router, prefix="/api/v1/ai/auth", tags=["Authentication"])
 app.include_router(expert.router, prefix="/api/v1/ai/experts", tags=["Expert Matching"])
-# app.include_router(branding.router, prefix="/api/v1/ai/branding", tags=["AI Branding"])
-# app.include_router(simulation.router, prefix="/api/v1/ai/simulation", tags=["Startup Simulation"])
-# app.include_router(compliance.router, prefix="/api/v1/ai/compliance", tags=["Compliance & Policy"])
+app.include_router(branding.router, prefix="/api/v1/ai/branding", tags=["AI Branding"])
+app.include_router(simulation.router, prefix="/api/v1/ai/simulation", tags=["Startup Simulation"])
+app.include_router(compliance.router, prefix="/api/v1/ai/compliance", tags=["Compliance & Policy"])
 app.include_router(community.router, prefix="/api/v1/ai/community", tags=["Hyper-local Community"])
-# app.include_router(dashboard.router, prefix="/api/v1/ai/dashboard", tags=["Ops & Dashboard"])
-# app.include_router(prediction.router, prefix="/api/v1/ai/prediction", tags=["Sales Prediction"])
-# app.include_router(operation.router, prefix="/api/v1/ai/operation", tags=["RAG Operation"])
-# app.include_router(subsidy.router, prefix="/api/v1/ai/subsidy", tags=["Subsidy Guide"])
+app.include_router(dashboard.router, prefix="/api/v1/ai/dashboard", tags=["Ops & Dashboard"])
+app.include_router(prediction.router, prefix="/api/v1/ai/prediction", tags=["Sales Prediction"])
+app.include_router(operation.router, prefix="/api/v1/ai/operation", tags=["RAG Operation"])
+app.include_router(subsidy.router, prefix="/api/v1/ai/subsidy", tags=["Subsidy Guide"])
 
 
 @app.get("/")

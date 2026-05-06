@@ -228,19 +228,13 @@ export default function ExpertMatchPage() {
                           </div>
                           <p className="text-[var(--nexus-primary)] font-bold text-sm flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-[var(--nexus-primary)]" />
-                            {expert.expertPhone || '010-XXXX-XXXX'}
+                            {expert.expertPhone}
                           </p>
                           <p className="text-[var(--nexus-outline)] font-medium mt-2 text-sm leading-relaxed">
                             {expert.expertPortfolio}
                           </p>
                         </div>
                         <div className="flex flex-col gap-2">
-                          <a 
-                            href={`tel:${expert.expertPhone}`}
-                            className="px-6 py-3 bg-[var(--nexus-primary)] text-white font-bold text-center text-md rounded-xl hover:opacity-90 transition-all shadow-lg active:scale-95 shrink-0"
-                          >
-                            전화 상담
-                          </a>
                           <button 
                             onClick={() => {
                               setSelectedExpert(expert);
@@ -306,7 +300,7 @@ export default function ExpertMatchPage() {
                 <div>
                   <h2 className="text-3xl font-black text-[var(--nexus-on-bg)] mb-2">{selectedExpert.expertName}</h2>
                   <div className="flex items-center gap-4">
-                    <span className="text-[var(--nexus-primary)] font-bold text-lg">{selectedExpert.expertPhone || '010-XXXX-XXXX'}</span>
+                    <span className="text-[var(--nexus-primary)] font-bold text-lg">{selectedExpert.expertPhone}</span>
                     <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-sm font-bold border border-amber-100">★ {selectedExpert.rating || '5.0'}</span>
                   </div>
                 </div>
@@ -335,12 +329,6 @@ export default function ExpertMatchPage() {
               </div>
 
               <div className="mt-10 flex gap-4">
-                <a 
-                  href={`tel:${selectedExpert.expertPhone}`}
-                  className="flex-1 py-5 bg-[var(--nexus-primary)] text-white font-bold text-center rounded-2xl shadow-lg shadow-[var(--nexus-primary)]/20 hover:opacity-90 transition-all"
-                >
-                  지금 바로 상담하기
-                </a>
                 <button 
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 py-5 bg-[var(--nexus-surface-container-highest)] text-[var(--nexus-on-bg)] font-bold rounded-2xl hover:bg-gray-200 transition-all"

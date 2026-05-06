@@ -1,6 +1,6 @@
 package com.team.nexus.domain.expert.service;
 
-import com.team.nexus.client.FastApiClient;
+import com.team.nexus.domain.expert.client.ExpertAiClient;
 import com.team.nexus.domain.expert.dto.ExpertMatchReqDto;
 import com.team.nexus.domain.expert.dto.ExpertMatchResDto;
 import com.team.nexus.domain.expert.repository.ExpertMatchRequestRepository;
@@ -27,7 +27,7 @@ public class ExpertMatchServiceImpl implements ExpertMatchService {
     private final ExpertRepository expertRepository;
     private final UserRepository userRepository;
     private final IndustryCategoryRepository categoryRepository;
-    private final FastApiClient fastApiClient;
+    private final ExpertAiClient expertAiClient;
 
     @Override
     public ExpertMatchResDto matchExpert(ExpertMatchReqDto reqDto) {
@@ -68,7 +68,7 @@ public class ExpertMatchServiceImpl implements ExpertMatchService {
                     categoryIdStr = reqDto.getIndustryCategoryId().toString();
                 }
                 
-                fastApiResponse = fastApiClient.requestExpertMatch(categoryIdStr, reqDto.getRequestContent()).block();
+                fastApiResponse = expertAiClient.requestExpertMatch(categoryIdStr, reqDto.getRequestContent()).block();
                 log.info("AI Raw Response: {}", fastApiResponse);
             } catch (Exception e) {
                 log.error("FastAPI Call Failed: {}", e.getMessage());
