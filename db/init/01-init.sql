@@ -205,30 +205,28 @@ CREATE TABLE ai_reports (
 ---------------------------------------
 
 CREATE TABLE subsidies (
-    id              uuid                     default gen_random_uuid() not null
-        primary key,
-    name            varchar(200)                                       not null,
-    organization    varchar(100)                                       not null,
-    region          varchar(100),
-    industry        varchar(100),
-    min_age         smallint,
-    max_age         smallint,
-    max_amount      integer,
-    deadline        date,
-    start_date      date,
-    description     text,
+    id uuid default gen_random_uuid() not null primary key,
+    name varchar(200) not null,
+    organization varchar(100) not null,
+    region varchar(100),
+    industry varchar(100),
+    min_age smallint,
+    max_age smallint,
+    max_amount integer,
+    deadline date,
+    start_date date,
+    description text,
     support_content text,
-    target          text,
-    how_to_apply    text,
-    contact         text,
-    apply_url       text,
-    source_url      varchar(500)
-        unique,
-    embedding       vector(768),
-    is_active       boolean                  default true,
-    life_cycle      varchar(20),
-    created_at      timestamp with time zone default now(),
-    updated_at      timestamp with time zone default now()
+    target text,
+    how_to_apply text,
+    contact text,
+    apply_url text,
+    source_url varchar(500) unique,
+    embedding vector(768),
+    is_active boolean default true,
+    life_cycle varchar(20),
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now()
 );
 
 CREATE TABLE equipment_prices (

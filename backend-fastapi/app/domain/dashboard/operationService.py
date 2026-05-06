@@ -180,3 +180,4 @@ def process_pdf_upload(file: UploadFile) -> dict:
         # 임시 파일 삭제
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
+

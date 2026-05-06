@@ -55,8 +55,4 @@ public class User {
     @Builder.Default
     @Column(name = "is_suspended")
     private Boolean isSuspended = false;
-
-    @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL)
-    @Builder.Default
-    private java.util.List<ExpertMatchRequest> expertMatchRequests = new java.util.ArrayList<>();
 }

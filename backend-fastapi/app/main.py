@@ -22,6 +22,7 @@ from app.domain.simulation import simulationRouter as simulation
 from app.domain.subsidy import subsidyRouter as subsidy
 from app.domain.subsidy.subsidyRouter import start_scheduler as subsidy_start_scheduler
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 서버 시작 시 실행될 로직
@@ -30,7 +31,7 @@ async def lifespan(app: FastAPI):
     # 1. AI 임베딩 모델 프리로딩
     get_ai_client("gemini")
 
-    # 2. 업종 카테고리 데이터 캐싱 (필요 시 복구)
+    # 2. 업종 카테고리 데이터 캐싱
     async with AsyncSessionLocal() as db:
         await initialize_industry_cache(db)
 
