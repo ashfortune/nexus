@@ -13,7 +13,7 @@ async def predict_market_survival(
 ):
     """
     창업 생존 예측 API
-    - 행정동 코드, 업종, 창업 예정일을 입력받아 3년 내 폐업 위험도를 반환합니다.
+    - 행정동 코드, 업종, 창업 예정일을 입력받아 2년 내 폐업 위험도를 반환합니다.
     """
     try:
         result = await simulationService.predict_survival(db, request)
