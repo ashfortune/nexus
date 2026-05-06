@@ -127,6 +127,7 @@ export default function IndustryBoardCreatePage() {
 
       const result = await response.json();
       if (result.status === "success") {
+        alert("게시글이 성공적으로 작성되었습니다.");
         router.push("/industry-board");
       } else {
         alert(result.message || "게시글 작성에 실패했습니다.");
@@ -161,7 +162,7 @@ export default function IndustryBoardCreatePage() {
 
         <div className="nexus-card bg-white p-8 md:p-14 shadow-2xl shadow-black/5">
           <header className="mb-14 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--nexus-primary-container)] text-[var(--nexus-primary)] rounded-full text-[10px] font-black uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--nexus-surface-container)] text-[var(--nexus-primary)] rounded-full text-[10px] font-black uppercase tracking-widest">
               <Briefcase className="w-3.5 h-3.5" />
               Industry Insight
             </div>

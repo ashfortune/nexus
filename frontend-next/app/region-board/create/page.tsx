@@ -128,7 +128,7 @@ export default function BoardCreatePage() {
         </button>
 
         <header className="mb-14 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--nexus-primary-container)] text-[var(--nexus-primary)] rounded-full text-[10px] font-black tracking-widest uppercase">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--nexus-surface-container)] text-[var(--nexus-primary)] rounded-full text-[10px] font-black tracking-widest uppercase">
             <Plus className="w-3.5 h-3.5" />
             New Discussion
           </div>

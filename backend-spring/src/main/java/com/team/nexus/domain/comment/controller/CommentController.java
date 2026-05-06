@@ -99,9 +99,10 @@ public class CommentController {
     public ResponseEntity<Map<String, Object>> reportComment(@PathVariable UUID commentId) {
         Map<String, Object> response = new HashMap<>();
         try {
-            commentService.reportComment(commentId);
+            int currentCount = commentService.reportComment(commentId);
             response.put("status", "success");
-            response.put("message", "신고가 접수되었습니다.");
+            response.put("reportCount", currentCount);
+            response.put("message", currentCount >= 3 ? "신고 누적으로 댓글이 삭제되었습니다." : "신고가 접수되었습니다.");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("status", "error");

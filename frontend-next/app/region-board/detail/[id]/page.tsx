@@ -236,7 +236,10 @@ export default function BoardDetailPage() {
     try {
       const response = await api.post(`/api/v1/comments/report/${commentId}`);
       const result = await response.json();
-      if (result.status === "success") alert("신고가 접수되었습니다.");
+      if (result.status === "success") {
+        alert(result.message);
+        fetchComments();
+      }
     } catch (error) {
       console.error("Failed to report comment:", error);
     }
@@ -640,7 +643,7 @@ function CommentItem({
   onSetEditCommentContent,
   onUpdate
 }: any) {
-  const isDeleted = comment.content === "삭제된 댓글입니다.";
+  const isDeleted = comment.content === "삭제된 댓글입니다." || comment.content === "신고 누적으로 삭제된 댓글입니다." || comment.reportCount >= 3;
   const myUserId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
   const isMine = comment.authorId?.toLowerCase() === myUserId?.toLowerCase();
 
@@ -738,7 +741,7 @@ function CommentItem({
                 "text-[15px] md:text-[16px] font-medium leading-relaxed whitespace-pre-wrap", 
                 isDeleted ? "text-zinc-300 italic" : "text-zinc-700"
               )}>
-                {comment.content}
+                {isDeleted ? "신고 누적으로 삭제된 댓글입니다." : comment.content}
               </p>
             )}
 

@@ -42,23 +42,48 @@ public class MyPageServiceImpl implements MyPageService {
                         : user.getLoginType() == 1 ? "google" : "kakao")
                 .profileImage(user.getProfileImage())
                 .posts(boardRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
-                        .map(b -> MyPageResponseDto.MyPostDto.builder()
+                        .map(b -> {
+                            String category = b.getCategoryName();
+                            String type = "board"; // Default to FREE
+                            
+                            if ("REGION".equals(category)) {
+                                type = "region-board";
+                            } else if ("INDUSTRY".equals(category)) {
+                                type = "industry-board";
+                            }
+                            
+                            return MyPageResponseDto.MyPostDto.builder()
                                 .id(b.getId().toString())
                                 .title(b.getTitle())
+                                .boardType(type)
                                 .createdAt(b.getCreatedAt())
-                                .build())
+                                .build();
+                        })
                         .collect(Collectors.toList()))
                 .comments(commentRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
-                        .map(c -> MyPageResponseDto.MyCommentDto.builder()
+                        .map(c -> {
+                            String category = c.getBoard().getCategoryName();
+                            String type = "board";
+                            
+                            if ("REGION".equals(category)) {
+                                type = "region-board";
+                            } else if ("INDUSTRY".equals(category)) {
+                                type = "industry-board";
+                            }
+                            
+                            return MyPageResponseDto.MyCommentDto.builder()
                                 .id(c.getId().toString())
                                 .content(c.getContent())
+                                .boardId(c.getBoard().getId().toString())
                                 .boardTitle(c.getBoard().getTitle())
+                                .boardType(type)
                                 .createdAt(c.getCreatedAt())
-                                .build())
+                                .build();
+                        })
                         .collect(Collectors.toList()))
                 .purchases(groupOrderRepository.findAllByUserId(userId).stream()
                         .map(o -> MyPageResponseDto.MyPurchaseDto.builder()
-                                .id(o.getId().toString())
+                                .id(o.getGroupPurchase().getId().toString())
                                 .title(o.getGroupPurchase().getTitle())
                                 .status(o.getGroupPurchase().getStatus())
                                 .createdAt(o.getPaidAt())

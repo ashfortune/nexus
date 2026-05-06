@@ -83,6 +83,7 @@ export default function BoardCreatePage() {
 
       const result = await response.json();
       if (result.status === "success") {
+        alert("게시글이 성공적으로 작성되었습니다.");
         router.push("/board");
       } else {
         alert(result.message || "작성에 실패했습니다.");
@@ -106,7 +107,7 @@ export default function BoardCreatePage() {
         </button>
 
         <header className="mb-14 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--nexus-primary-container)] text-[var(--nexus-primary)] text-[10px] font-black uppercase tracking-widest rounded-full">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--nexus-surface-container)] text-[var(--nexus-primary)] text-[10px] font-black uppercase tracking-widest rounded-full">
             <Plus className="w-3.5 h-3.5" />
             New Discussion
           </div>

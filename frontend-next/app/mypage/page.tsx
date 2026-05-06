@@ -12,8 +12,8 @@ interface MyPageData {
   bizNo: string | null;
   provider: string | null;
   profileImage: string | null;
-  posts: Array<{ id: string; title: string; createdAt: string }>;
-  comments: Array<{ id: string; content: string; boardTitle: string; createdAt: string }>;
+  posts: Array<{ id: string; title: string; boardType: string; createdAt: string }>;
+  comments: Array<{ id: string; content: string; boardId: string; boardTitle: string; boardType: string; createdAt: string }>;
   purchases: Array<{ id: string; title: string; status: string; createdAt: string }>;
 }
 
@@ -361,9 +361,10 @@ export default function MyPage() {
                       data.posts.map((post, idx) => (
                         <div
                           key={`${post.id}-${idx}`}
-                          className="flex justify-between items-center p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)]"
+                          onClick={() => router.push(`/${post.boardType || 'board'}/detail/${post.id}`)}
+                          className="flex justify-between items-center p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)] cursor-pointer group"
                         >
-                          <span className="font-bold text-[var(--nexus-on-bg)]">{post.title}</span>
+                          <span className="font-bold text-[var(--nexus-on-bg)] group-hover:text-[var(--nexus-primary)] transition-colors">{post.title}</span>
                           <span className="text-[10px] font-bold text-[var(--nexus-outline)] uppercase">
                             {new Date(post.createdAt).toLocaleDateString()}
                           </span>
@@ -383,9 +384,10 @@ export default function MyPage() {
                       data.comments.map((comment, idx) => (
                         <div
                           key={`${comment.id}-${idx}`}
-                          className="p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)]"
+                          onClick={() => router.push(`/${comment.boardType || 'board'}/detail/${comment.boardId}`)}
+                          className="p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)] cursor-pointer group"
                         >
-                          <p className="text-[var(--nexus-on-bg)] font-bold mb-2">
+                          <p className="text-[var(--nexus-on-bg)] font-bold mb-2 group-hover:text-[var(--nexus-primary)] transition-colors">
                             {comment.content}
                           </p>
                           <div className="flex justify-between items-center">
@@ -412,10 +414,11 @@ export default function MyPage() {
                       data.purchases.map((purchase, idx) => (
                         <div
                           key={`${purchase.id}-${idx}`}
-                          className="flex justify-between items-center p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)]"
+                          onClick={() => router.push(`/group-purchases/${purchase.id}`)}
+                          className="flex justify-between items-center p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)] cursor-pointer group"
                         >
                           <div>
-                            <span className="font-bold text-[var(--nexus-on-bg)] block mb-1">
+                            <span className="font-bold text-[var(--nexus-on-bg)] block mb-1 group-hover:text-[var(--nexus-primary)] transition-colors">
                               {purchase.title}
                             </span>
                             <span className="text-[9px] bg-[var(--nexus-tertiary-fixed)] text-[var(--nexus-tertiary-container)] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">
