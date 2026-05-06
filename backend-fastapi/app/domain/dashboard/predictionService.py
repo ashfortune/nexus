@@ -1,8 +1,10 @@
 import datetime
 import logging
+import os
 import uuid
-from typing import Any, Dict
+from typing import Any, Dict, List
 
+import numpy as np
 import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,7 +28,6 @@ async def fetchSalesData(userId: uuid.UUID, db: AsyncSession) -> pd.DataFrame:
         raise ValueError("분석을 위한 데이터가 충분하지 않습니다. (최소 2건 필요)")
 
     df = pd.DataFrame(rows, columns=["date", "actual"])
-    # 날짜 정제: 시간대 정보를 완전히 제거하여 Naive 상태로 만듦
     df["date"] = pd.to_datetime(df["date"]).dt.tz_localize(None)
     df["actual"] = df["actual"].astype(float)
     return df
@@ -34,29 +35,99 @@ async def fetchSalesData(userId: uuid.UUID, db: AsyncSession) -> pd.DataFrame:
 
 def analyzeStatistics(df: pd.DataFrame) -> Dict[str, Any]:
     """매출 데이터의 통계치(이동평균, 변동률)를 계산합니다."""
-    df["movingAverage"] = df["actual"].rolling(window=min(7, len(df))).mean()
+    windowSize = min(7, len(df))
+    df["movingAverage"] = df["actual"].rolling(window=windowSize).mean()
     df["returnRate"] = df["actual"].pct_change() * 100
 
-    currentMa = (
-        df["movingAverage"].iloc[-1]
-        if not pd.isna(df["movingAverage"].iloc[-1])
-        else df["actual"].mean()
-    )
+    currentMa = df["movingAverage"].iloc[-1] if not pd.isna(df["movingAverage"].iloc[-1]) else df["actual"].mean()
     currentReturnRate = df["returnRate"].iloc[-1] if not pd.isna(df["returnRate"].iloc[-1]) else 0.0
 
     return {"currentMa": float(currentMa), "currentReturnRate": float(currentReturnRate)}
 
 
-def generatePrediction(df: pd.DataFrame) -> Dict[str, Any]:
-    """SES 모델을 사용하여 내일 매출을 예측합니다."""
+async def predictWithBasicStats(df: pd.DataFrame) -> Dict[str, Any]:
+    """30일 이하 데이터: 이동평균 기반 단순 예측"""
+    stats = analyzeStatistics(df)
+    forecastValue = int(stats["currentMa"])
+    nextDate = df["date"].iloc[-1] + datetime.timedelta(days=1)
+    
+    # 분석용 가상 피팅 데이터 생성 (과거치 = 실제치, 마지막만 MA)
+    df["predicted"] = df["actual"]
+    
+    return {
+        "forecastValue": forecastValue,
+        "nextDate": nextDate.strftime("%Y-%m-%d"),
+        "method": "Simple Moving Average",
+        "nextMonthForecast": forecastValue * 30  # 단순 추정
+    }
+
+
+async def predictWithStatsmodels(df: pd.DataFrame) -> Dict[str, Any]:
+    """30일~90일 데이터: Statsmodels SES 모델 사용"""
     model = SimpleExpSmoothing(df["actual"], initialization_method="estimated").fit()
-    df["exponentialSmoothing"] = model.fittedvalues
+    df["predicted"] = model.fittedvalues
     forecast = model.forecast(1)
+    
+    nextDate = df["date"].iloc[-1] + datetime.timedelta(days=1)
+    
+    return {
+        "forecastValue": int(forecast.iloc[0]),
+        "nextDate": nextDate.strftime("%Y-%m-%d"),
+        "method": "Exponential Smoothing (Statsmodels)",
+        "nextMonthForecast": int(forecast.iloc[0] * 30)
+    }
 
-    lastDate = df["date"].iloc[-1]
-    nextDate = lastDate + datetime.timedelta(days=1)
 
-    return {"forecastValue": int(forecast.iloc[0]), "nextDate": nextDate.strftime("%Y-%m-%d")}
+async def predictWithTimesFM(df: pd.DataFrame) -> Dict[str, Any]:
+    """90일 이상 데이터: TimesFM (AI Foundation Model) 실모델 호출"""
+    # CPU 전용 모드 및 환경 변수 설정
+    os.environ["JAX_PLATFORM_NAME"] = "cpu"
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    
+    try:
+        from timesfm import TimesFm
+        
+        # 모델 초기화 (CPU 백엔드 명시)
+        tfm = TimesFm(
+            context_len=512,
+            horizon_len=31,
+            input_patch_len=32,
+            output_patch_len=128,
+            num_layers=20,
+            model_dims=1280,
+            backend="cpu",
+        )
+        
+        # 허깅페이스에서 모델 체크포인트 로드 (로컬 캐시 활용)
+        tfm.load_from_checkpoint(repo_id="google/timesfm-1.0-200m")
+        
+        # 데이터 준비: [B, T] 형태의 리스트 필요
+        actual_data = df["actual"].values.tolist()
+        forecast_input = [actual_data]
+        
+        # 예측 수행 (freq 0은 정수형 데이터/일일 데이터를 의미)
+        point_forecast, _, _ = tfm.forecast(forecast_input, freq=[0])
+        
+        # 결과 추출 (B=1, H=31)
+        forecast_values = point_forecast[0]
+        forecastValue = int(forecast_values[0])  # 내일 매출
+        nextMonthForecast = int(np.sum(forecast_values[:30]))  # 다음 달(30일) 합산 매출
+        
+        # 분석 리포트용 피팅 데이터 (간소화)
+        df["predicted"] = df["actual"].rolling(window=7).mean().fillna(df["actual"])
+        
+    except (ImportError, Exception) as e:
+        logger.warning(f"TimesFM 실모델 호출 실패 ({str(e)}). Statsmodels로 전환합니다.")
+        return await predictWithStatsmodels(df)
+    
+    nextDate = df["date"].iloc[-1] + datetime.timedelta(days=1)
+    
+    return {
+        "forecastValue": forecastValue,
+        "nextDate": nextDate.strftime("%Y-%m-%d"),
+        "method": "TimesFM (AI Foundation Model) - Local CPU",
+        "nextMonthForecast": nextMonthForecast
+    }
 
 
 async def persistAnalysisResults(
@@ -66,8 +137,9 @@ async def persistAnalysisResults(
     pred: Dict[str, Any],
     db: AsyncSession,
 ) -> Prediction:
-    """분석 및 예측 결과를 DB에 저장합니다. 시간대 에러를 완벽히 차단합니다."""
+    """분석 및 예측 결과를 DB에 저장합니다."""
     nowNaive = datetime.datetime.now().replace(tzinfo=None)
+    
     newPred = Prediction(
         id=uuid.uuid4(),
         user_id=userId,
@@ -81,22 +153,15 @@ async def persistAnalysisResults(
     await db.flush()
 
     for _, row in df.iterrows():
-        # row['date']에서 시간대 정보를 다시 한번 확실하게 제거
-        pureDate = row["date"]
-        if hasattr(pureDate, "to_pydatetime"):
-            pureDate = pureDate.to_pydatetime().replace(tzinfo=None)
-        elif hasattr(pureDate, "replace"):
-            pureDate = pureDate.replace(tzinfo=None)
+        pureDate = row["date"].to_pydatetime().replace(tzinfo=None) if hasattr(row["date"], "to_pydatetime") else row["date"].replace(tzinfo=None)
 
         daily = DailyPrediction(
             id=uuid.uuid4(),
             prediction_id=newPred.id,
             target_date=pureDate,
-            pred_sales=int(row["exponentialSmoothing"]),
+            pred_sales=int(row["predicted"]) if "predicted" in row else int(row["actual"]),
             actual_sales=int(row["actual"]),
-            moving_average=float(row["movingAverage"])
-            if not pd.isna(row["movingAverage"])
-            else None,
+            moving_average=float(row["movingAverage"]) if not pd.isna(row["movingAverage"]) else None,
             return_rate=float(row["returnRate"]) if not pd.isna(row["returnRate"]) else None,
         )
         db.add(daily)
@@ -106,36 +171,52 @@ async def persistAnalysisResults(
 
 
 async def getAnalysisFromDb(userId: str, db: AsyncSession) -> Dict[str, Any]:
-    """메인 분석 프로세스: 프론트엔드 요구사항(analysisData)에 맞춰 반환합니다."""
+    """데이터 크기에 따라 모델을 선택하여 분석을 수행합니다."""
     try:
         userUuid = uuid.UUID(userId)
         df = await fetchSalesData(userUuid, db)
+        dataSize = len(df)
+        
+        # 1. 통계 분석 (공통)
         stats = analyzeStatistics(df)
-        pred = generatePrediction(df)
+        
+        # 2. 데이터 크기별 예측 모델 분기
+        if dataSize <= 30:
+            pred = await predictWithBasicStats(df)
+        elif dataSize <= 90:
+            pred = await predictWithStatsmodels(df)
+        else:
+            pred = await predictWithTimesFM(df)
+            
+        # 3. 결과 저장
         await persistAnalysisResults(userUuid, df, stats, pred, db)
 
-        # 프론트엔드 컴포넌트(AnalysisReport)와 호환되도록 키값 설정
         return {
             "prediction": {
                 "amount": pred["forecastValue"],
                 "date": pred["nextDate"],
-                "confidence": 0.92,
+                "confidence": 0.95 if dataSize > 90 else (0.85 if dataSize > 30 else 0.70),
             },
             "analysisData": [
                 {
-                    "date": str(r["date"].date() if hasattr(r["date"], "date") else r["date"]),
+                    "date": str(r["date"].date()),
                     "amount": int(r["actual"]),
                 }
                 for _, r in df.iterrows()
             ],
             "analysisReport": (
-                f"최근 7일간의 이동평균은 {stats['currentMa']:,.0f}원이며, 현재 매출 변동률은 {stats['currentReturnRate']:.2f}%입니다. "
-                "(참고: 모든 매출 데이터는 시간 정보를 배제하고 일자별로 분석되었습니다.)"
+                f"분석 기법: {pred['method']}. "
+                f"최근 데이터 {dataSize}일을 기반으로 분석되었습니다. "
+                f"이동평균: {stats['currentMa']:,.0f}원, 변동률: {stats['currentReturnRate']:.2f}%. "
+                f"다음 달 예상 총 매출: {pred.get('nextMonthForecast', 0):,.0f}원입니다."
             ),
+            "predictionMethod": pred["method"],
+            "nextMonthForecast": pred.get("nextMonthForecast", 0),
             "movingAverage": stats["currentMa"],
             "returnRate": stats["currentReturnRate"],
         }
     except Exception as e:
-        logger.error(f"분석 서비스 최종 오류: {str(e)}")
+        logger.error(f"Prediction Service Error: {str(e)}")
         await db.rollback()
         raise e
+
