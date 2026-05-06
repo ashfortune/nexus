@@ -32,12 +32,33 @@ export default function BrandingAssetsSection({
   const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+
+  // 가이드 데이터가 없는 경우 기본값 제공 (방어적 코드)
+  const availableAssets = logo?.availableAssetTypes || [
+    { type: 'BUSINESS_CARD', name: '명함', description: '브랜드 로고가 담긴 세련된 명함' },
+    { type: 'MENU', name: '메뉴판/가격표', description: '가독성 좋은 브랜드 전용 메뉴판' },
+    { type: 'POSTER', name: '포스터', description: '매장 분위기를 살려주는 홍보용 포스터' }
+  ];
+
+  const toggleType = (type: string) => {
+    setSelectedTypes(prev => 
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+  };
 
   const handleGenerateAssets = async () => {
+    if (selectedTypes.length === 0) {
+      alert('최소 하나 이상의 에셋 타입을 선택해 주세요.');
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const targetId = identity?.identityId || identity?.id;
-      const response = await api.post(`${API_BASE_PATH}/identity/${targetId}/assets`, null, {
+      const response = await api.post(`${API_BASE_PATH}/identity/${targetId}/assets`, {
+        assetTypes: selectedTypes
+      }, {
         baseUrl: FASTAPI_URL,
       });
       const result = await response.json();
@@ -168,21 +189,74 @@ export default function BrandingAssetsSection({
         </div>
 
         {!assets.length && (
-          <div className="flex justify-center pb-12">
-            <button
-              onClick={handleGenerateAssets}
-              disabled={isGenerating}
-              className="px-12 py-5 bg-[var(--nexus-secondary)] text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl shadow-[var(--nexus-secondary)]/30 hover:-translate-y-1 active:scale-95 transition-all flex items-center gap-4 disabled:opacity-50"
-            >
-              {isGenerating ? (
-                <>
-                  <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                  Generating Marketing Ecosystem...
-                </>
-              ) : (
-                'Generate Marketing Assets'
-              )}
-            </button>
+          <div className="space-y-12 animate-in fade-in zoom-in duration-700">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {availableAssets.map((item: any) => (
+                <div
+                  key={item.type}
+                  onClick={() => toggleType(item.type)}
+                  className={`group p-8 rounded-[2.5rem] border-2 transition-all cursor-pointer relative overflow-hidden ${
+                    selectedTypes.includes(item.type)
+                      ? 'bg-white border-[var(--nexus-primary)] shadow-2xl shadow-[var(--nexus-primary)]/10 -translate-y-2'
+                      : 'bg-[var(--nexus-surface-low)] border-transparent hover:border-[var(--nexus-outline-variant)]'
+                  }`}
+                >
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-colors ${
+                    selectedTypes.includes(item.type)
+                      ? 'bg-[var(--nexus-primary)] text-white'
+                      : 'bg-white text-gray-400'
+                  }`}>
+                    {selectedTypes.includes(item.type) ? (
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4v16m8-8H4" />
+                      </svg>
+                    )}
+                  </div>
+                  <h4 className={`text-lg font-black mb-2 ${selectedTypes.includes(item.type) ? 'text-[var(--nexus-on-bg)]' : 'text-gray-500'}`}>
+                    {item.name}
+                  </h4>
+                  <p className="text-[10px] font-bold text-gray-400 leading-relaxed">
+                    {item.description}
+                  </p>
+                  
+                  {selectedTypes.includes(item.type) && (
+                    <div className="absolute top-4 right-4">
+                      <div className="w-2 h-2 bg-[var(--nexus-primary)] rounded-full animate-ping" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-center pt-8">
+              <button
+                onClick={handleGenerateAssets}
+                disabled={isGenerating || selectedTypes.length === 0}
+                className={`px-16 py-6 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center gap-4 ${
+                  selectedTypes.length > 0 && !isGenerating
+                    ? 'bg-[var(--nexus-secondary)] text-white shadow-2xl shadow-[var(--nexus-secondary)]/30 hover:-translate-y-1 active:scale-95'
+                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                }`}
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                    Branding Assets...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Generate {selectedTypes.length} Selected Assets
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
 

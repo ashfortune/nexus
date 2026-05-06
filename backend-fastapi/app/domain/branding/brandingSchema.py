@@ -79,9 +79,20 @@ class LogoFinalizeRequest(BaseModel):
 class LogoFinalizeResponse(BaseModel):
     success: bool = Field(True)
     logoAssetId: UUID = Field(..., description="최종 저장된 로고 에셋 ID")
+    availableAssetTypes: List[dict] = Field(
+        default=[], 
+        description="선택 가능한 마케팅 에셋 타입 리스트 (가이드용)"
+    )
 
 
-# [추가] 마케팅 에셋 응답 스키마
+# [추가] 마케팅 에셋 요청 및 응답 스키마
+class MarketingAssetRequest(BaseModel):
+    assetTypes: List[str] = Field(
+        ..., 
+        description="생성할 에셋 타입 리스트 (예: BUSINESS_CARD, INSTAGRAM_POST, SIGNBOARD 등)"
+    )
+
+
 class BrandingAssetResult(BaseModel):
     id: str
     type: str

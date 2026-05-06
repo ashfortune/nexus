@@ -35,7 +35,7 @@ function BrandingPageContent() {
           const recoveredData: any = {
             projectId: data.id,
             namingOptions: data.identities || [],
-            chatHistory: data.chatHistory || [],
+            chatHistory: Array.isArray(data.chatHistory) ? data.chatHistory : [],
             keywords: data.keywords?.extracted_keywords || [],
             selectedIdentity: data.identities?.find((i: any) => i.isSelected) || null,
             isFinished:
@@ -46,7 +46,9 @@ function BrandingPageContent() {
           let startStep = 1;
           if (data.currentStep === 'NAMING_READY') startStep = 2;
           else if (data.currentStep === 'LOGO_GENERATION') startStep = 3;
+          else if (data.currentStep === 'ASSET_SELECT') startStep = 4;
           else if (data.currentStep === 'COMPLETED') startStep = 4;
+          
           setBrandData(recoveredData);
           setStep(startStep);
         } catch (error) {

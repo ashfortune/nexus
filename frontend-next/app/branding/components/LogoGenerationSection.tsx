@@ -80,8 +80,12 @@ export default function LogoGenerationSection({
 
       const result = await response.json();
       if (result.success) {
-        // 확정된 ID와 함께 완료 처리
-        onComplete({ ...selected, id: result.logoAssetId });
+        // 확정된 ID와 사용 가능한 에셋 목록을 함께 전달
+        onComplete({ 
+          ...selected, 
+          id: result.logoAssetId,
+          availableAssetTypes: result.availableAssetTypes || []
+        });
       } else {
         throw new Error(result.message || '로고 확정에 실패했습니다.');
       }

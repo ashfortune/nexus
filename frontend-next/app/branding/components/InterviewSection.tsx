@@ -168,7 +168,7 @@ export default function InterviewSection({
           ref={scrollRef}
           className="flex-1 overflow-y-auto p-8 space-y-6 bg-[var(--nexus-bg)]/30"
         >
-          {messages.map((msg) => (
+          {Array.isArray(messages) && messages.map((msg) => (
             <div
               key={msg.id}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
