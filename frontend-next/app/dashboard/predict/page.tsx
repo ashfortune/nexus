@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import AnalysisReport from '../components/predict/AnalysisReport';
 import { LineChart, LayoutDashboard, Database, AlertCircle, RefreshCcw } from 'lucide-react';
+import { useAuthStore } from '@/store/useAuthStore';
 import Link from 'next/link';
 
 /**
@@ -19,8 +20,10 @@ const PredictPage = () => {
     setIsLoading(true);
     setError(null);
     try {
+      const { user } = useAuthStore.getState();
       const response = await api.get('/api/v1/ai/prediction/analysis', {
-        baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000'
+        baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000',
+        headers: { 'X-User-Id': user?.id || '' }
       });
       if (!response.ok) {
         const errorData = await response.json();

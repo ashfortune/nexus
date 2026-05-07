@@ -13,9 +13,9 @@ interface RequestOptions extends RequestInit {
 async function request(path: string, options: RequestOptions = {}) {
   const { token, clearAuth } = useAuthStore.getState();
   const { baseUrl, params, ...fetchOptions } = options;
-  
+
   const headers = new Headers(fetchOptions.headers);
-  
+
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
@@ -27,9 +27,9 @@ async function request(path: string, options: RequestOptions = {}) {
   // URL 생성
   const base = baseUrl || DEFAULT_BASE_URL;
   const url = path.startsWith('http') ? new URL(path) : new URL(`${base}${path}`);
-  
+
   if (params) {
-    Object.keys(params).forEach(key => 
+    Object.keys(params).forEach(key =>
       url.searchParams.append(key, params[key])
     );
   }
@@ -64,30 +64,30 @@ async function request(path: string, options: RequestOptions = {}) {
 }
 
 export const api = {
-  get: (path: string, options?: RequestOptions) => 
+  get: (path: string, options?: RequestOptions) =>
     request(path, { ...options, method: 'GET' }),
-    
-  post: (path: string, body?: any, options?: RequestOptions) => 
-    request(path, { 
-      ...options, 
-      method: 'POST', 
-      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)
-    }),
-    
-  put: (path: string, body?: any, options?: RequestOptions) => 
-    request(path, { 
-      ...options, 
-      method: 'PUT', 
+
+  post: (path: string, body?: any, options?: RequestOptions) =>
+    request(path, {
+      ...options,
+      method: 'POST',
       body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)
     }),
 
-  patch: (path: string, body?: any, options?: RequestOptions) => 
-    request(path, { 
-      ...options, 
-      method: 'PATCH', 
+  put: (path: string, body?: any, options?: RequestOptions) =>
+    request(path, {
+      ...options,
+      method: 'PUT',
       body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)
     }),
-    
-  delete: (path: string, options?: RequestOptions) => 
+
+  patch: (path: string, body?: any, options?: RequestOptions) =>
+    request(path, {
+      ...options,
+      method: 'PATCH',
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)
+    }),
+
+  delete: (path: string, options?: RequestOptions) =>
     request(path, { ...options, method: 'DELETE' }),
 };

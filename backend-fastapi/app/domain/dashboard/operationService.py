@@ -17,18 +17,18 @@ import shutil
 load_dotenv()
 
 # DB 연결 정보 (환경 변수에서 로드)
-DB_USER = os.getenv("DB_USER", "human2team")
-DB_PASS = os.getenv("DB_PASS", "human2team")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME", "nexus_db")
+# app/core/database.py와 동일하게 DATABASE_URL을 사용합니다.
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL이 설정되지 않았습니다. .env 파일을 확인해주세요.")
 
 # Google API Key (임베딩용)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# 연결 문자열 구성 (psycopg2 사용)
-# 형식: postgresql+psycopg2://user:password@host:port/dbname
-CONNECTION_STRING = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# LangChain PGVector는 psycopg2 스타일의 연결 문자열을 선호하므로
+# asyncpg를 psycopg2로 변환하여 사용합니다.
+CONNECTION_STRING = DATABASE_URL.replace("asyncpg", "psycopg2")
 
 # 컬렉션(테이블) 이름 설정
 COLLECTION_NAME = "kcd_reports"

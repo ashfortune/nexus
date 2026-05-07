@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import DropZone from '../components/upload/Drop_zone';
 import InfoCard from '../components/upload/Infocard';
 import { Upload, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
+import { useAuthStore } from '@/store/useAuthStore';
 import Link from 'next/link';
 
 /**
@@ -33,9 +34,10 @@ const UploadPage = () => {
     formData.append('file', file);
 
     try {
+      const { user } = useAuthStore.getState();
       const response = await api.post('/api/v1/ai/dashboard/upload-sales', formData, {
         baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000',
-        headers: {} // Let browser handle boundary
+        headers: { 'X-User-Id': user?.id || '' } // Let browser handle boundary for multipart, but add our header
       });
 
       if (!response.ok) {
