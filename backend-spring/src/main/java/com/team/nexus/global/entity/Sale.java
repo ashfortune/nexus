@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,7 @@ public class Sale {
     private User user;
 
     @Column(name = "sales_date", nullable = false)
-    private LocalDateTime salesDate;
+    private LocalDate salesDate;
 
     @Column(name = "total_amount")
     private Integer totalAmount;

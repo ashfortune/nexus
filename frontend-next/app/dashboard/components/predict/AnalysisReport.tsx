@@ -26,15 +26,18 @@ interface AnalysisReportProps {
 const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
   const [activeTab, setActiveTab] = React.useState<'comparison' | 'trends'>('comparison');
 
-  const predictedSales = data.prediction?.amount ?? data.predictedSales ?? 0;
-  const latestData = data.analysisData && data.analysisData.length > 0
-    ? data.analysisData[data.analysisData.length - 1]
-    : { actual: 0 };
-  const isPositive = data.returnRate >= 0;
+  const predictedSales = data?.prediction?.amount ?? data?.predictedSales ?? 0;
+  const analysisData = data?.analysisData ?? [];
+  const totalDays = analysisData.length;
+  
+  const latestData = totalDays > 0 
+    ? analysisData[totalDays - 1] 
+    : { actual: 0, date: '' };
+    
+  const isPositive = (data?.returnRate ?? 0) >= 0;
 
-  const startDate = data.analysisData?.[0]?.date;
-  const endDate = data.analysisData?.[data.analysisData.length - 1]?.date;
-  const totalDays = data.analysisData?.length ?? 0;
+  const startDate = totalDays > 0 ? analysisData[0]?.date : null;
+  const endDate = totalDays > 0 ? analysisData[totalDays - 1]?.date : null;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -92,7 +95,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* 분석 그래프 블록 */}
+      {/* 매출 분석 보고서 섹션 주석 처리 
       <div className="nexus-card border border-[var(--nexus-outline-variant)] rounded-3xl p-8 shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div className="space-y-1">
@@ -108,7 +111,6 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
           </div>
           
           <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-            {/* 탭 컨트롤러 */}
             <div className="flex bg-[var(--nexus-surface-container)] p-1 rounded-2xl border border-[var(--nexus-outline-variant)]">
               <button
                 onClick={() => setActiveTab('comparison')}
@@ -132,7 +134,6 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
               </button>
             </div>
 
-            {/* 커스텀 뱃지 스타일 범례 */}
             <div className="flex items-center gap-4 text-xs font-medium">
               {activeTab === 'comparison' ? (
                 <>
@@ -169,14 +170,12 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
           </div>
         </div>
         
-        {/* 그래프 컴포넌트 렌더링 */}
         <SalesAnalysisGraph 
-          data={data.analysisData} 
+          data={analysisData} 
           mode={activeTab}
         />
       </div>
 
-      {/* AI 심층 분석 코멘트 */}
       <div className="bg-[var(--nexus-surface-container-highest)] border border-[var(--nexus-outline-variant)] rounded-3xl p-6 shadow-xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-4 opacity-[0.03] pointer-events-none group-hover:scale-105 transition-transform duration-700">
           <Activity size={180} className="text-[var(--nexus-primary)]" />
@@ -189,10 +188,10 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
         
         <div className="space-y-4">
           <p className="text-[var(--nexus-on-bg)]/80 text-sm leading-relaxed">
-            {data.analysisReport || (
-              `최근 7일 이동평균이 ${data.movingAverage > (data.analysisData[0]?.actual ?? 0) ? '상승' : '하향'} 곡선을 그리고 있습니다. ` +
-              `평균 수익률은 ${data.returnRate.toFixed(2)}%로 측정되었으며, 내일은 오늘보다 약 ${Math.abs(predictedSales - (latestData.actual ?? 0)).toLocaleString()}원 정도 ` +
-              `${predictedSales > (latestData.actual ?? 0) ? '높은' : '낮은'} 매출이 발생할 것으로 예측됩니다.`
+            {data?.analysisReport || (
+              `최근 7일 이동평균이 ${(data?.movingAverage ?? 0) > (analysisData[0]?.actual ?? 0) ? '상승' : '하향'} 곡선을 그리고 있습니다. ` +
+              `평균 수익률은 ${(data?.returnRate ?? 0).toFixed(2)}%로 측정되었으며, 내일은 오늘보다 약 ${Math.abs(predictedSales - (latestData?.actual ?? 0)).toLocaleString()}원 정도 ` +
+              `${predictedSales > (latestData?.actual ?? 0) ? '높은' : '낮은'} 매출이 발생할 것으로 예측됩니다.`
             )}
           </p>
           
@@ -222,6 +221,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
           )}
         </div>
       </div>
+      */}
     </div>
   );
 };

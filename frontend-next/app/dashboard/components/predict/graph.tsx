@@ -101,142 +101,175 @@ const SalesAnalysisGraph: React.FC<GraphProps> = ({ data, mode = 'comparison' })
     setMounted(true);
   }, []);
 
+  // 데이터를 Recharts가 선호하는 숫자 형식으로 확실하게 변환
+  const safeData = React.useMemo(() => {
+    if (!data) return [];
+    return data.map(item => ({
+      ...item,
+      actual: item.actual !== null && item.actual !== undefined ? Number(item.actual) : null,
+      predicted: item.predicted !== null && item.predicted !== undefined ? Number(item.predicted) : null,
+      timesfm: item.timesfm !== null && item.timesfm !== undefined ? Number(item.timesfm) : null,
+      movingAverage: item.movingAverage !== null && item.movingAverage !== undefined ? Number(item.movingAverage) : null,
+      returnRate: item.returnRate !== null && item.returnRate !== undefined ? Number(item.returnRate) : null,
+    }));
+  }, [data]);
+
+  // 데이터 유입 및 타입 검증을 위한 상세 로그
+  React.useEffect(() => {
+    if (mounted && data) {
+      console.log('======= AI 분석 그래프 데이터 디버깅 =======');
+      console.log('1. 전체 데이터 개수:', data.length);
+      if (data.length > 0) {
+        console.log('2. 데이터 샘플 (첫 3건):', data.slice(0, 3));
+        console.log('3. 데이터 타입 확인 (첫 번째 데이터의 actual):', typeof data[0]?.actual);
+        console.log('4. 변환 후 샘플 (첫 3건):', safeData.slice(0, 3));
+      } else {
+        console.warn('⚠️ 데이터가 비어 있습니다!');
+      }
+      console.log('==========================================');
+    }
+  }, [mounted, data, safeData]);
+
   if (!mounted) {
     return (
-      <div className="w-full h-[400px] nexus-card border border-[var(--nexus-outline-variant)] flex items-center justify-center">
-        <div className="text-[var(--nexus-primary)] font-medium animate-pulse">차트를 불러오는 중...</div>
+      <div className="w-full h-[400px] flex items-center justify-center bg-[var(--nexus-surface-container)] rounded-2xl border border-[var(--nexus-outline-variant)]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[var(--nexus-primary)] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-[var(--nexus-primary)] font-medium">차트 준비 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 데이터가 없을 경우 처리
+  if (!safeData || safeData.length === 0) {
+    return (
+      <div className="w-full h-[400px] flex flex-col items-center justify-center bg-[var(--nexus-surface-container)] rounded-2xl border border-[var(--nexus-outline-variant)] border-dashed">
+        <p className="text-[var(--nexus-outline)] font-medium">표시할 그래프 데이터가 없습니다.</p>
+        <p className="text-xs text-[var(--nexus-outline)]/60 mt-2">매출 데이터를 먼저 업로드해 주세요.</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-[400px] nexus-card border border-[var(--nexus-outline-variant)] p-4 shadow-xl relative">
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 20, right: 10, left: 10, bottom: 10 }}>
-          <defs>
-            {/* 기존 그라데이션 */}
-            <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8884d8" stopOpacity={0.4} />
-              <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-            </linearGradient>
-            {/* 비교용 인디고 블루 실제 매출 그라데이션 */}
-            <linearGradient id="colorActualComp" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--nexus-primary)" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="var(--nexus-primary)" stopOpacity={0.0} />
-            </linearGradient>
-          </defs>
-          
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--nexus-outline-variant)" vertical={false} />
-          
-          <XAxis
-            dataKey="date"
-            stroke="var(--nexus-outline)"
-            fontSize={11}
-            tickLine={false}
-            axisLine={false}
-            dy={10}
-          />
-          
-          <YAxis
-            yAxisId="left"
-            stroke="var(--nexus-outline)"
-            fontSize={11}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(value) => `₩ ${(value / 10000).toLocaleString()}만`}
-            dx={-5}
-          />
-
-          {!isComparison && (
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              stroke="var(--nexus-outline)"
+    <div 
+      className="w-full h-[400px] relative mt-6 bg-[var(--nexus-surface-container-low)]/30 rounded-2xl border border-[var(--nexus-outline-variant)]/50 flex items-center justify-center overflow-hidden"
+      style={{ minHeight: '400px', width: '100%' }}
+    >
+      <div className="w-full h-full p-4">
+        <ResponsiveContainer width="99%" height="99%">
+          <ComposedChart 
+            data={safeData} 
+            margin={{ top: 30, right: 30, left: 40, bottom: 20 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
+            
+            <XAxis
+              dataKey="date"
+              stroke="#333"
               fontSize={11}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => `${value}%`}
-              dx={5}
+              tickLine={true}
+              axisLine={true}
+              dy={10}
+              tick={{ fill: '#333' }}
             />
-          )}
+            
+            <YAxis
+              yAxisId="left"
+              stroke="#333"
+              fontSize={11}
+              tickLine={true}
+              axisLine={true}
+              width={60}
+              tick={{ fill: '#333' }}
+              tickFormatter={(value) => {
+                if (value >= 10000) return `${(value / 10000).toFixed(1)}만`;
+                return value.toLocaleString();
+              }}
+            />
 
-          {/* 호버 시 고급 툴팁 활성화 */}
-          <Tooltip content={<CustomTooltip mode={mode} />} />
-
-          {isComparison ? (
-            // 탭 1: 실제 vs AI 예측 비교 모드 (TimesFM)
-            <>
-              {/* 실제 매출 (Indigo Area) */}
-              <Area
-                yAxisId="left"
-                type="monotone"
-                dataKey="actual"
-                name="실제 매출"
-                stroke="var(--nexus-primary)"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#colorActualComp)"
-                activeDot={{ r: 5, stroke: 'var(--nexus-primary)', strokeWidth: 2, fill: '#fff' }}
-              />
-              {/* TimesFM AI 예측 (강조되는 내일 단일 Point 점) */}
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="timesfm"
-                name="TimesFM AI 예측점"
-                stroke="#0ea5e9"
-                strokeWidth={0} // 선은 그리지 않음
-                dot={{ r: 7, stroke: '#0ea5e9', strokeWidth: 3, fill: '#fff' }}
-                activeDot={{ r: 9, stroke: '#0ea5e9', strokeWidth: 3, fill: '#fff' }}
-              />
-            </>
-          ) : (
-            // 탭 2: 실제 vs 통계 트렌드 비교 모드 (Statsmodels)
-            <>
-              <Area
-                yAxisId="left"
-                type="monotone"
-                dataKey="actual"
-                name="실제 매출"
-                stroke="#8884d8"
-                fillOpacity={1}
-                fill="url(#colorActual)"
-                activeDot={{ r: 5, stroke: '#8884d8', strokeWidth: 2, fill: '#fff' }}
-              />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="predicted"
-                name="Statsmodels 통계 예측선"
-                stroke="#f59e0b"
-                strokeWidth={3}
-                dot={{ r: 1.5, stroke: '#f59e0b', strokeWidth: 1, fill: '#f59e0b' }}
-                activeDot={{ r: 6, stroke: '#f59e0b', strokeWidth: 2, fill: '#fff' }}
-              />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="movingAverage"
-                name="7일 이동평균"
-                stroke="#ffc658"
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 5, stroke: '#ffc658', strokeWidth: 2, fill: '#fff' }}
-              />
-              <Line
+            {!isComparison && (
+              <YAxis
                 yAxisId="right"
-                type="monotone"
-                dataKey="returnRate"
-                name="일별 수익률(%)"
-                stroke="#82ca9d"
-                strokeWidth={2}
-                dot={{ r: 3, fill: '#82ca9d' }}
-                activeDot={{ r: 5, stroke: '#82ca9d', strokeWidth: 2, fill: '#fff' }}
+                orientation="right"
+                stroke="#10b981"
+                fontSize={11}
+                tickLine={true}
+                axisLine={true}
               />
-            </>
-          )}
-        </ComposedChart>
-      </ResponsiveContainer>
+            )}
+
+            <Tooltip content={<CustomTooltip mode={mode} />} />
+
+            {isComparison ? (
+              <>
+                <Area
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="actual"
+                  name="실제 매출"
+                  stroke="#000000"
+                  strokeWidth={3}
+                  fill="#000000"
+                  fillOpacity={0.1}
+                  connectNulls={true}
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="timesfm"
+                  name="예측점"
+                  stroke="#333"
+                  strokeWidth={0}
+                  dot={{ r: 8, fill: '#000', stroke: '#fff', strokeWidth: 2 }}
+                />
+              </>
+            ) : (
+              <>
+                <Area
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="actual"
+                  name="실제 매출"
+                  stroke="#000"
+                  strokeWidth={2}
+                  fill="#000"
+                  fillOpacity={0.1}
+                  connectNulls={true}
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="predicted"
+                  name="통계 예측선"
+                  stroke="#333"
+                  strokeWidth={3}
+                  strokeDasharray="5 5"
+                  dot={false}
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="movingAverage"
+                  name="이동평균"
+                  stroke="#666"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="returnRate"
+                  name="수익률(%)"
+                  stroke="#000"
+                  strokeWidth={2}
+                  dot={true}
+                />
+              </>
+            )}
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };

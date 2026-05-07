@@ -12,35 +12,41 @@ import Link from 'next/link';
  */
 const PredictPage = () => {
   const [analysisResult, setAnalysisResult] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
 
   const fetchAnalysis = async () => {
     setIsLoading(true);
     setError(null);
+    setAnalysisResult(null); // 이전 결과 초기화
     try {
       const { user } = useAuthStore.getState();
       const response = await api.get('/api/v1/ai/prediction/analysis', {
         baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000',
         params: { userId: user?.id || '' }
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || '데이터를 불러오는 중 오류가 발생했습니다.');
-      }
+      
       const result = await response.json();
-      setAnalysisResult(result.data);
+      
+      if (result.status === 'no_data') {
+        setError(result.message);
+      } else if (result.status === 'success') {
+        setAnalysisResult(result.data);
+      } else {
+        throw new Error(result.detail || '데이터를 불러오는 중 오류가 발생했습니다.');
+      }
     } catch (err: any) {
       console.error('분석 데이터 로드 실패:', err);
-      setError(err.message);
+      setError(err.message || '서버와의 통신에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // useEffect에서 fetchAnalysis() 제거 (사용자 클릭 시에만 실행되도록)
   useEffect(() => {
-    fetchAnalysis();
+    // 초기에는 아무것도 하지 않음
   }, []);
 
   return (
@@ -60,14 +66,16 @@ const PredictPage = () => {
             </p>
           </div>
 
-          <button
-            onClick={fetchAnalysis}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-6 py-3 bg-[var(--nexus-surface-container)] hover:bg-[var(--nexus-surface-container-high)] border border-[var(--nexus-outline-variant)] rounded-2xl transition-all disabled:opacity-50 text-[var(--nexus-on-bg)]"
-          >
-            <RefreshCcw size={18} className={isLoading ? 'animate-spin' : ''} />
-            새로고침
-          </button>
+          {analysisResult && (
+            <button
+              onClick={fetchAnalysis}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-6 py-3 bg-[var(--nexus-surface-container)] hover:bg-[var(--nexus-surface-container-high)] border border-[var(--nexus-outline-variant)] rounded-2xl transition-all disabled:opacity-50 text-[var(--nexus-on-bg)]"
+            >
+              <RefreshCcw size={18} className={isLoading ? 'animate-spin' : ''} />
+              다시 분석하기
+            </button>
+          )}
         </header>
 
         {isLoading ? (
@@ -77,15 +85,34 @@ const PredictPage = () => {
               AI가 데이터를 심층 분석하고 있습니다...
             </p>
           </div>
+        ) : !analysisResult && !error ? (
+          // 초기 진입 상태: 분석 시작 버튼 표시
+          <div className="h-[50vh] nexus-card border border-[var(--nexus-outline-variant)] rounded-[2.5rem] flex flex-col items-center justify-center p-12 text-center shadow-xl">
+            <div className="p-6 bg-[var(--nexus-primary)]/10 rounded-full mb-6 text-[var(--nexus-primary)]">
+              <RefreshCcw size={48} />
+            </div>
+            <h2 className="text-2xl font-bold mb-4 text-[var(--nexus-on-bg)]">AI 매출 분석 시작하기</h2>
+            <p className="text-[var(--nexus-outline)] mb-8 max-w-md text-lg">
+              지금까지 입력된 매출 데이터를 바탕으로 <br />
+              내일의 매출을 정밀하게 예측해 드립니다.
+            </p>
+            <button
+              onClick={fetchAnalysis}
+              className="flex items-center gap-2 px-10 py-5 bg-[var(--nexus-primary)] hover:bg-[var(--nexus-secondary)] text-[var(--nexus-on-primary)] rounded-2xl font-bold transition-all shadow-xl text-lg"
+            >
+              <LineChart size={22} />
+              현재 데이터로 분석하기
+            </button>
+          </div>
         ) : error ? (
+          // 데이터 부족 또는 에러 상태
           <div className="h-[50vh] nexus-card border border-[var(--nexus-outline-variant)] rounded-[2.5rem] flex flex-col items-center justify-center p-12 text-center shadow-xl">
             <div className="p-6 bg-[var(--nexus-error)]/10 rounded-full mb-6 text-[var(--nexus-error)]">
               <AlertCircle size={48} />
             </div>
-            <h2 className="text-2xl font-bold mb-4 text-[var(--nexus-on-bg)]">데이터가 부족합니다</h2>
+            <h2 className="text-2xl font-bold mb-4 text-[var(--nexus-on-bg)]">데이터를 준비해 주세요</h2>
             <p className="text-[var(--nexus-outline)] mb-8 max-w-md text-lg">
-              {error} <br />
-              분석을 위해 먼저 과거 매출 데이터를 업로드해 주세요.
+              {error}
             </p>
             <Link
               href="/dashboard/upload"
