@@ -7,6 +7,7 @@ interface User {
   nickname: string;
   userType: number;
   profileImage?: string;
+  bizNo?: string;
 }
 
 interface AuthState {

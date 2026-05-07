@@ -56,6 +56,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .queryParam("email", user.getEmail())
                     .queryParam("userType", user.getUserType())
                     .queryParam("provider", provider)
+                    .queryParam("profileImage", user.getProfileImage())
                     .build()
                     .encode(java.nio.charset.StandardCharsets.UTF_8) // 명시적 인코딩 추가
                     .toUriString();

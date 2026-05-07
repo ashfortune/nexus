@@ -72,6 +72,9 @@ export default function LoginPage() {
         localStorage.setItem('userId', userId);
         localStorage.setItem('nickname', nickname);
 
+        // 헤더에 로그인 상태 변경 이벤트 알림
+        window.dispatchEvent(new Event('login-status-change'));
+
         // 페이지 이동
         router.push('/');
         router.refresh(); 

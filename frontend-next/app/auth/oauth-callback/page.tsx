@@ -15,6 +15,7 @@ function OAuthCallbackContent() {
     const userId = searchParams.get('userId');
     const nickname = searchParams.get('nickname');
     const email = searchParams.get('email');
+    const profileImage = searchParams.get('profileImage');
     const userType = searchParams.get('userType');
 
     if (token) {
@@ -23,7 +24,8 @@ function OAuthCallbackContent() {
         id: userId || '',
         nickname: nickname || '',
         email: email || '',
-        userType: Number(userType) || 1
+        userType: Number(userType) || 1,
+        profileImage: profileImage || ''
       }, token);
 
       // 로컬 스토리지에 정보 저장 (백업용)

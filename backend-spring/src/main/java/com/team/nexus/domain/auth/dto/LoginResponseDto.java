@@ -27,4 +27,7 @@ public class LoginResponseDto {
 
     @Schema(description = "프로필 이미지 URL")
     private String profileImage;
+
+    @Schema(description = "사용자 이메일")
+    private String email;
 }
