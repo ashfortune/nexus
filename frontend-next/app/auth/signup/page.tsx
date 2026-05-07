@@ -66,6 +66,8 @@ export default function SignupPage() {
   const [agreedPolicies, setAgreedPolicies] = useState<number[]>([]);
   const { isAuthenticated, _hasHydrated } = useAuthStore();
   const [isClient, setIsClient] = useState(false);
+  const [emailChecked, setEmailChecked] = useState(false);
+  const [isEmailAvailable, setIsEmailAvailable] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -100,6 +102,14 @@ export default function SignupPage() {
   const isPasswordMismatch =
     watchPassword && watchConfirmPassword && watchPassword !== watchConfirmPassword;
 
+  const watchEmail = watch('email');
+
+  // 이메일 변경 시 중복 체크 상태 리셋
+  useEffect(() => {
+    setEmailChecked(false);
+    setIsEmailAvailable(false);
+  }, [watchEmail]);
+
   // --- Handlers ---
   const handleTogglePolicy = (id: number) => {
     if (agreedPolicies.includes(id)) {
@@ -132,7 +142,34 @@ export default function SignupPage() {
     setIsAddressModalOpen(false);
   };
 
+  const checkEmailDuplication = async () => {
+    const email = watch('email');
+    if (!email) return alert('이메일을 입력해주세요.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert('유효한 이메일 형식이 아닙니다.');
+
+    try {
+      const response = await api.get(`/api/v1/auth/check-email?email=${email}`);
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        setEmailChecked(true);
+        setIsEmailAvailable(!result.isDuplicate);
+      } else {
+        alert(result.message || '중복 체크 중 오류가 발생했습니다.');
+      }
+    } catch (error) {
+      alert('서버와 통신 중 오류가 발생했습니다.');
+    }
+  };
+
   const onSignupSubmit = async (data: SignupFormValues) => {
+    if (!emailChecked) {
+      return alert('이메일 중복 확인이 필요합니다.');
+    }
+    if (!isEmailAvailable) {
+      return alert('이미 사용 중인 이메일입니다. 다른 이메일을 입력해주세요.');
+    }
+
     try {
       const response = await api.post('/api/v1/auth/signup', {
         email: data.email,
@@ -324,18 +361,39 @@ export default function SignupPage() {
               {/* Email */}
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-zinc-700 ml-1">이메일 (ID)</label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-400" />
-                  <input
-                    {...register('email')}
-                    type="email"
-                    placeholder="example@email.com"
-                    className="w-full h-12 pl-11 pr-4 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-all"
-                  />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-400" />
+                    <input
+                      {...register('email')}
+                      type="email"
+                      placeholder="example@email.com"
+                      className={cn(
+                        "w-full h-12 pl-11 pr-4 bg-zinc-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all",
+                        emailChecked && isEmailAvailable ? "border-green-200 focus:border-green-500" : 
+                        emailChecked && !isEmailAvailable ? "border-red-200 focus:border-red-500" : "border-zinc-200 focus:border-black"
+                      )}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={checkEmailDuplication}
+                    className="h-12 px-4 bg-zinc-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-colors whitespace-nowrap shadow-sm"
+                  >
+                    중복 확인
+                  </button>
                 </div>
                 {errors.email && (
                   <p className="text-xs text-red-500 flex items-center gap-1 mt-1 ml-1">
                     <AlertCircle className="w-3 h-3" /> {errors.email.message}
+                  </p>
+                )}
+                {emailChecked && (
+                  <p className={cn(
+                    "text-[11px] mt-1 ml-1 font-bold",
+                    isEmailAvailable ? "text-green-600" : "text-red-600"
+                  )}>
+                    {isEmailAvailable ? "✅ 사용 가능한 이메일입니다." : "❌ 이미 사용 중인 이메일입니다."}
                   </p>
                 )}
               </div>

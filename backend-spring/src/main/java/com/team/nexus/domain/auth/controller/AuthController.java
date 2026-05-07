@@ -81,4 +81,21 @@ public class AuthController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
-}
+
+    @Operation(summary = "이메일 중복 체크", description = "입력한 이메일이 이미 존재하는지 확인합니다.")
+    @GetMapping("/check-email")
+    public ResponseEntity<Map<String, Object>> checkEmail(@RequestParam("email") String email) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            boolean isDuplicate = authService.checkEmailDuplication(email);
+            response.put("status", "success");
+            response.put("isDuplicate", isDuplicate);
+            response.put("message", isDuplicate ? "이미 사용 중인 이메일입니다." : "사용 가능한 이메일입니다.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "서버 오류가 발생했습니다.");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+}

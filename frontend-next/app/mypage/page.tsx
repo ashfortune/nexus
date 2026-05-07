@@ -328,6 +328,26 @@ export default function MyPage() {
                 </div>
               </div>
 
+          {/* 오른쪽: 상세 내용 */}
+          <div className="lg:col-span-2">
+            <div className="nexus-card border border-[var(--nexus-outline-variant)]/30 overflow-hidden shadow-xl shadow-[var(--nexus-primary)]/5">
+              {/* 탭 메뉴 */}
+              <div className="flex border-b border-[var(--nexus-outline-variant)]/30">
+                {(['posts', 'comments', 'purchases'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex-1 py-4 text-sm font-black transition-all ${
+                      activeTab === tab
+                        ? 'text-[var(--nexus-primary)] border-b-2 border-[var(--nexus-primary)] bg-[var(--nexus-primary)]/5'
+                        : 'text-[var(--nexus-outline)] hover:text-[var(--nexus-on-bg)] hover:bg-[var(--nexus-surface-low)]'
+                    }`}
+                  >
+                    {tab === 'posts' ? '작성 글' : tab === 'comments' ? '작성 댓글' : '공동구매'}
+                  </button>
+                ))}
+              </div>
+
               <div className="p-8 min-h-[400px]">
                 {activeTab === 'posts' && (
                   <div className="space-y-3">
@@ -349,6 +369,8 @@ export default function MyPage() {
                         작성한 게시글이 없습니다.
                       </div>
                     )}
+                  </div>
+                )}
 
                 {activeTab === 'comments' && (
                   <div className="space-y-3">
@@ -370,9 +392,15 @@ export default function MyPage() {
                               {new Date(comment.createdAt).toLocaleDateString()}
                             </span>
                           </div>
-                        )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-20 text-center text-[var(--nexus-outline)] font-medium">
+                        작성한 댓글이 없습니다.
                       </div>
                     )}
+                  </div>
+                )}
 
                 {activeTab === 'purchases' && (
                   <div className="space-y-3">
@@ -391,14 +419,20 @@ export default function MyPage() {
                               {purchase.status}
                             </span>
                           </div>
-                        )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-20 text-center text-[var(--nexus-outline)] font-medium">
+                        참여한 공동구매가 없습니다.
                       </div>
                     )}
                   </div>
-                </div>
+                )}
               </div>
             </div>
-          </main>
+          </div>
+        </div>
+      </main>
         )}
       </div>
     </AuthGuard>
