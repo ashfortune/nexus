@@ -32,12 +32,13 @@ const UploadPage = () => {
 
     const formData = new FormData();
     formData.append('file', file);
+    
+    const { user } = useAuthStore.getState();
+    formData.append('userId', user?.id || '');
 
     try {
-      const { user } = useAuthStore.getState();
       const response = await api.post('/api/v1/ai/dashboard/upload-sales', formData, {
-        baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000',
-        headers: { 'X-User-Id': user?.id || '' } // Let browser handle boundary for multipart, but add our header
+        baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000'
       });
 
       if (!response.ok) {

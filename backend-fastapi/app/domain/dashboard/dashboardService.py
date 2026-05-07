@@ -1,3 +1,4 @@
+import datetime
 import io
 import logging
 import uuid
@@ -16,14 +17,22 @@ async def processSalesCsv(file: UploadFile, userId: str, db: AsyncSession) -> Di
     """매출 CSV 파일을 파싱하고 DB에 적재하는 메인 프로세스입니다."""
     try:
         contents = await file.read()
+        logger.info(f"파일 수신 완료: {file.filename} (크기: {len(contents)} bytes)")
+        
+        logger.info("CSV 파싱 시작...")
         df = pd.read_csv(io.BytesIO(contents))
+        logger.info(f"CSV 파싱 완료: 총 {len(df)}행 추출됨")
 
         if df.empty or len(df.columns) < 2:
             raise ValueError("CSV 파일 형식이 올바르지 않습니다.")
 
+        logger.info("데이터 정제 및 클렌징 작업 중...")
         cleanedData = prepareSalesData(df, file.filename)
+        
+        logger.info(f"DB 적재 시작 (대상: {len(cleanedData)}건)...")
         count = await saveSalesToDb(cleanedData, userId, db)
 
+        logger.info(f"모든 작업 성공: {count}건의 데이터가 최종 처리됨")
         return {
             "status": "success",
             "count": count,
@@ -84,14 +93,18 @@ async def saveSalesToDb(dataList: List[Dict[str, Any]], userId: str, db: AsyncSe
 
     count = 0
     # 3. DB 업데이트 또는 신규 추가
-    for item_date, item in aggregated_data.items():
+    for idx, (item_date, item) in enumerate(aggregated_data.items()):
+        if (idx + 1) % 100 == 0:
+            logger.info(f"진행 중... ({idx + 1}/{len(aggregated_data)} 건 처리 완료)")
+            
         if item_date in existing_map:
-            # 기존 데이터가 있는 경우: 기존 매출보다 큰 경우에만 최대 매출 값으로 대체
+            # 기존 데이터가 있는 경우: 최신 업로드 데이터로 업데이트하고 타임스탬프 갱신 (캐시 무효화용)
             db_sale = existing_map[item_date]
-            if item["amount"] > db_sale.total_amount:
-                db_sale.total_amount = item["amount"]
-                db_sale.file_url = item["fileName"]  # 파일명도 최신 파일로 갱신
-                count += 1
+            db_sale.total_amount = item["amount"]
+            db_sale.file_url = item["fileName"]
+            db_sale.created_at = datetime.datetime.now()
+            logger.info(f"기존 데이터 갱신 및 타임스탬프 업데이트: {item_date}")
+            count += 1
         else:
             # 기존 데이터가 없는 경우: 신규 추가
             newSale = Sale(

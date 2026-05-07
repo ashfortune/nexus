@@ -198,18 +198,24 @@ async def getAnalysisFromDb(userId: str, db: AsyncSession) -> Dict[str, Any]:
     try:
         userUuid = uuid.UUID(userId)
         
-        # 1. 오늘 이미 생성된 예측 기록이 있는지 확인 (캐싱)
+        # 1. 오늘 이미 생성된 예측 기록이 있는지 확인 (단, 마지막 분석 이후에 새로운 매출 업로드가 없어야 함)
         today_start = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+        
         check_query = text("""
-            SELECT id, predicted_cost, moving_average, return_rate 
-            FROM predictions 
-            WHERE user_id = :uid AND base_date >= :today_start
-            ORDER BY created_at DESC LIMIT 1
+            SELECT p.id, p.predicted_cost, p.moving_average, p.return_rate, p.created_at
+            FROM predictions p
+            WHERE p.user_id = :uid AND p.base_date >= :today_start
+            AND (
+                SELECT COALESCE(MAX(s.created_at), '1970-01-01') FROM sales s 
+                WHERE s.user_id = :uid
+            ) <= p.created_at
+            ORDER BY p.created_at DESC LIMIT 1
         """)
         pred_result = await db.execute(check_query, {"uid": userUuid, "today_start": today_start})
         existing_pred = pred_result.fetchone()
 
         if existing_pred:
+            logger.info(f"캐시된 분석 결과를 사용합니다. (생성일시: {existing_pred.created_at})")
             # 기존 기록이 있으면 daily_predictions에서 불러와서 리턴
             pred_id = existing_pred.id
             daily_query = text("""

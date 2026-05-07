@@ -23,7 +23,7 @@ const PredictPage = () => {
       const { user } = useAuthStore.getState();
       const response = await api.get('/api/v1/ai/prediction/analysis', {
         baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000',
-        headers: { 'X-User-Id': user?.id || '' }
+        params: { userId: user?.id || '' }
       });
       if (!response.ok) {
         const errorData = await response.json();

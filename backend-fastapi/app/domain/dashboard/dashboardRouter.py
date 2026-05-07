@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Header
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -19,7 +19,7 @@ async def getRoot() -> Dict[str, str]:
 @router.post("/upload-sales", response_model=SalesUploadResponseSchema)
 async def uploadSales(
     file: UploadFile = File(...),
-    userId: str = Header(..., alias="X-User-Id"),
+    userId: str = Form(...),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """매출 내역 CSV 파일을 업로드하여 마스터 테이블에 적재합니다."""

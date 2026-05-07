@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -12,7 +12,7 @@ router = APIRouter()
 
 @router.get("/analysis", response_model=PredictionResponseSchema)
 async def getAnalysis(
-    userId: str = Header(..., alias="X-User-Id"),
+    userId: str,
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
