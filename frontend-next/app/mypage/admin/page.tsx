@@ -119,7 +119,7 @@ export default function AdminPage() {
   ];
 
   return (
-    <AuthGuard requiredRole={2}>
+    <AuthGuard allowedRoles={[2]}>
       <div className="min-h-screen bg-[var(--nexus-bg)] flex font-sans">
         {/* 사이드바 */}
         <aside className="w-72 bg-[var(--nexus-surface-lowest)] border-r border-[var(--nexus-outline-variant)]/30 flex flex-col sticky top-0 h-screen shadow-2xl shadow-[var(--nexus-primary)]/5">
