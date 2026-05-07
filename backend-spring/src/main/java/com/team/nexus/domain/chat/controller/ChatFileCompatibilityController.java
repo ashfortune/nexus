@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 @Tag(name = "Chat File Compatibility", description = "구 버전 파일 경로 호환성 API")
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*", allowCredentials = "true")
+@CrossOrigin(origins = "${frontend.url:http://localhost:3000}", allowedHeaders = "*", allowCredentials = "true")
 public class ChatFileCompatibilityController {
 
     @Operation(summary = "구 버전 파일 표시 호환성", description = "/api/v1/files 경로로 저장된 이전 파일들을 표시합니다.")

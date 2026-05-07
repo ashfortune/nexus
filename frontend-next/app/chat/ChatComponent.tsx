@@ -601,7 +601,7 @@ const ChatComponent = () => {
                 >
                   {room.imageUrl ? (
                     <img
-                      src={room.imageUrl.startsWith('http') ? room.imageUrl : `http://localhost:8080${room.imageUrl}`}
+                      src={room.imageUrl.startsWith('http') ? room.imageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${room.imageUrl}`}
                       alt={room.title}
                       className="w-full h-full object-cover"
                     />
@@ -685,7 +685,7 @@ const ChatComponent = () => {
                 <div className="w-10 h-10 bg-[var(--nexus-surface-low)] rounded-xl flex items-center justify-center font-bold text-[var(--nexus-primary)] overflow-hidden border border-[var(--nexus-surface-container)]">
                   {activeRoom.imageUrl ? (
                     <img
-                      src={activeRoom.imageUrl.startsWith('http') ? activeRoom.imageUrl : `http://localhost:8080${activeRoom.imageUrl}`}
+                      src={activeRoom.imageUrl.startsWith('http') ? activeRoom.imageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${activeRoom.imageUrl}`}
                       alt={activeRoom.title}
                       className="w-full h-full object-cover"
                     />
@@ -823,7 +823,7 @@ const ChatComponent = () => {
                         >
                           {msg.senderProfileImageUrl ? (
                             <img
-                              src={msg.senderProfileImageUrl.startsWith('http') ? msg.senderProfileImageUrl : `http://localhost:8080${msg.senderProfileImageUrl}`}
+                              src={msg.senderProfileImageUrl.startsWith('http') ? msg.senderProfileImageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${msg.senderProfileImageUrl}`}
                               alt={msg.senderNickname}
                               className="w-full h-full object-cover"
                             />
@@ -854,10 +854,10 @@ const ChatComponent = () => {
                           {msg.type === 'IMAGE' && msg.fileUrl ? (
                             <div className="flex flex-col">
                               <img
-                                src={msg.fileUrl.startsWith('http') ? msg.fileUrl : `http://localhost:8080${msg.fileUrl}`}
+                                src={msg.fileUrl.startsWith('http') ? msg.fileUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${msg.fileUrl}`}
                                 alt="Shared Image"
                                 className="w-full max-h-[300px] object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                onClick={() => setSelectedImageUrl(msg.fileUrl!.startsWith('http') ? msg.fileUrl! : `http://localhost:8080${msg.fileUrl}`)}
+                                onClick={() => setSelectedImageUrl(msg.fileUrl!.startsWith('http') ? msg.fileUrl! : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${msg.fileUrl}`)}
                               />
                               <div className="px-4 py-2 text-[11px] opacity-70">{msg.message}</div>
                             </div>
@@ -872,7 +872,7 @@ const ChatComponent = () => {
                                   onClick={() => {
                                     const url = msg.fileUrl?.startsWith('http') 
                                       ? msg.fileUrl 
-                                      : `http://localhost:8080${msg.fileUrl}`.replace('/display/', '/download/');
+                                      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${msg.fileUrl}`.replace('/display/', '/download/');
                                     handleDownload(url, msg.fileName || 'download');
                                   }}
                                   className="text-[10px] text-[var(--nexus-secondary)] font-black hover:underline mt-1 flex items-center gap-1"
@@ -1198,7 +1198,7 @@ const ChatComponent = () => {
             <div className="p-8 text-center">
               <div className="w-20 h-20 bg-[var(--nexus-surface-low)] rounded-3xl mx-auto mb-6 flex items-center justify-center text-[var(--nexus-primary)] overflow-hidden shadow-inner border border-[var(--nexus-surface-container)]">
                 {joiningRoom.imageUrl ? (
-                  <img src={joiningRoom.imageUrl.startsWith('http') ? joiningRoom.imageUrl : `http://localhost:8080${joiningRoom.imageUrl}`} alt="" className="w-full h-full object-cover" />
+                  <img src={joiningRoom.imageUrl.startsWith('http') ? joiningRoom.imageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${joiningRoom.imageUrl}`} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <Users size={40} />
                 )}

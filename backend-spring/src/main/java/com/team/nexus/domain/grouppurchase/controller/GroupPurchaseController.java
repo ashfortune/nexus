@@ -16,7 +16,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/group-purchases")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${frontend.url:http://localhost:3000}")
 public class GroupPurchaseController {
 
     private final GroupPurchaseService groupPurchaseService;

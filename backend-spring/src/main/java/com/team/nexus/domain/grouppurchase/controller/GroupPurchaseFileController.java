@@ -20,7 +20,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/group-purchases/files")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*", allowCredentials = "true")
+@CrossOrigin(origins = "${frontend.url:http://localhost:3000}", allowedHeaders = "*", allowCredentials = "true")
 public class GroupPurchaseFileController {
 
     @Operation(summary = "파일 표시", description = "업로드된 파일을 브라우저에 표시합니다.")

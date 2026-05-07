@@ -22,7 +22,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/chat")
-@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*", allowCredentials = "true")
+@CrossOrigin(origins = "${frontend.url:http://localhost:3000}", allowedHeaders = "*", allowCredentials = "true")
 public class ChatController {
 
     private final ChatService chatService;

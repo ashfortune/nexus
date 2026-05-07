@@ -15,7 +15,7 @@ import java.util.Map;
 @Tag(name = "Group Purchase Config", description = "공동구매용 결제 설정값 제공 API")
 @RestController
 @RequestMapping("/api/v1/config")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${frontend.url:http://localhost:3000}")
 public class GroupPurchaseConfigController {
 
     @Value("${toss.client-key}")
