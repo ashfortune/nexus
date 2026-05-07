@@ -30,4 +30,5 @@ class PredictionDataSchema(BaseModel):
 
 class PredictionResponseSchema(BaseModel):
     status: str
-    data: PredictionDataSchema
+    data: Optional[PredictionDataSchema] = None
+    message: Optional[str] = None

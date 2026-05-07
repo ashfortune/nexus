@@ -401,7 +401,7 @@ class Sale(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    sales_date: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, nullable=False)
+    sales_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     total_amount: Mapped[Optional[int]] = mapped_column(Integer, server_default=text("0"))
     file_url: Mapped[Optional[str]] = mapped_column(String(255))
     store_number: Mapped[Optional[str]] = mapped_column(String(255))
@@ -436,7 +436,7 @@ class Prediction(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    base_date: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, nullable=False)
+    base_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     total_sales: Mapped[Optional[int]] = mapped_column(Integer)
     predicted_cost: Mapped[Optional[int]] = mapped_column(Integer)
     moving_average: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION)
@@ -457,7 +457,7 @@ class DailyPrediction(Base):
     prediction_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("predictions.id", ondelete="CASCADE"), nullable=False
     )
-    target_date: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, nullable=False)
+    target_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     pred_sales: Mapped[Optional[int]] = mapped_column(Integer)
     actual_sales: Mapped[Optional[int]] = mapped_column(Integer)
     moving_average: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION)

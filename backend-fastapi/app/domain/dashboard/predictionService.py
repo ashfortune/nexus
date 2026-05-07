@@ -27,8 +27,11 @@ async def fetchSalesData(userId: uuid.UUID, db: AsyncSession) -> pd.DataFrame:
     result = await db.execute(query, {"uid": userId})
     rows = result.fetchall()
 
+    if len(rows) == 0:
+        raise ValueError("등록된 매출 데이터가 없습니다. 먼저 매출 데이터를 업로드해 주세요.")
+    
     if len(rows) < 2:
-        raise ValueError("분석을 위한 데이터가 충분하지 않습니다. (최소 2건 필요)")
+        raise ValueError("분석을 시작하려면 최소 2일 이상의 매출 데이터가 필요합니다.")
 
     df = pd.DataFrame(rows, columns=["date", "actual"])
     df["date"] = pd.to_datetime(df["date"]).dt.tz_localize(None)
@@ -171,7 +174,15 @@ async def persistAnalysisResults(
     await db.flush()
 
     for _, row in df.iterrows():
-        pureDate = row["date"].to_pydatetime().replace(tzinfo=None) if hasattr(row["date"], "to_pydatetime") else row["date"].replace(tzinfo=None)
+        # date와 datetime 모두 대응 가능하도록 수정
+        date_obj = row["date"]
+        if hasattr(date_obj, "to_pydatetime"):
+            date_obj = date_obj.to_pydatetime()
+            
+        if isinstance(date_obj, datetime.datetime):
+            pureDate = date_obj.replace(tzinfo=None)
+        else:
+            pureDate = date_obj  # 이미 date 객체인 경우
 
         actual_val = int(row["actual"]) if pd.notna(row.get("actual")) else None
         pred_val = int(row["predicted"]) if pd.notna(row.get("predicted")) else actual_val
@@ -198,18 +209,24 @@ async def getAnalysisFromDb(userId: str, db: AsyncSession) -> Dict[str, Any]:
     try:
         userUuid = uuid.UUID(userId)
         
-        # 1. 오늘 이미 생성된 예측 기록이 있는지 확인 (캐싱)
+        # 1. 오늘 이미 생성된 예측 기록이 있는지 확인 (단, 마지막 분석 이후에 새로운 매출 업로드가 없어야 함)
         today_start = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+        
         check_query = text("""
-            SELECT id, predicted_cost, moving_average, return_rate 
-            FROM predictions 
-            WHERE user_id = :uid AND base_date >= :today_start
-            ORDER BY created_at DESC LIMIT 1
+            SELECT p.id, p.predicted_cost, p.moving_average, p.return_rate, p.created_at
+            FROM predictions p
+            WHERE p.user_id = :uid AND p.base_date >= :today_start
+            AND (
+                SELECT COALESCE(MAX(s.created_at), '1970-01-01') FROM sales s 
+                WHERE s.user_id = :uid
+            ) <= p.created_at
+            ORDER BY p.created_at DESC LIMIT 1
         """)
         pred_result = await db.execute(check_query, {"uid": userUuid, "today_start": today_start})
         existing_pred = pred_result.fetchone()
 
         if existing_pred:
+            logger.info(f"캐시된 분석 결과를 사용합니다. (생성일시: {existing_pred.created_at})")
             # 기존 기록이 있으면 daily_predictions에서 불러와서 리턴
             pred_id = existing_pred.id
             daily_query = text("""
@@ -229,11 +246,12 @@ async def getAnalysisFromDb(userId: str, db: AsyncSession) -> Dict[str, Any]:
             next_date_str = None
             for r in daily_rows:
                 if r.actual_sales is None:
-                    next_date_str = str(r.target_date.date())
+                    # target_date가 date일 수도, datetime일 수도 있으므로 안전하게 처리
+                    next_date_str = str(r.target_date.date()) if hasattr(r.target_date, "date") else str(r.target_date)
                     break
 
             for r in daily_rows:
-                date_str = str(r.target_date.date())
+                date_str = str(r.target_date.date()) if hasattr(r.target_date, "date") else str(r.target_date)
                 is_tomorrow = (next_date_str is not None and date_str == next_date_str)
                 
                 analysis_data.append({
@@ -302,11 +320,11 @@ async def getAnalysisFromDb(userId: str, db: AsyncSession) -> Dict[str, Any]:
             },
             "analysisData": [
                 {
-                    "date": str(r["date"].date()),
+                    "date": str(r["date"].date()) if hasattr(r["date"], "date") else str(r["date"]),
                     "actual": int(r["actual"]) if pd.notna(r.get("actual")) else None,
                     "predicted": int(r["predicted"]) if pd.notna(r.get("predicted")) else None,
                     # 내일 날짜인 경우, 예측치(forecastValue)를 timesfm 필드에 제공하여 그래프 점 렌더링 보장
-                    "timesfm": int(pred["forecastValue"]) if (str(r["date"].date()) == pred["nextDate"]) else None,
+                    "timesfm": int(pred["forecastValue"]) if ( (str(r["date"].date()) if hasattr(r["date"], "date") else str(r["date"])) == pred["nextDate"]) else None,
                     "movingAverage": float(r["movingAverage"]) if pd.notna(r.get("movingAverage")) else None,
                     "returnRate": float(r["returnRate"]) if pd.notna(r.get("returnRate")) else None,
                 }

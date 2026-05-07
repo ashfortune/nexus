@@ -142,7 +142,7 @@ CREATE TABLE checklist_steps (
 CREATE TABLE sales (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    sales_date TIMESTAMPTZ NOT NULL,
+    sales_date DATE NOT NULL,
     total_amount INT DEFAULT 0,
     store_number VARCHAR(255),
     file_url VARCHAR(255),
@@ -162,7 +162,7 @@ CREATE TABLE sales_items (
 CREATE TABLE predictions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    base_date TIMESTAMPTZ NOT NULL,
+    base_date DATE NOT NULL,
     total_sales INT,
     predicted_cost INT,
     moving_average DOUBLE PRECISION,
@@ -174,7 +174,7 @@ CREATE TABLE predictions (
 CREATE TABLE daily_predictions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     prediction_id UUID NOT NULL REFERENCES predictions(id) ON DELETE CASCADE,
-    target_date TIMESTAMPTZ NOT NULL,
+    target_date DATE NOT NULL,
     pred_sales INT,
     actual_sales INT,
     moving_average DOUBLE PRECISION,

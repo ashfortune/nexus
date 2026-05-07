@@ -313,7 +313,7 @@ export default function MyPage() {
                   )}
 
                   <button
-                    onClick={() => router.push('/mypage/report')}
+                    onClick={() => router.push('/dashboard')}
                     className="w-full mt-6 py-3.5 bg-gradient-to-r from-[var(--nexus-primary)] to-[var(--nexus-secondary)] text-white rounded-xl text-sm font-black hover:opacity-90 transition-all shadow-lg shadow-[var(--nexus-primary)]/20 active:scale-[0.95] flex items-center justify-center gap-2"
                   >
                     <span>📊</span> 사후보고서
