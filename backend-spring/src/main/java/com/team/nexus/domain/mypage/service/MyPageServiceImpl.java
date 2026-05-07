@@ -110,6 +110,9 @@ public class MyPageServiceImpl implements MyPageService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         user.setDeletedAt(LocalDateTime.now());
+        // 이메일 중복 방지를 위해 마스킹 처리 (재가입 가능하게 함)
+        user.setEmail("deleted_" + userId.toString() + "_" + user.getEmail());
+        
         userRepository.save(user);
     }
 

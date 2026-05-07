@@ -24,7 +24,7 @@ function OAuthCallbackContent() {
         id: userId || '',
         nickname: nickname || '',
         email: email || '',
-        userType: Number(userType) || 1,
+        userType: Number(userType ?? 0),
         profileImage: profileImage || ''
       }, token);
 
