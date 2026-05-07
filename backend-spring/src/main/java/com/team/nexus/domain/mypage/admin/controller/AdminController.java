@@ -30,7 +30,6 @@ public class AdminController {
             response.put("data", data);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace(); // 서버 콘솔에 에러 내용 출력
             response.put("status", "error");
             response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
