@@ -17,12 +17,14 @@ interface AdminData {
     createdAt: string;
     isSuspended: boolean;
   }>;
-  boards: Array<{ id: string; title: string; authorNickname: string; createdAt: string }>;
+  boards: Array<{ id: string; title: string; authorNickname: string; boardType: string; createdAt: string }>;
   comments: Array<{
     id: string;
     content: string;
     authorNickname: string;
     boardTitle: string;
+    boardId: string;
+    boardType: string;
     createdAt: string;
   }>;
   purchases: Array<{
@@ -189,10 +191,10 @@ export default function AdminPage() {
                 <thead className="bg-[var(--nexus-surface-low)]/50 border-b border-[var(--nexus-outline-variant)]/30">
                   {activeTab === 'users' && (
                     <tr>
-                      <th className="px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
+                      <th className="w-[300px] px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
                         이메일
                       </th>
-                      <th className="px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
+                      <th className="w-[300px] px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
                         닉네임
                       </th>
                       <th className="px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
@@ -201,7 +203,7 @@ export default function AdminPage() {
                       <th className="px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
                         상태
                       </th>
-                      <th className="px-8 pr-12 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap text-center">
+                      <th className="px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap text-right">
                         작업
                       </th>
                     </tr>
@@ -213,6 +215,9 @@ export default function AdminPage() {
                       </th>
                       <th className="px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
                         작성자
+                      </th>
+                      <th className="px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
+                        게시판 유형
                       </th>
                       <th className="px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
                         작성일
@@ -229,6 +234,12 @@ export default function AdminPage() {
                       </th>
                       <th className="px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
                         작성자
+                      </th>
+                      <th className="px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
+                        게시판
+                      </th>
+                      <th className="px-8 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap">
+                        게시글 제목
                       </th>
                       <th className="px-8 pr-12 py-6 text-[11px] font-black text-[var(--nexus-outline)] uppercase tracking-widest whitespace-nowrap text-center">
                         작업
@@ -272,10 +283,16 @@ export default function AdminPage() {
                         key={u.id}
                         className="hover:bg-[var(--nexus-surface-low)]/50 transition-colors"
                       >
-                        <td className="px-8 py-6 text-sm font-medium text-[var(--nexus-on-bg)] whitespace-nowrap">
+                        <td 
+                          className="px-8 py-6 text-sm font-medium text-[var(--nexus-on-bg)] truncate max-w-[300px]" 
+                          title={u.email}
+                        >
                           {u.email}
                         </td>
-                        <td className="px-8 py-6 text-sm font-black text-[var(--nexus-on-bg)] whitespace-nowrap">
+                        <td 
+                          className="px-8 py-6 text-sm font-black text-[var(--nexus-on-bg)] truncate max-w-[300px]"
+                          title={u.nickname}
+                        >
                           {u.nickname}
                         </td>
                         <td className="px-8 py-6 whitespace-nowrap">
@@ -292,10 +309,14 @@ export default function AdminPage() {
                             {u.isSuspended ? 'SUSPENDED' : 'ACTIVE'}
                           </span>
                         </td>
-                        <td className="px-8 pr-12 py-6 text-center whitespace-nowrap">
+                        <td className="px-8 py-6 text-right whitespace-nowrap">
                           <button
                             onClick={() => handleToggleSuspension(u.id, u.isSuspended)}
-                            className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${u.isSuspended ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-red-500 text-white hover:bg-red-600'}`}
+                            className={`min-w-[80px] px-4 py-2.5 rounded-xl text-[10px] font-black transition-all shadow-md active:scale-95 ${
+                              u.isSuspended 
+                                ? 'bg-green-500 text-white hover:bg-green-600 shadow-green-500/20' 
+                                : 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/20'
+                            }`}
                           >
                             {u.isSuspended ? '해제' : '정지'}
                           </button>
@@ -308,11 +329,19 @@ export default function AdminPage() {
                         key={b.id}
                         className="hover:bg-[var(--nexus-surface-low)]/50 transition-colors"
                       >
-                        <td className="px-8 py-6 text-sm font-black text-[var(--nexus-on-bg)] whitespace-nowrap">
-                          {b.title}
+                        <td 
+                          onClick={() => router.push(`/board/detail/${b.id}`)}
+                          className="px-8 py-6 text-sm font-black text-[var(--nexus-on-bg)] whitespace-nowrap cursor-pointer hover:text-[var(--nexus-primary)] transition-colors group"
+                        >
+                          <span className="group-hover:underline">{b.title}</span>
                         </td>
                         <td className="px-8 py-6 text-sm font-bold text-[var(--nexus-secondary)] whitespace-nowrap">
                           {b.authorNickname}
+                        </td>
+                        <td className="px-8 py-6 whitespace-nowrap">
+                          <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-[var(--nexus-surface-container)] text-[var(--nexus-primary)]">
+                            {b.boardType}
+                          </span>
                         </td>
                         <td className="px-8 py-6 text-[11px] font-bold text-[var(--nexus-outline)] whitespace-nowrap">
                           {new Date(b.createdAt).toLocaleDateString()}
@@ -333,11 +362,22 @@ export default function AdminPage() {
                         key={c.id}
                         className="hover:bg-[var(--nexus-surface-low)]/50 transition-colors"
                       >
-                        <td className="px-8 py-6 text-sm font-bold text-[var(--nexus-on-bg)] whitespace-nowrap">
-                          {c.content}
+                        <td 
+                          onClick={() => router.push(`/board/detail/${c.boardId || c.boardTitle}`)} 
+                          className="px-8 py-6 text-sm font-bold text-[var(--nexus-on-bg)] whitespace-nowrap cursor-pointer hover:text-[var(--nexus-primary)] transition-colors group"
+                        >
+                          <span className="group-hover:underline">{c.content}</span>
                         </td>
                         <td className="px-8 py-6 text-sm font-bold text-[var(--nexus-secondary)] whitespace-nowrap">
                           {c.authorNickname}
+                        </td>
+                        <td className="px-8 py-6 whitespace-nowrap">
+                          <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-[var(--nexus-surface-container)] text-[var(--nexus-primary)]">
+                            {c.boardType}
+                          </span>
+                        </td>
+                        <td className="px-8 py-6 text-[11px] font-bold text-[var(--nexus-outline)] whitespace-nowrap max-w-[200px] truncate">
+                          {c.boardTitle}
                         </td>
                         <td className="px-8 pr-12 py-6 text-center whitespace-nowrap">
                           <button
@@ -355,8 +395,11 @@ export default function AdminPage() {
                         key={p.id}
                         className="hover:bg-[var(--nexus-surface-low)]/50 transition-colors"
                       >
-                        <td className="px-8 py-6 text-sm font-black text-[var(--nexus-on-bg)] whitespace-nowrap">
-                          {p.title}
+                        <td 
+                          onClick={() => router.push(`/group-purchases/${p.id}`)}
+                          className="px-8 py-6 text-sm font-black text-[var(--nexus-on-bg)] whitespace-nowrap cursor-pointer hover:text-[var(--nexus-primary)] transition-colors group"
+                        >
+                          <span className="group-hover:underline">{p.title}</span>
                         </td>
                         <td className="px-8 py-6 text-sm whitespace-nowrap">
                           <span className="bg-[var(--nexus-tertiary-fixed)] text-[var(--nexus-tertiary-container)] px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter">

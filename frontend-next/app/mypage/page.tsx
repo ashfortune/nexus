@@ -13,8 +13,8 @@ interface MyPageData {
   bizNo: string | null;
   provider: string | null;
   profileImage: string | null;
-  posts: Array<{ id: string; title: string; createdAt: string }>;
-  comments: Array<{ id: string; content: string; boardTitle: string; createdAt: string }>;
+  posts: Array<{ id: string; title: string; boardType: string; createdAt: string }>;
+  comments: Array<{ id: string; content: string; boardId: string; boardTitle: string; boardType: string; createdAt: string }>;
   purchases: Array<{ id: string; title: string; status: string; createdAt: string }>;
 }
 
@@ -39,13 +39,25 @@ export default function MyPage() {
     formData.append('files', file);
 
     try {
-      const response = await api.post(`/api/v1/mypage/profile-image/${userId}`, formData);
-      const result = await response.json();
-      if (result.status === 'success') {
-        alert('프로필 이미지가 변경되었습니다.');
-        fetchData(userId!);
+      // 1단계: 실제 파일 업로드 (Supabase Storage)
+      const uploadResponse = await api.post('/api/v1/upload/profiles', formData);
+      const uploadResult = await uploadResponse.json();
+      
+      if (uploadResult.status === 'success' && uploadResult.urls && uploadResult.urls.length > 0) {
+        const imageUrl = uploadResult.urls[0];
+        
+        // 2단계: DB의 프로필 이미지 경로 업데이트
+        const response = await api.patch(`/api/v1/mypage/profile-image/${userId}`, { imageUrl });
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          alert('프로필 이미지가 변경되었습니다.');
+          fetchData(userId!);
+        } else {
+          alert(result.message || '업로드에 실패했습니다.');
+        }
       } else {
-        alert(result.message || '업로드에 실패했습니다.');
+        alert('이미지 서버 업로드에 실패했습니다.');
       }
     } catch (error) {
       console.error('Profile upload error:', error);
@@ -103,6 +115,8 @@ export default function MyPage() {
       const result = await response.json();
       if (result.status === 'success') {
         setData(result.data);
+        // 전역 상태 및 로컬 스토리지 업데이트
+        useAuthStore.getState().updateUser({ profileImage: result.data.profileImage || '' });
         localStorage.setItem('profileImage', result.data.profileImage || '');
         window.dispatchEvent(new Event('login-status-change'));
       }
@@ -161,38 +175,38 @@ export default function MyPage() {
               마이페이지
             </h1>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* 왼쪽: 프로필 카드 */}
-              <div className="lg:col-span-1">
-                <div className="nexus-card border border-[var(--nexus-outline-variant)]/30 p-8 sticky top-24 shadow-xl shadow-[var(--nexus-primary)]/5">
-                  <div className="relative group w-24 h-24 mb-6">
-                    <div className="w-full h-full bg-[var(--nexus-surface-container)] rounded-3xl flex items-center justify-center overflow-hidden shadow-inner border-2 border-white">
-                      {data.profileImage ? (
-                        <img
-                          src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${data.profileImage}`}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-4xl text-[var(--nexus-primary)] font-black">
-                          {data.nickname[0]}
-                        </span>
-                      )}
-                    </div>
-                    <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl cursor-pointer">
-                      <span className="text-xl">📷</span>
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                      />
-                    </label>
-                  </div>
-                  <h2 className="text-2xl font-black text-[var(--nexus-on-bg)] mb-1 tracking-tight">
-                    {data.nickname}
-                  </h2>
-                  <p className="text-[var(--nexus-outline)] text-sm mb-6 font-medium">{data.email}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* 왼쪽: 프로필 카드 */}
+          <div className="lg:col-span-1">
+            <div className="nexus-card border border-[var(--nexus-outline-variant)]/30 p-8 sticky top-24 shadow-xl shadow-[var(--nexus-primary)]/5">
+              <div className="relative group w-24 h-24 mb-6">
+                <div className="w-full h-full bg-[var(--nexus-surface-container)] rounded-3xl flex items-center justify-center overflow-hidden shadow-inner border-2 border-white">
+                  {data.profileImage ? (
+                    <img
+                      src={data.profileImage.startsWith('http') ? data.profileImage : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${data.profileImage}`}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-4xl text-[var(--nexus-primary)] font-black">
+                      {data.nickname[0]}
+                    </span>
+                  )}
+                </div>
+                <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl cursor-pointer">
+                  <span className="text-xl">📷</span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                  />
+                </label>
+              </div>
+              <h2 className="text-2xl font-black text-[var(--nexus-on-bg)] mb-1 tracking-tight">
+                {data.nickname}
+              </h2>
+              <p className="text-[var(--nexus-outline)] text-sm mb-6 font-medium">{data.email}</p>
 
                   <div className="space-y-4 pt-6 border-t border-[var(--nexus-outline-variant)]/30">
                     <div className="flex justify-between items-center">
@@ -314,104 +328,68 @@ export default function MyPage() {
                 </div>
               </div>
 
-              {/* 오른쪽: 활동 내역 */}
-              <div className="lg:col-span-2">
-                <div className="nexus-card border border-[var(--nexus-outline-variant)]/30 overflow-hidden shadow-xl shadow-[var(--nexus-primary)]/5">
-                  <div className="flex bg-[var(--nexus-surface-low)]/50 border-b border-[var(--nexus-outline-variant)]/30">
-                    {(['posts', 'comments', 'purchases'] as const).map((tab) => (
-                      <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`flex-1 py-5 text-sm font-black transition-all ${activeTab === tab
-                          ? 'text-[var(--nexus-primary)] bg-[var(--nexus-surface-lowest)] border-b-2 border-[var(--nexus-primary)]'
-                          : 'text-[var(--nexus-outline)] hover:text-[var(--nexus-on-bg)] hover:bg-[var(--nexus-surface-low)]'
-                          }`}
-                      >
-                        {tab === 'posts'
-                          ? '내 게시글'
-                          : tab === 'comments'
-                            ? '내 댓글'
-                            : '참여 공동구매'}
-                      </button>
-                    ))}
-                  </div>
+              <div className="p-8 min-h-[400px]">
+                {activeTab === 'posts' && (
+                  <div className="space-y-3">
+                    {data.posts.length > 0 ? (
+                      data.posts.map((post, idx) => (
+                        <div
+                          key={`${post.id}-${idx}`}
+                          onClick={() => router.push(`/${post.boardType || 'board'}/detail/${post.id}`)}
+                          className="flex justify-between items-center p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)] cursor-pointer group"
+                        >
+                          <span className="font-bold text-[var(--nexus-on-bg)] group-hover:text-[var(--nexus-primary)] transition-colors">{post.title}</span>
+                          <span className="text-[10px] font-bold text-[var(--nexus-outline)] uppercase">
+                            {new Date(post.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-20 text-center text-[var(--nexus-outline)] font-medium">
+                        작성한 게시글이 없습니다.
+                      </div>
+                    )}
 
-                  <div className="p-8 min-h-[400px]">
-                    {activeTab === 'posts' && (
-                      <div className="space-y-3">
-                        {data.posts.length > 0 ? (
-                          data.posts.map((post, idx) => (
-                            <div
-                              key={`${post.id}-${idx}`}
-                              className="flex justify-between items-center p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)]"
-                            >
-                              <span className="font-bold text-[var(--nexus-on-bg)]">{post.title}</span>
-                              <span className="text-[10px] font-bold text-[var(--nexus-outline)] uppercase">
-                                {new Date(post.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="py-20 text-center text-[var(--nexus-outline)] font-medium">
-                            작성한 게시글이 없습니다.
+                {activeTab === 'comments' && (
+                  <div className="space-y-3">
+                    {data.comments.length > 0 ? (
+                      data.comments.map((comment, idx) => (
+                        <div
+                          key={`${comment.id}-${idx}`}
+                          onClick={() => router.push(`/${comment.boardType || 'board'}/detail/${comment.boardId}`)}
+                          className="p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)] cursor-pointer group"
+                        >
+                          <p className="text-[var(--nexus-on-bg)] font-bold mb-2 group-hover:text-[var(--nexus-primary)] transition-colors">
+                            {comment.content}
+                          </p>
+                          <div className="flex justify-between items-center">
+                            <span className="text-[11px] font-bold text-[var(--nexus-secondary)] bg-[var(--nexus-secondary)]/5 px-2 py-1 rounded-lg">
+                              원문: {comment.boardTitle}
+                            </span>
+                            <span className="text-[10px] font-bold text-[var(--nexus-outline)]">
+                              {new Date(comment.createdAt).toLocaleDateString()}
+                            </span>
                           </div>
                         )}
                       </div>
                     )}
 
-                    {activeTab === 'comments' && (
-                      <div className="space-y-3">
-                        {data.comments.length > 0 ? (
-                          data.comments.map((comment, idx) => (
-                            <div
-                              key={`${comment.id}-${idx}`}
-                              className="p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)]"
-                            >
-                              <p className="text-[var(--nexus-on-bg)] font-bold mb-2">
-                                {comment.content}
-                              </p>
-                              <div className="flex justify-between items-center">
-                                <span className="text-[11px] font-bold text-[var(--nexus-secondary)] bg-[var(--nexus-secondary)]/5 px-2 py-1 rounded-lg">
-                                  원문: {comment.boardTitle}
-                                </span>
-                                <span className="text-[10px] font-bold text-[var(--nexus-outline)]">
-                                  {new Date(comment.createdAt).toLocaleDateString()}
-                                </span>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="py-20 text-center text-[var(--nexus-outline)] font-medium">
-                            작성한 댓글이 없습니다.
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {activeTab === 'purchases' && (
-                      <div className="space-y-3">
-                        {data.purchases.length > 0 ? (
-                          data.purchases.map((purchase, idx) => (
-                            <div
-                              key={`${purchase.id}-${idx}`}
-                              className="flex justify-between items-center p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)]"
-                            >
-                              <div>
-                                <span className="font-bold text-[var(--nexus-on-bg)] block mb-1">
-                                  {purchase.title}
-                                </span>
-                                <span className="text-[9px] bg-[var(--nexus-tertiary-fixed)] text-[var(--nexus-tertiary-container)] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">
-                                  {purchase.status}
-                                </span>
-                              </div>
-                              <span className="text-[10px] font-bold text-[var(--nexus-outline)]">
-                                {new Date(purchase.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="py-20 text-center text-[var(--nexus-outline)] font-medium">
-                            참여한 공동구매가 없습니다.
+                {activeTab === 'purchases' && (
+                  <div className="space-y-3">
+                    {data.purchases.length > 0 ? (
+                      data.purchases.map((purchase, idx) => (
+                        <div
+                          key={`${purchase.id}-${idx}`}
+                          onClick={() => router.push(`/group-purchases/${purchase.id}`)}
+                          className="flex justify-between items-center p-5 bg-[var(--nexus-surface-low)]/30 hover:bg-[var(--nexus-surface-low)] rounded-2xl transition-all border border-[var(--nexus-outline-variant)]/20 hover:border-[var(--nexus-outline-variant)] cursor-pointer group"
+                        >
+                          <div>
+                            <span className="font-bold text-[var(--nexus-on-bg)] block mb-1 group-hover:text-[var(--nexus-primary)] transition-colors">
+                              {purchase.title}
+                            </span>
+                            <span className="text-[9px] bg-[var(--nexus-tertiary-fixed)] text-[var(--nexus-tertiary-container)] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">
+                              {purchase.status}
+                            </span>
                           </div>
                         )}
                       </div>

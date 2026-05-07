@@ -25,6 +25,7 @@ public class MyPageResponseDto {
     public static class MyPostDto {
         private String id;
         private String title;
+        private String boardType; // board, region-board, industry-board
         private LocalDateTime createdAt;
     }
 
@@ -32,7 +33,9 @@ public class MyPageResponseDto {
     public static class MyCommentDto {
         private String id;
         private String content;
+        private String boardId;
         private String boardTitle;
+        private String boardType; // board, region-board, industry-board
         private LocalDateTime createdAt;
     }
 

@@ -30,7 +30,7 @@ public class ChatFileController {
             String cleanPath = fileName.startsWith("/") ? fileName.substring(1) : fileName;
             // 프로젝트 루트 기준 uploads 폴더와 결합
             Path path = Paths.get("uploads").resolve(cleanPath).normalize();
-            
+
             log.info("Attempting to display file: {}", path.toAbsolutePath());
 
             Resource resource = new UrlResource(path.toUri());
@@ -38,11 +38,15 @@ public class ChatFileController {
             if (resource.exists() || resource.isReadable()) {
                 String contentType = "application/octet-stream";
                 String name = path.getFileName().toString().toLowerCase();
-                
-                if (name.endsWith(".png")) contentType = "image/png";
-                else if (name.endsWith(".jpg") || name.endsWith(".jpeg")) contentType = "image/jpeg";
-                else if (name.endsWith(".gif")) contentType = "image/gif";
-                else if (name.endsWith(".webp")) contentType = "image/webp";
+
+                if (name.endsWith(".png"))
+                    contentType = "image/png";
+                else if (name.endsWith(".jpg") || name.endsWith(".jpeg"))
+                    contentType = "image/jpeg";
+                else if (name.endsWith(".gif"))
+                    contentType = "image/gif";
+                else if (name.endsWith(".webp"))
+                    contentType = "image/webp";
 
                 return ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_TYPE, contentType)
@@ -63,7 +67,7 @@ public class ChatFileController {
         try {
             String cleanPath = fileName.startsWith("/") ? fileName.substring(1) : fileName;
             Path path = Paths.get("uploads").resolve(cleanPath).normalize();
-            
+
             log.info("Attempting to download file: {}", path.toAbsolutePath());
 
             Resource resource = new UrlResource(path.toUri());

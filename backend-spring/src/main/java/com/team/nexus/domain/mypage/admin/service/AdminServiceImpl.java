@@ -12,6 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
+import com.team.nexus.global.entity.Board;
+import com.team.nexus.global.entity.Comment;
+import com.team.nexus.global.entity.User;
 
 @Slf4j
 @Service
@@ -21,13 +25,17 @@ public class AdminServiceImpl implements AdminService {
         private final UserRepository userRepository;
         private final GroupPurchaseRepository groupPurchaseRepository;
         private final ChatRoomRepository chatRoomRepository;
+        private final com.team.nexus.domain.board.repository.BoardRepository boardRepository;
+        private final com.team.nexus.domain.comment.repository.CommentRepository commentRepository;
         private final jakarta.persistence.EntityManager entityManager;
 
         @Override
         @Transactional(readOnly = true)
         public AdminDashboardDto getDashboardData() {
+                Sort sortByCreatedAt = Sort.by(Sort.Direction.DESC, "createdAt");
+                
                 return AdminDashboardDto.builder()
-                                .users(userRepository.findAll().stream()
+                                .users(userRepository.findAll(sortByCreatedAt).stream()
                                                 .map(u -> AdminDashboardDto.UserSummaryDto.builder()
                                                                 .id(u.getId().toString())
                                                                 .email(u.getEmail())
@@ -40,9 +48,52 @@ public class AdminServiceImpl implements AdminService {
                                                                                 && u.getIsSuspended())
                                                                 .build())
                                                 .collect(Collectors.toList()))
-                                .boards(java.util.List.of())
-                                .comments(java.util.List.of())
-                                .purchases(groupPurchaseRepository.findAll().stream()
+                                .boards(boardRepository.findAll(sortByCreatedAt).stream()
+                                                .map(b -> {
+                                                        String type = "일반";
+                                                        if (b.getRegionName() != null && !b.getRegionName().isEmpty()) {
+                                                                type = "지역 (" + b.getRegionName() + ")";
+                                                        } else if (b.getIndustryCategory() != null) {
+                                                                type = "업종 (" + b.getIndustryCategory().getName() + ")";
+                                                        } else if (b.getCategoryName() != null) {
+                                                                type = b.getCategoryName();
+                                                        }
+
+                                                        return AdminDashboardDto.BoardSummaryDto.builder()
+                                                                        .id(b.getId().toString())
+                                                                        .title(b.getTitle())
+                                                                        .authorNickname(b.getUser() != null ? b.getUser().getNickname() : "알 수 없음")
+                                                                        .boardType(type)
+                                                                        .createdAt(b.getCreatedAt())
+                                                                        .build();
+                                                })
+                                                .collect(Collectors.toList()))
+                                .comments(commentRepository.findAll(sortByCreatedAt).stream()
+                                                .map(c -> {
+                                                        String type = "일반";
+                                                        Board b = c.getBoard();
+                                                        if (b != null) {
+                                                                if (b.getRegionName() != null && !b.getRegionName().isEmpty()) {
+                                                                        type = "지역 (" + b.getRegionName() + ")";
+                                                                } else if (b.getIndustryCategory() != null) {
+                                                                        type = "업종 (" + b.getIndustryCategory().getName() + ")";
+                                                                } else if (b.getCategoryName() != null) {
+                                                                        type = b.getCategoryName();
+                                                                }
+                                                        }
+
+                                                        return AdminDashboardDto.CommentSummaryDto.builder()
+                                                                        .id(c.getId().toString())
+                                                                        .content(c.getContent())
+                                                                        .authorNickname(c.getUser() != null ? c.getUser().getNickname() : "알 수 없음")
+                                                                        .boardTitle(b != null ? b.getTitle() : "삭제된 게시글")
+                                                                        .boardId(b != null ? b.getId().toString() : null)
+                                                                        .boardType(type)
+                                                                        .createdAt(c.getCreatedAt())
+                                                                        .build();
+                                                })
+                                                .collect(Collectors.toList()))
+                                .purchases(groupPurchaseRepository.findAll(Sort.by(Sort.Direction.DESC, "startDate")).stream()
                                                 .map(p -> AdminDashboardDto.PurchaseSummaryDto.builder()
                                                                 .id(p.getId().toString())
                                                                 .title(p.getTitle())
@@ -51,7 +102,7 @@ public class AdminServiceImpl implements AdminService {
                                                                 .createdAt(p.getStartDate())
                                                                 .build())
                                                 .collect(Collectors.toList()))
-                                .chatRooms(chatRoomRepository.findAll().stream()
+                                .chatRooms(chatRoomRepository.findAll(sortByCreatedAt).stream()
                                                 .map(cr -> AdminDashboardDto.ChatRoomSummaryDto.builder()
                                                                 .id(cr.getId().toString())
                                                                 .title(cr.getTitle())
@@ -84,11 +135,22 @@ public class AdminServiceImpl implements AdminService {
                                         .getResultList();
 
                         // 2. 발견된 모든 하위 테이블에서 해당 게시글 관련 데이터 선제적 삭제
+                        // (댓글의 경우 대댓글 제약조건 때문에 더 신중하게 처리해야 함)
                         for (Object[] row : results) {
                                 String tableName = (String) row[0];
                                 String columnName = (String) row[1];
 
                                 log.info("Cleaning up referencing table: {} (column: {})", tableName, columnName);
+                                
+                                // 댓글 테이블인 경우 대댓글(self-reference) 관계를 먼저 끊어줘야 함
+                                if ("comments".equals(tableName)) {
+                                        log.info("Special cleanup for comments: clearing parent_comment_id first");
+                                        String clearParentSql = "UPDATE comments SET parent_comment_id = NULL WHERE board_id = :boardId";
+                                        entityManager.createNativeQuery(clearParentSql)
+                                                        .setParameter("boardId", boardId)
+                                                        .executeUpdate();
+                                }
+
                                 String deleteSql = String.format("DELETE FROM %s WHERE %s = :boardId", tableName,
                                                 columnName);
                                 entityManager.createNativeQuery(deleteSql)
@@ -97,7 +159,7 @@ public class AdminServiceImpl implements AdminService {
                         }
 
                         // 3. 모든 방해 요소 제거 후 메인 게시글 삭제
-                        // boardRepository.deleteById(boardId);
+                        boardRepository.deleteById(boardId);
                         log.info("Successfully deleted board: {}", boardId);
 
                 } catch (Exception e) {
@@ -109,7 +171,7 @@ public class AdminServiceImpl implements AdminService {
         @Override
         @Transactional
         public void deleteComment(UUID commentId) {
-                // commentRepository.deleteById(commentId);
+                commentRepository.deleteById(commentId);
         }
 
         @Override

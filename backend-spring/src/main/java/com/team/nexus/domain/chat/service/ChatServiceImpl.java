@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -138,15 +138,20 @@ public class ChatServiceImpl implements ChatService {
             room.setLastMessageAt(LocalDateTime.now());
             chatRoomRepository.save(room);
 
+            // 발신자 프로필 이미지 조회
+            User sender = userRepository.findById(savedMessage.getUserId()).orElse(null);
+            String profileImageUrl = (sender != null && sender.getProfileImage() != null) ? sender.getProfileImage() : "";
+
             return ChatMessageResponseDto.builder()
                     .roomId(savedMessage.getRoomId())
                     .senderId(savedMessage.getUserId())
                     .senderNickname(savedMessage.getSenderNickname())
-                    .senderProfileImageUrl("")
+                    .senderProfileImageUrl(profileImageUrl)
                     .message(savedMessage.getContent())
                     .type(savedMessage.getType())
                     .fileUrl(savedMessage.getFileUrl())
                     .fileName(savedMessage.getFileName())
+                    .participantCount(chatParticipantRepository.countByRoomId(messageDto.getRoomId()))
                     .createdAt(LocalDateTime.now())
                     .build();
         } catch (Exception e) {
@@ -165,13 +170,26 @@ public class ChatServiceImpl implements ChatService {
                     .map(ChatParticipant::getJoinedAt)
                     .orElse(LocalDateTime.MIN);
             
-            return chatMessageRepository.findByRoomIdAndCreatedAtAfterOrderByCreatedAtAsc(roomId, joinedAt)
-                    .stream()
+            List<ChatMessage> messages = chatMessageRepository.findByRoomIdAndCreatedAtAfterOrderByCreatedAtAsc(roomId, joinedAt);
+            
+            // 발신자들의 프로필 이미지 미리 조회 (N+1 방지)
+            Set<UUID> userIds = messages.stream()
+                    .map(ChatMessage::getUserId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            
+            Map<UUID, String> profileImageMap = userRepository.findAllById(userIds).stream()
+                    .collect(Collectors.toMap(
+                            User::getId, 
+                            u -> u.getProfileImage() != null ? u.getProfileImage() : ""
+                    ));
+            
+            return messages.stream()
                     .map(msg -> ChatMessageResponseDto.builder()
                             .roomId(roomId)
                             .senderId(msg.getUserId())
                             .senderNickname(msg.getSenderNickname() != null ? msg.getSenderNickname() : "익명")
-                            .senderProfileImageUrl("") 
+                            .senderProfileImageUrl(profileImageMap.getOrDefault(msg.getUserId(), "")) 
                             .message(msg.getContent())
                             .type(msg.getType())
                             .fileUrl(msg.getFileUrl())
@@ -208,15 +226,16 @@ public class ChatServiceImpl implements ChatService {
     public void leaveRoom(UUID roomId, UUID userId) {
         log.info("Leaving chat room: roomId={}, userId={}", roomId, userId);
         
-        // 시스템 메시지 발송 (퇴장)
         User user = userRepository.findById(userId).orElse(null);
-        if (user != null) {
-            sendSystemMessage(roomId, userId, user.getNickname(), user.getNickname() + "님이 퇴장하셨습니다.", ChatMessage.MessageType.LEAVE);
-        }
+        String nickname = user != null ? user.getNickname() : "익명";
 
+        // 1. 먼저 참여자 목록에서 삭제
         chatParticipantRepository.deleteByRoomIdAndUserId(roomId, userId);
         
-        // 참가자가 0명이면 방 삭제
+        // 2. 시스템 메시지 발송 (퇴장) - 삭제 후에 보내야 인원수가 정확히 반영됨
+        sendSystemMessage(roomId, userId, nickname, nickname + "님이 퇴장하셨습니다.", ChatMessage.MessageType.LEAVE);
+        
+        // 3. 참가자가 0명이면 방 삭제
         long participantCount = chatParticipantRepository.countByRoomId(roomId);
         if (participantCount == 0) {
             log.info("Room is empty. Deleting room: id={}", roomId);
@@ -251,6 +270,7 @@ public class ChatServiceImpl implements ChatService {
         // 참여 중이지 않은 유저들 조회
         if (participantIds.isEmpty()) {
             return userRepository.findAll().stream()
+                    .filter(user -> user.getDeletedAt() == null) // 탈퇴 회원 제외
                     .map(user -> com.team.nexus.domain.auth.dto.UserSummaryDto.builder()
                             .id(user.getId())
                             .nickname(user.getNickname())
@@ -260,6 +280,7 @@ public class ChatServiceImpl implements ChatService {
         }
 
         return userRepository.findAll().stream()
+                .filter(user -> user.getDeletedAt() == null) // 탈퇴 회원 제외
                 .filter(user -> !participantIds.contains(user.getId()))
                 .map(user -> com.team.nexus.domain.auth.dto.UserSummaryDto.builder()
                         .id(user.getId())
@@ -273,6 +294,20 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public void inviteUsers(UUID roomId, List<UUID> userIds) {
         log.info("Inviting users to room: roomId={}, userCount={}", roomId, userIds.size());
+        
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("방을 찾을 수 없습니다."));
+
+        // 1:1 채팅방은 2명까지만 가능하므로 초대 제한
+        if (chatRoom.getType() == ChatRoom.ChatRoomType.PRIVATE) {
+            long currentCount = chatParticipantRepository.countByRoomId(roomId);
+            if (currentCount >= 2) {
+                throw new IllegalStateException("1:1 채팅방은 더 이상 초대할 수 없습니다.");
+            }
+            if (currentCount + userIds.size() > 2) {
+                throw new IllegalStateException("1:1 채팅방은 최대 2명까지만 참여 가능합니다.");
+            }
+        }
         
         for (UUID userId : userIds) {
             if (!chatParticipantRepository.existsByRoomIdAndUserId(roomId, userId)) {
@@ -303,12 +338,18 @@ public class ChatServiceImpl implements ChatService {
         
         chatMessageRepository.save(chatMessage);
         
+        // 발신자 프로필 이미지 조회
+        User user = userRepository.findById(userId).orElse(null);
+        String profileImageUrl = (user != null && user.getProfileImage() != null) ? user.getProfileImage() : "";
+
         ChatMessageResponseDto responseDto = ChatMessageResponseDto.builder()
                 .roomId(roomId)
                 .senderId(userId)
-                .senderNickname("시스템")
+                .senderNickname(nickname)
+                .senderProfileImageUrl(profileImageUrl)
                 .message(content)
                 .type(type)
+                .participantCount(chatParticipantRepository.countByRoomId(roomId))
                 .createdAt(LocalDateTime.now())
                 .build();
         

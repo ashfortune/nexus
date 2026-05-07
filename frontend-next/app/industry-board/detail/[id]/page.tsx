@@ -231,7 +231,10 @@ export default function IndustryBoardDetailPage() {
     try {
       const response = await api.post(`/api/v1/comments/report/${commentId}`);
       const result = await response.json();
-      if (result.status === "success") alert("신고가 접수되었습니다.");
+      if (result.status === "success") {
+        alert(result.message);
+        fetchComments();
+      }
     } catch (error) {
       console.error("Failed to report comment:", error);
     }
@@ -323,7 +326,7 @@ export default function IndustryBoardDetailPage() {
           <div className="p-8 md:p-14">
             <header className="mb-14 pb-14 border-b border-zinc-50">
               <div className="flex items-center gap-3 mb-8">
-                <span className="px-3 py-1 bg-[var(--nexus-primary-container)] text-[var(--nexus-primary)] text-[10px] font-black uppercase tracking-widest rounded-full">
+                <span className="px-3 py-1 bg-[var(--nexus-surface-container)] text-[var(--nexus-primary)] text-[10px] font-black uppercase tracking-widest rounded-full">
                   <Briefcase className="w-3 h-3 inline-block mr-1 -mt-0.5" />
                   {post.industryCategoryName}
                 </span>
@@ -346,7 +349,7 @@ export default function IndustryBoardDetailPage() {
 
               <div className="flex flex-wrap items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center border border-zinc-50 transition-colors">
+                  <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center border border-zinc-50 group-hover:bg-[var(--nexus-surface-container)] transition-colors">
                     <User className="w-6 h-6 text-[var(--nexus-primary)]" />
                   </div>
                   <div>
@@ -636,7 +639,7 @@ function CommentItem({
   onSetEditCommentContent,
   onUpdate
 }: any) {
-  const isDeleted = comment.content === "삭제된 댓글입니다.";
+  const isDeleted = comment.content === "삭제된 댓글입니다." || comment.content === "신고 누적으로 삭제된 댓글입니다." || comment.reportCount >= 3;
   const myUserId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
   const isMine = comment.authorId?.toLowerCase() === myUserId?.toLowerCase();
 
@@ -734,7 +737,7 @@ function CommentItem({
                 "text-[15px] md:text-[16px] font-medium leading-relaxed whitespace-pre-wrap", 
                 isDeleted ? "text-zinc-300 italic" : "text-zinc-700"
               )}>
-                {comment.content}
+                {isDeleted ? "신고 누적으로 삭제된 댓글입니다." : comment.content}
               </p>
             )}
 

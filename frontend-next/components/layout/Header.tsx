@@ -185,7 +185,7 @@ export default function Header() {
                   >
                     {user?.profileImage ? (
                       <img
-                        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${user.profileImage}`}
+                        src={user.profileImage.startsWith('http') ? user.profileImage : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${user.profileImage}`}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />

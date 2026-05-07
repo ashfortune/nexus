@@ -15,15 +15,15 @@ public class ExpertAiClient {
 
     private final WebClient webClient;
 
-    public ExpertAiClient(WebClient.Builder webClientBuilder, 
-                          @Value("${fastapi.url:http://localhost:8000}") String fastApiUrl) {
+    public ExpertAiClient(WebClient.Builder webClientBuilder,
+            @Value("http://localhost:8000") String fastApiUrl) {
         this.webClient = webClientBuilder.baseUrl(fastApiUrl).build();
     }
 
     /**
      * FastAPI 서버에 전문가 매칭 요청을 보냅니다.
      * 
-     * @param categoryId 산업군 카테고리 ID
+     * @param categoryId     산업군 카테고리 ID
      * @param requestContent 사용자 요청 내용
      * @return 매칭 결과 (전문가 목록 및 추천 사유)
      */
@@ -31,9 +31,8 @@ public class ExpertAiClient {
         return this.webClient.post()
                 .uri("/api/v1/ai/experts/match")
                 .bodyValue(Map.of(
-                    "industry_category_id", categoryId,
-                    "request_content", requestContent
-                ))
+                        "industry_category_id", categoryId,
+                        "request_content", requestContent))
                 .retrieve()
                 .bodyToMono(Map.class);
     }

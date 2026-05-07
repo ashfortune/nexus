@@ -94,7 +94,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public void reportComment(UUID commentId) {
+    public int reportComment(UUID commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
         
@@ -106,13 +106,20 @@ public class CommentServiceImpl implements CommentService {
             comment.setContent("신고 누적으로 삭제된 댓글입니다.");
         }
         
-        commentRepository.save(comment);
+        // 변경 사항 즉시 반영
+        commentRepository.saveAndFlush(comment);
+        return newCount;
     }
 
     private CommentResponseDto convertToDto(Comment comment) {
+        String content = comment.getContent();
+        if (comment.getReportCount() >= 3) {
+            content = "신고 누적으로 삭제된 댓글입니다.";
+        }
+
         return CommentResponseDto.builder()
                 .id(comment.getId())
-                .content(comment.getContent())
+                .content(content)
                 .author(comment.getUser() != null ? comment.getUser().getNickname() : "알 수 없음")
                 .authorId(comment.getUser() != null ? comment.getUser().getId() : null)
                 .createdAt(comment.getCreatedAt())

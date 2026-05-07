@@ -300,7 +300,7 @@ export default function GroupBuyCreatePage() {
         const uploadFormData = new FormData();
         uploadFormData.append('files', selectedFile);
 
-        const uploadRes = await api.post('/api/v1/group-purchases/files/upload', uploadFormData, {
+        const uploadRes = await api.post('/api/v1/upload/purchase', uploadFormData, {
           headers: {} // Let browser handle boundary
         });
 

@@ -191,7 +191,7 @@ export default function GroupBuyDetailPage() {
               <img
                 src={
                   gb.imageUrl 
-                    ? (gb.imageUrl.startsWith('http') ? gb.imageUrl : `http://localhost:8080${gb.imageUrl}`)
+                    ? (gb.imageUrl.startsWith('http') ? gb.imageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${gb.imageUrl}`)
                     : 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1200&auto=format&fit=crop'
                 }
                 alt={gb.itemName}

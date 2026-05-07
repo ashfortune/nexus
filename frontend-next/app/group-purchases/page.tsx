@@ -60,23 +60,23 @@ export default function GroupBuyListPage() {
 
   const regions = [
     '전체',
-    '서울',
-    '경기',
-    '인천',
-    '부산',
-    '대구',
-    '광주',
-    '대전',
-    '울산',
-    '세종',
-    '강원',
-    '충북',
-    '충남',
-    '전북',
-    '전남',
-    '경북',
-    '경남',
-    '제주',
+    '서울특별시',
+    '경기도',
+    '인천광역시',
+    '부산광역시',
+    '대구광역시',
+    '광주광역시',
+    '대전광역시',
+    '울산광역시',
+    '세종특별자치시',
+    '강원특별자치도',
+    '충청북도',
+    '충청남도',
+    '전북특별자치도',
+    '전라남도',
+    '경상북도',
+    '경상남도',
+    '제주특별자치도',
   ];
 
   const filteredGroupBuys = groupBuys;
@@ -191,7 +191,7 @@ export default function GroupBuyListPage() {
                     <img
                       src={
                         gb.imageUrl 
-                          ? (gb.imageUrl.startsWith('http') ? gb.imageUrl : `http://localhost:8080${gb.imageUrl}`)
+                          ? (gb.imageUrl.startsWith('http') ? gb.imageUrl : `${(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '')}${gb.imageUrl}`)
                           : 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=800&auto=format&fit=crop'
                       }
                       alt={gb.itemName}

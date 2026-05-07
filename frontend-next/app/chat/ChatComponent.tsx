@@ -16,7 +16,6 @@ import {
   Video,
   Info,
   ChevronLeft,
-  Smile,
   Paperclip,
   ImageIcon,
   MessageSquare,
@@ -92,6 +91,7 @@ const ChatComponent = () => {
   const [inviteCandidates, setInviteCandidates] = useState<UserSummary[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [isInviting, setIsInviting] = useState(false);
+  const [candidateSearchQuery, setCandidateSearchQuery] = useState(''); // 초대 검색용 추가
   const [roomSearchQuery, setRoomSearchQuery] = useState('');
   const [isMsgSearchOpen, setIsMsgSearchOpen] = useState(false);
   const [msgSearchQuery, setMsgSearchQuery] = useState('');
@@ -171,14 +171,15 @@ const ChatComponent = () => {
         const errorData = await response.json().catch(() => ({}));
         alert(errorData.message || '비밀번호가 틀렸거나 입장에 실패했습니다.');
       }
-    } catch (error) {
-      console.error('Failed to join room:', error);
+    } catch (error: any) {
+      console.warn('Chat join notice:', error.message);
+      alert(error.message || '비밀번호가 틀렸거나 입장에 실패했습니다.');
     }
   };
 
   const handleLeaveRoom = () => {
     const activeRoom = rooms.find((r) => r.id === activeRoomId);
-    if (!activeRoom || activeRoom.type !== 'GROUP') return;
+    if (!activeRoom) return;
     setLeaveModalOpen(true);
   };
 
@@ -232,6 +233,7 @@ const ChatComponent = () => {
                       ? '(파일)'
                       : message.message,
                 lastMessageAt: message.createdAt,
+                participantCount: message.participantCount !== undefined ? message.participantCount : room.participantCount
               };
             }
             return room;
@@ -362,6 +364,7 @@ const ChatComponent = () => {
         alert('성공적으로 초대되었습니다.');
         setIsInviteModalOpen(false);
         setSelectedUserIds([]);
+        setCandidateSearchQuery('');
         // 참가자 수 업데이트를 위해 내 방 목록 다시 불러오기
         if (currentUserId) fetchMyRooms(currentUserId);
       } else {
@@ -417,6 +420,24 @@ const ChatComponent = () => {
     return null;
   };
 
+  const handleDownload = async (url: string, fileName: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      window.open(url, '_blank');
+    }
+  };
+
   const handleFileMessageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activeRoomId || !currentUserId || !chatServiceRef.current) {
@@ -428,14 +449,14 @@ const ChatComponent = () => {
 
     try {
       console.log('Uploading file...');
-      const response = await api.post('/api/v1/chat/files/upload', formData, {
+      const response = await api.post('/api/v1/upload/chat', formData, {
         params: { category: 'chat-messages' },
         headers: {}
       });
 
       if (response.ok) {
         const data = await response.json();
-        const fileUrl = data.url;
+        const fileUrl = data.urls[0];
         const fileName = file.name;
         const isImage = file.type.startsWith('image/');
 
@@ -580,7 +601,7 @@ const ChatComponent = () => {
                 >
                   {room.imageUrl ? (
                     <img
-                      src={room.imageUrl.startsWith('http') ? room.imageUrl : `http://localhost:8080${room.imageUrl}`}
+                      src={room.imageUrl.startsWith('http') ? room.imageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${room.imageUrl}`}
                       alt={room.title}
                       className="w-full h-full object-cover"
                     />
@@ -664,7 +685,7 @@ const ChatComponent = () => {
                 <div className="w-10 h-10 bg-[var(--nexus-surface-low)] rounded-xl flex items-center justify-center font-bold text-[var(--nexus-primary)] overflow-hidden border border-[var(--nexus-surface-container)]">
                   {activeRoom.imageUrl ? (
                     <img
-                      src={activeRoom.imageUrl.startsWith('http') ? activeRoom.imageUrl : `http://localhost:8080${activeRoom.imageUrl}`}
+                      src={activeRoom.imageUrl.startsWith('http') ? activeRoom.imageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${activeRoom.imageUrl}`}
                       alt={activeRoom.title}
                       className="w-full h-full object-cover"
                     />
@@ -720,29 +741,28 @@ const ChatComponent = () => {
                   <Search size={20} />
                 </button>
 
-                {rooms.find((r) => r.id === activeRoomId)?.type === 'GROUP' && (
-                  <>
-                    <button
-                      onClick={fetchInviteCandidates}
-                      className="p-2.5 rounded-xl text-[var(--nexus-primary)] hover:bg-[var(--nexus-surface-low)] transition-all flex items-center gap-2 group"
-                      title="멤버 초대하기"
-                    >
-                      <UserPlus size={20} className="group-hover:scale-110 transition-transform" />
-                      <span className="text-xs font-bold hidden sm:inline">초대</span>
-                    </button>
-                    <button
-                      onClick={() => setLeaveModalOpen(true)}
-                      className="p-2.5 rounded-xl text-[var(--nexus-error)] hover:bg-red-50/10 transition-all flex items-center gap-2 group"
-                      title="방 나가기"
-                    >
-                      <LogOut
-                        size={20}
-                        className="group-hover:translate-x-1 transition-transform"
-                      />
-                      <span className="text-xs font-bold hidden sm:inline">나가기</span>
-                    </button>
-                  </>
+                {!(rooms.find((r) => r.id === activeRoomId)?.type === 'PRIVATE' && (rooms.find((r) => r.id === activeRoomId)?.participantCount || 0) >= 2) && (
+                  <button
+                    onClick={fetchInviteCandidates}
+                    className="p-2.5 rounded-xl text-[var(--nexus-primary)] hover:bg-[var(--nexus-surface-low)] transition-all flex items-center gap-2 group"
+                    title="멤버 초대하기"
+                  >
+                    <UserPlus size={20} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-bold hidden sm:inline">초대</span>
+                  </button>
                 )}
+                
+                <button
+                  onClick={handleLeaveRoom}
+                  className="p-2.5 rounded-xl text-[var(--nexus-error)] hover:bg-red-50/10 transition-all flex items-center gap-2 group"
+                  title="방 나가기"
+                >
+                  <LogOut
+                    size={20}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
+                  <span className="text-xs font-bold hidden sm:inline">나가기</span>
+                </button>
                 <button className="p-2.5 rounded-xl text-[var(--nexus-outline)] hover:bg-[var(--nexus-surface-low)] transition-all">
                   <Info size={20} />
                 </button>
@@ -803,7 +823,7 @@ const ChatComponent = () => {
                         >
                           {msg.senderProfileImageUrl ? (
                             <img
-                              src={msg.senderProfileImageUrl.startsWith('http') ? msg.senderProfileImageUrl : `http://localhost:8080${msg.senderProfileImageUrl}`}
+                              src={msg.senderProfileImageUrl.startsWith('http') ? msg.senderProfileImageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${msg.senderProfileImageUrl}`}
                               alt={msg.senderNickname}
                               className="w-full h-full object-cover"
                             />
@@ -834,10 +854,10 @@ const ChatComponent = () => {
                           {msg.type === 'IMAGE' && msg.fileUrl ? (
                             <div className="flex flex-col">
                               <img
-                                src={msg.fileUrl.startsWith('http') ? msg.fileUrl : `http://localhost:8080${msg.fileUrl}`}
+                                src={msg.fileUrl.startsWith('http') ? msg.fileUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${msg.fileUrl}`}
                                 alt="Shared Image"
                                 className="w-full max-h-[300px] object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                onClick={() => setSelectedImageUrl(msg.fileUrl!.startsWith('http') ? msg.fileUrl! : `http://localhost:8080${msg.fileUrl}`)}
+                                onClick={() => setSelectedImageUrl(msg.fileUrl!.startsWith('http') ? msg.fileUrl! : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${msg.fileUrl}`)}
                               />
                               <div className="px-4 py-2 text-[11px] opacity-70">{msg.message}</div>
                             </div>
@@ -848,13 +868,17 @@ const ChatComponent = () => {
                               </div>
                               <div className="flex-1 truncate">
                                 <p className="text-xs font-bold truncate">{msg.fileName}</p>
-                                <a
-                                  href={msg.fileUrl?.replace('/display/', '/download/')}
-                                  download={msg.fileName}
+                                <button
+                                  onClick={() => {
+                                    const url = msg.fileUrl?.startsWith('http') 
+                                      ? msg.fileUrl 
+                                      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${msg.fileUrl}`.replace('/display/', '/download/');
+                                    handleDownload(url, msg.fileName || 'download');
+                                  }}
                                   className="text-[10px] text-[var(--nexus-secondary)] font-black hover:underline mt-1 flex items-center gap-1"
                                 >
                                   <Download size={10} /> 다운로드
-                                </a>
+                                </button>
                               </div>
                             </div>
                           ) : (
@@ -926,12 +950,6 @@ const ChatComponent = () => {
                   className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--nexus-outline)] hover:text-[var(--nexus-primary)] transition-colors"
                 >
                   <Paperclip size={14} /> 파일 첨부
-                </button>
-                <button
-                  type="button"
-                  className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--nexus-outline)] hover:text-[var(--nexus-primary)] transition-colors"
-                >
-                  <Smile size={14} /> 이모지
                 </button>
                 <button
                   type="button"
@@ -1180,7 +1198,7 @@ const ChatComponent = () => {
             <div className="p-8 text-center">
               <div className="w-20 h-20 bg-[var(--nexus-surface-low)] rounded-3xl mx-auto mb-6 flex items-center justify-center text-[var(--nexus-primary)] overflow-hidden shadow-inner border border-[var(--nexus-surface-container)]">
                 {joiningRoom.imageUrl ? (
-                  <img src={joiningRoom.imageUrl.startsWith('http') ? joiningRoom.imageUrl : `http://localhost:8080${joiningRoom.imageUrl}`} alt="" className="w-full h-full object-cover" />
+                  <img src={joiningRoom.imageUrl.startsWith('http') ? joiningRoom.imageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${joiningRoom.imageUrl}`} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <Users size={40} />
                 )}
@@ -1300,6 +1318,7 @@ const ChatComponent = () => {
                 onClick={() => {
                   setIsInviteModalOpen(false);
                   setSelectedUserIds([]);
+                  setCandidateSearchQuery('');
                 }}
                 className="w-10 h-10 rounded-full hover:bg-[var(--nexus-surface-low)] flex items-center justify-center transition-colors"
               >
@@ -1316,13 +1335,23 @@ const ChatComponent = () => {
                 <input
                   type="text"
                   placeholder="닉네임 또는 이메일 검색..."
+                  value={candidateSearchQuery}
+                  onChange={(e) => setCandidateSearchQuery(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-[var(--nexus-surface-low)] border-transparent focus:bg-[var(--nexus-surface-lowest)] focus:border-[var(--nexus-primary)] rounded-2xl text-sm transition-all text-[var(--nexus-on-bg)] placeholder:text-[var(--nexus-outline)] font-medium"
                 />
               </div>
 
               <div className="max-h-[350px] overflow-y-auto px-2 custom-scrollbar">
-                {inviteCandidates.length > 0 ? (
-                  inviteCandidates.map((user) => (
+                {inviteCandidates.filter(u => 
+                  u.nickname.toLowerCase().includes(candidateSearchQuery.toLowerCase()) || 
+                  u.email.toLowerCase().includes(candidateSearchQuery.toLowerCase())
+                ).length > 0 ? (
+                  inviteCandidates
+                    .filter(u => 
+                      u.nickname.toLowerCase().includes(candidateSearchQuery.toLowerCase()) || 
+                      u.email.toLowerCase().includes(candidateSearchQuery.toLowerCase())
+                    )
+                    .map((user) => (
                     <div
                       key={user.id}
                       onClick={() => toggleUserSelection(user.id)}
@@ -1379,6 +1408,7 @@ const ChatComponent = () => {
                 onClick={() => {
                   setIsInviteModalOpen(false);
                   setSelectedUserIds([]);
+                  setCandidateSearchQuery('');
                 }}
                 className="flex-1 py-4 bg-[var(--nexus-surface-container)] hover:bg-[var(--nexus-surface-container-high)] text-[var(--nexus-outline)] font-bold rounded-2xl transition-all"
               >
