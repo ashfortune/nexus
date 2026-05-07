@@ -24,9 +24,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final JwtTokenProvider jwtTokenProvider;
     private final com.team.nexus.domain.auth.repository.UserRepository userRepository;
 
-    @org.springframework.beans.factory.annotation.Value("${frontend.url:http://localhost:3000}")
-    private String frontendUrl;
-
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException,
@@ -52,7 +49,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             log.info("OAuth2 Login Success: {} (ID: {}), Provider: {}", email, user.getId(), provider);
 
             // 닉네임 한글 인코딩 및 URL 생성
-            String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/oauth-callback")
+            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/auth/oauth-callback")
                     .queryParam("token", token)
                     .queryParam("userId", user.getId().toString())
                     .queryParam("nickname", user.getNickname())
@@ -64,11 +61,19 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .encode(java.nio.charset.StandardCharsets.UTF_8) // 명시적 인코딩 추가
                     .toUriString();
             log.info("Redirecting to: {}", targetUrl);
-            
+            // 디버깅을 위한 파일 로그 (콘솔 확인이 어려울 때 사용)
+            try (java.io.FileWriter fw = new java.io.FileWriter("C:/nexus/oauth_debug.log", true)) {
+                fw.write(new java.util.Date() + " - Redirecting to: " + targetUrl + "\n");
+            }
             getRedirectStrategy().sendRedirect(request, response, targetUrl);
         } catch (Exception e) {
             log.error("OAuth2 Success Handler Error: ", e);
-            response.sendRedirect(frontendUrl + "/auth/login?error=auth_failed");
+            try (java.io.FileWriter fw = new java.io.FileWriter("C:/nexus/oauth_debug.log", true)) {
+                fw.write(new java.util.Date() + " - Error: " + e.getMessage() + "\n");
+                java.io.PrintWriter pw = new java.io.PrintWriter(fw);
+                e.printStackTrace(pw);
+            }
+            response.sendRedirect("http://localhost:3000/auth/login?error=auth_failed");
         }
     }
 }

@@ -20,7 +20,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/group-purchases/files")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "${frontend.url:http://localhost:3000}", allowedHeaders = "*", allowCredentials = "true")
+@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*", allowCredentials = "true")
 public class GroupPurchaseFileController {
 
     @Operation(summary = "파일 표시", description = "업로드된 파일을 브라우저에 표시합니다.")
@@ -29,17 +29,21 @@ public class GroupPurchaseFileController {
         try {
             String cleanPath = fileName.startsWith("/") ? fileName.substring(1) : fileName;
             Path path = Paths.get("uploads").resolve(cleanPath).normalize();
-            
+
             Resource resource = new UrlResource(path.toUri());
 
             if (resource.exists() || resource.isReadable()) {
                 String contentType = "application/octet-stream";
                 String name = path.getFileName().toString().toLowerCase();
-                
-                if (name.endsWith(".png")) contentType = "image/png";
-                else if (name.endsWith(".jpg") || name.endsWith(".jpeg")) contentType = "image/jpeg";
-                else if (name.endsWith(".gif")) contentType = "image/gif";
-                else if (name.endsWith(".webp")) contentType = "image/webp";
+
+                if (name.endsWith(".png"))
+                    contentType = "image/png";
+                else if (name.endsWith(".jpg") || name.endsWith(".jpeg"))
+                    contentType = "image/jpeg";
+                else if (name.endsWith(".gif"))
+                    contentType = "image/gif";
+                else if (name.endsWith(".webp"))
+                    contentType = "image/webp";
 
                 return ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_TYPE, contentType)
@@ -59,7 +63,7 @@ public class GroupPurchaseFileController {
         try {
             String cleanPath = fileName.startsWith("/") ? fileName.substring(1) : fileName;
             Path path = Paths.get("uploads").resolve(cleanPath).normalize();
-            
+
             Resource resource = new UrlResource(path.toUri());
 
             if (resource.exists() || resource.isReadable()) {

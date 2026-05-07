@@ -22,7 +22,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/chat")
-@CrossOrigin(origins = "${frontend.url:http://localhost:3000}", allowedHeaders = "*", allowCredentials = "true")
+@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*", allowCredentials = "true")
 public class ChatController {
 
     private final ChatService chatService;
@@ -34,7 +34,7 @@ public class ChatController {
     public void sendMessage(ChatMessageRequestDto messageDto) {
         // 1. 메시지 저장 및 응답 DTO 생성
         com.team.nexus.domain.chat.dto.ChatMessageResponseDto responseDto = chatService.saveMessage(messageDto);
-        
+
         // 2. 해당 채팅방 구독자들에게 브로드캐스트
         // 클라이언트는 /topic/chat/room/{roomId} 를 구독하고 있어야 함
         messagingTemplate.convertAndSend("/topic/chat/" + messageDto.getRoomId(), responseDto);
@@ -44,13 +44,17 @@ public class ChatController {
 
     @Operation(summary = "채팅방 생성")
     @PostMapping("/rooms")
-    public ResponseEntity<com.team.nexus.domain.chat.dto.ChatRoomResponseDto> createRoom(@RequestBody com.team.nexus.domain.chat.dto.ChatRoomRequestDto requestDto) {
-        return ResponseEntity.ok(chatService.createRoom(requestDto.getTitle(), requestDto.getType(), requestDto.getDescription(), requestDto.getImageUrl(), requestDto.getCreatorId(), requestDto.getPassword()));
+    public ResponseEntity<com.team.nexus.domain.chat.dto.ChatRoomResponseDto> createRoom(
+            @RequestBody com.team.nexus.domain.chat.dto.ChatRoomRequestDto requestDto) {
+        return ResponseEntity
+                .ok(chatService.createRoom(requestDto.getTitle(), requestDto.getType(), requestDto.getDescription(),
+                        requestDto.getImageUrl(), requestDto.getCreatorId(), requestDto.getPassword()));
     }
 
     @Operation(summary = "채팅방 참가")
     @PostMapping("/rooms/{roomId}/join")
-    public ResponseEntity<Void> joinRoom(@PathVariable UUID roomId, @RequestParam UUID userId, @RequestParam(required = false) String password) {
+    public ResponseEntity<Void> joinRoom(@PathVariable UUID roomId, @RequestParam UUID userId,
+            @RequestParam(required = false) String password) {
         chatService.joinRoom(roomId, userId, password);
         return ResponseEntity.ok().build();
     }
@@ -64,7 +68,8 @@ public class ChatController {
 
     @Operation(summary = "내 채팅방 목록 조회")
     @GetMapping("/rooms/mine")
-    public ResponseEntity<List<com.team.nexus.domain.chat.dto.ChatRoomResponseDto>> getMyRooms(@RequestParam UUID userId) {
+    public ResponseEntity<List<com.team.nexus.domain.chat.dto.ChatRoomResponseDto>> getMyRooms(
+            @RequestParam UUID userId) {
         return ResponseEntity.ok(chatService.getJoinedRooms(userId));
     }
 
@@ -84,7 +89,8 @@ public class ChatController {
 
     @Operation(summary = "초대 가능한 사용자 목록 조회")
     @GetMapping("/rooms/{roomId}/invite-candidates")
-    public ResponseEntity<List<com.team.nexus.domain.auth.dto.UserSummaryDto>> getInviteCandidates(@PathVariable UUID roomId) {
+    public ResponseEntity<List<com.team.nexus.domain.auth.dto.UserSummaryDto>> getInviteCandidates(
+            @PathVariable UUID roomId) {
         return ResponseEntity.ok(chatService.getInviteCandidates(roomId));
     }
 
