@@ -150,19 +150,29 @@ async def finalize_logo_api(
     try:
         final_logo = await brandingService.finalize_brand_logo(db, identity_id, request.imageUrl)
 
-        return brandingSchema.LogoFinalizeResponse(success=True, logoAssetId=final_logo.id)
+        return brandingSchema.LogoFinalizeResponse(
+            success=True, 
+            logoAssetId=final_logo.id,
+            availableAssetTypes=brandingService.AVAILABLE_MARKETING_ASSETS
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"로고 확정 중 오류가 발생했습니다: {str(e)}")
 
 
 @router.post("/identity/{identity_id}/assets", response_model=brandingSchema.BrandingAssetsResponse)
-async def generate_marketing_assets_api(identity_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def generate_marketing_assets_api(
+    identity_id: uuid.UUID,
+    request: brandingSchema.MarketingAssetRequest,
+    db: AsyncSession = Depends(get_db),
+):
     """
     마케팅 에셋 생성 API
-    - 확정된 로고와 브랜드 정보를 바탕으로 명함, 메뉴판 등의 목업 이미지를 생성합니다.
+    - 확정된 로고와 브랜드 정보를 바탕으로 사용자가 선택한 목업 이미지들을 생성합니다.
     """
     try:
-        assets = await brandingService.generate_marketing_assets(db, identity_id)
+        assets = await brandingService.generate_marketing_assets(
+            db, identity_id, request.assetTypes
+        )
 
         if not assets:
             raise HTTPException(

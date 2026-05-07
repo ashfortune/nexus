@@ -35,7 +35,7 @@ function BrandingPageContent() {
           const recoveredData: any = {
             projectId: data.id,
             namingOptions: data.identities || [],
-            chatHistory: data.chatHistory || [],
+            chatHistory: Array.isArray(data.chatHistory) ? data.chatHistory : [],
             keywords: data.keywords?.extracted_keywords || [],
             selectedIdentity: data.identities?.find((i: any) => i.isSelected) || null,
             isFinished:
@@ -46,7 +46,9 @@ function BrandingPageContent() {
           let startStep = 1;
           if (data.currentStep === 'NAMING_READY') startStep = 2;
           else if (data.currentStep === 'LOGO_GENERATION') startStep = 3;
+          else if (data.currentStep === 'ASSET_SELECT') startStep = 4;
           else if (data.currentStep === 'COMPLETED') startStep = 4;
+          
           setBrandData(recoveredData);
           setStep(startStep);
         } catch (error) {
@@ -59,6 +61,20 @@ function BrandingPageContent() {
       fetchResumeData();
     }
   }, [resumeId]);
+
+  // 브라우저 이탈 방지 경고 및 안내
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Step 4(최종 확정 단계)가 아니거나 데이터가 있는 경우 경고
+      if (step < 4) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [step]);
 
   const handleInterviewComplete = (namingOptions: any[]) => {
     setBrandData({ ...brandData, namingOptions });
@@ -83,8 +99,8 @@ function BrandingPageContent() {
   return (
     <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-16 flex flex-col gap-12">
       {/* Step Indicator (Hextech Blueprint Style) */}
-      <div className="flex items-center justify-center mb-4 overflow-x-auto py-4">
-        <div className="flex items-center gap-2 md:gap-4 p-2 bg-[var(--nexus-surface-low)]/50 border border-[var(--nexus-outline-variant)]/30 rounded-full">
+      <div className="flex flex-col items-center gap-6 mb-4">
+        <div className="flex items-center gap-2 md:gap-4 p-2 bg-[var(--nexus-surface-low)]/50 border border-[var(--nexus-outline-variant)]/30 rounded-full overflow-x-auto max-w-full">
           {[1, 2, 3, 4].map((s) => (
             <div key={s} className="flex items-center gap-2 md:gap-4">
               <div
@@ -117,6 +133,18 @@ function BrandingPageContent() {
             </div>
           ))}
         </div>
+
+        {/* 안내 문구 추가 */}
+        {step < 4 && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-[var(--nexus-error-container)]/10 border border-[var(--nexus-error)]/20 rounded-xl animate-in fade-in slide-in-from-top-2 duration-500">
+            <svg className="w-4 h-4 text-[var(--nexus-error)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p className="text-[11px] font-bold text-[var(--nexus-error)]">
+              주의: 최종 확정 전 페이지를 새로고침하거나 뒤로가기를 누르면 진행 중인 데이터가 초기화될 수 있습니다.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Content Area */}
