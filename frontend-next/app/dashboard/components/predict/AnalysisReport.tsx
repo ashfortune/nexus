@@ -41,46 +41,70 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
+      {/* 분석 기간 안내 뱃지 */}
+      {startDate && endDate && (
+        <div className="flex items-center justify-end">
+          <div className="flex items-center gap-2.5 px-5 py-2.5 bg-[var(--nexus-surface-container-high)] border border-[var(--nexus-outline-variant)] rounded-2xl shadow-sm">
+            <div className="p-1.5 bg-[var(--nexus-primary)]/10 rounded-lg">
+              <Calendar size={16} className="text-[var(--nexus-primary)]" />
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-x-2">
+              <span className="text-xs text-[var(--nexus-outline)] font-medium">분석 데이터 범위:</span>
+              <span className="text-sm font-bold text-[var(--nexus-on-bg)]">
+                {startDate} <span className="mx-1 text-[var(--nexus-outline)]">~</span> {endDate}
+                <span className="ml-2 text-xs font-normal text-[var(--nexus-primary)] bg-[var(--nexus-primary)]/10 px-2 py-0.5 rounded-full border border-[var(--nexus-primary)]/20">
+                  {totalDays}일 분석됨
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* 예측 매출 카드 */}
         <div className="nexus-card border border-[var(--nexus-outline-variant)] rounded-3xl p-6 shadow-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
             <DollarSign size={80} className="text-[var(--nexus-primary)]" />
           </div>
-          <p className="text-[var(--nexus-outline)] text-sm font-medium mb-1">내일 예상 매출</p>
+          <p className="text-[var(--nexus-outline)] text-sm font-medium mb-1">
+            <span className="text-[var(--nexus-primary)] font-bold">{data?.prediction?.date || '내일'}</span> 예상 매출
+          </p>
           <h3 className="text-3xl font-bold text-[var(--nexus-on-bg)] mb-2">
             ₩ {predictedSales.toLocaleString()}
           </h3>
           <div className="flex items-center gap-1 text-xs text-[var(--nexus-primary)]">
             <Activity size={14} />
             <span className="font-medium truncate max-w-[220px]">
-              {data.predictionMethod || '지수평활법(SES) 모델'} 분석 결과
+              AI 데이터 분석 결과
             </span>
           </div>
         </div>
 
-        {/* 7일 이동평균 카드 */}
+        {/* 최근 매출 평균 카드 */}
         <div className="nexus-card border border-[var(--nexus-outline-variant)] rounded-3xl p-6 shadow-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
             <Activity size={80} className="text-[var(--nexus-secondary)]" />
           </div>
-          <p className="text-[var(--nexus-outline)] text-sm font-medium mb-1">7일 이동평균</p>
+          <p className="text-[var(--nexus-outline)] text-sm font-medium mb-1">최근 7일 매출 평균</p>
           <h3 className="text-3xl font-bold text-[var(--nexus-on-bg)] mb-2">
             ₩ {data.movingAverage.toLocaleString()}
           </h3>
-          <p className="text-xs text-[var(--nexus-outline)]">최근 일주일 평균 트렌드</p>
+          <p className="text-xs text-[var(--nexus-outline)] italic">
+            {startDate ? startDate.substring(5) : ''} ~ {endDate ? endDate.substring(5) : ''} 평균치
+          </p>
         </div>
 
-        {/* 평균 수익률 카드 */}
+        {/* 매출 변동률 카드 */}
         <div className="nexus-card border border-[var(--nexus-outline-variant)] rounded-3xl p-6 shadow-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
             {isPositive ? <TrendingUp size={80} className="text-[#059669]" /> : <TrendingDown size={80} className="text-[var(--nexus-error)]" />}
           </div>
-          <p className="text-[var(--nexus-outline)] text-sm font-medium mb-1">평균 수익률(성장률)</p>
+          <p className="text-[var(--nexus-outline)] text-sm font-medium mb-1">매출 변동 추이</p>
           <h3
             className={`text-3xl font-bold mb-2 ${isPositive ? 'text-[#059669]' : 'text-[var(--nexus-error)]'}`}
           >
-            {data.returnRate.toFixed(2)}%
+            {isPositive ? '+' : ''}{data.returnRate.toFixed(2)}%
           </h3>
           <div className="flex items-center gap-1 text-xs">
             {isPositive ? (
@@ -89,7 +113,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
               <TrendingDown size={14} className="text-[var(--nexus-error)]" />
             )}
             <span className={isPositive ? 'text-[#059669]' : 'text-[var(--nexus-error)]'}>
-              전일 대비 변화 분석
+              최근 판매일(<span className="font-bold">{latestData.date || '어제'}</span>) 대비
             </span>
           </div>
         </div>

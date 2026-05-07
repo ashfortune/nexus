@@ -61,8 +61,8 @@ const PredictPage = () => {
               <h1 className="text-4xl font-bold tracking-tight">매출 예측 및 분석 리포트</h1>
             </div>
             <p className="text-[var(--nexus-outline)] max-w-2xl text-lg">
-              데이터베이스에 적재된 매출 내역을 바탕으로 한 심층 분석 결과입니다. 지수평활법(SES)과
-              이동평균(MA)을 활용하여 내일의 성과를 예측합니다.
+              데이터베이스에 쌓인 매출 내역을 바탕으로 AI가 내일의 예상 매출과 <br />
+              전반적인 비즈니스 흐름을 정밀하게 분석한 결과입니다.
             </p>
           </div>
 

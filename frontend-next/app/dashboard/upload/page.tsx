@@ -82,9 +82,18 @@ const UploadPage = () => {
         sales: item.sales
       }));
       
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const hasFutureDate = importedRows.some(r => new Date(r.date) > today);
+      
       setRows(importedRows);
       setUseEditor(true);
-      setCsvSuccess('CSV 데이터가 편집기로 성공적으로 불러와졌습니다. 내용을 확인 후 저장해주세요.');
+      
+      if (hasFutureDate) {
+        setError('불러온 데이터 중 오늘 이후의 날짜가 포함되어 있습니다. 미래 날짜는 저장이 불가능하므로 편집기에서 수정해주세요.');
+      } else {
+        setCsvSuccess('CSV 데이터가 편집기로 성공적으로 불러와졌습니다. 내용을 확인 후 저장해주세요.');
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -99,8 +108,18 @@ const UploadPage = () => {
     }
 
     // 유효성 검사
-    const invalidRow = rows.find(r => !r.date || r.sales < 0);
-    if (invalidRow) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // 시간 제외하고 날짜만 비교
+
+    const futureRow = rows.find(r => new Date(r.date) > today);
+    const invalidFormatRow = rows.find(r => !r.date || r.sales < 0);
+
+    if (futureRow) {
+      setError(`미래 날짜(${futureRow.date})의 매출 데이터는 입력할 수 없습니다. 오늘 또는 이전 날짜를 선택해주세요.`);
+      return;
+    }
+
+    if (invalidFormatRow) {
       setError('날짜와 매출액을 올바르게 입력해주세요.');
       return;
     }
