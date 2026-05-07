@@ -1,11 +1,26 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 
-const MENU_DATA = [
+interface SubMenu {
+  name: string;
+  href: string;
+  allowedRoles?: number[];
+}
+
+interface MenuItem {
+  id: string;
+  title: string;
+  hasSub: boolean;
+  href?: string;
+  subMenu?: SubMenu[];
+  allowedRoles?: number[];
+}
+
+const MENU_DATA: MenuItem[] = [
   {
     id: 'analysis',
     title: '창업 분석',
@@ -15,15 +30,16 @@ const MENU_DATA = [
       { name: '상권 분석 지도', href: '/store-map' },
     ],
   },
-  { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/subsidy' },
-  { id: 'creative', title: 'AI 브랜딩', hasSub: false, href: '/branding' },
+  { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/subsidy', allowedRoles: [0, 1, 2] },
+  { id: 'creative', title: 'AI 브랜딩', hasSub: false, href: '/branding', allowedRoles: [1, 2] },
   {
     id: 'compliance',
     title: '창업 가이드',
     hasSub: true,
+    allowedRoles: [0, 1, 2],
     subMenu: [
-      { name: '서류 가이드', href: '/license' },
-      { name: '고용 가이드', href: '/worker' },
+      { name: '서류 가이드', href: '/license', allowedRoles: [0, 1, 2] },
+      { name: '고용 가이드', href: '/worker', allowedRoles: [0, 1, 2] },
     ],
   },
   {
@@ -31,14 +47,15 @@ const MENU_DATA = [
     title: '커뮤니티',
     hasSub: true,
     href: '/board',
+    allowedRoles: [0, 1, 2],
     subMenu: [
-      { name: '자유 게시판', href: '/board' },
-      { name: '지역별 게시판', href: '/region-board' },
-      { name: '업종별 게시판', href: '/industry-board' },
-      { name: '전문가 매칭', href: '/expert' },
+      { name: '자유 게시판', href: '/board', allowedRoles: [0, 1, 2] },
+      { name: '지역별 게시판', href: '/region-board', allowedRoles: [0, 1, 2] },
+      { name: '업종별 게시판', href: '/industry-board', allowedRoles: [0, 1, 2] },
+      { name: '전문가 매칭', href: '/expert', allowedRoles: [1, 2] },
     ],
   },
-  { id: 'group-purchases', title: '공동구매', hasSub: false, href: '/group-purchases' },
+  { id: 'group-purchases', title: '공동구매', hasSub: false, href: '/group-purchases', allowedRoles: [0, 1, 2] },
 ];
 
 export default function Header() {
@@ -65,6 +82,28 @@ export default function Header() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // 권한에 따른 메뉴 필터링
+  const filteredMenus = useMemo(() => {
+    // 비로그인 상태일 때는 전체 노출 (클릭 시 가드에서 처리)
+    if (!isAuthenticated) return MENU_DATA;
+
+    const userType = user?.userType ?? 0;
+
+    return MENU_DATA.filter(menu => {
+      // 메인 메뉴 권한 체크
+      const isMenuAllowed = !menu.allowedRoles || menu.allowedRoles.includes(userType);
+      if (!isMenuAllowed) return false;
+
+      // 서브 메뉴 권한 필터링
+      if (menu.subMenu) {
+        menu.subMenu = menu.subMenu.filter(sub => 
+          !sub.allowedRoles || sub.allowedRoles.includes(userType)
+        );
+      }
+      return true;
+    });
+  }, [isAuthenticated, user?.userType]);
 
   const handleMenuHover = (menuId: string | null, hasSub: boolean) => {
     if (hasSub) {
@@ -102,7 +141,7 @@ export default function Header() {
         <nav className="hidden lg:block flex-grow h-full">
           {mounted && _hasHydrated ? (
             <ul className="grid grid-cols-6 h-full items-center">
-              {MENU_DATA.map((menu) => (
+              {filteredMenus.map((menu) => (
                 <li
                   key={menu.id}
                   className="relative flex items-center justify-center h-full cursor-pointer"
@@ -125,11 +164,11 @@ export default function Header() {
           )}
         </nav>
 
-          <div
-            className="w-[100px] lg:w-[160px] shrink-0 flex items-center justify-end gap-3"
-            ref={profileRef}
-          >
-            {mounted && _hasHydrated ? (
+        <div
+          className="w-[100px] lg:w-[160px] shrink-0 flex items-center justify-end gap-3"
+          ref={profileRef}
+        >
+          {mounted && _hasHydrated ? (
             <>
               {!isAuthenticated ? (
                 <Link
@@ -214,7 +253,7 @@ export default function Header() {
           <div className="max-w-[1440px] mx-auto px-6 md:px-8 flex items-start justify-between">
             <div className="w-[160px] shrink-0" />
             <div className="flex-grow grid grid-cols-6">
-              {MENU_DATA.map((menu) => (
+              {filteredMenus.map((menu) => (
                 <div key={menu.id} className="flex flex-col items-center">
                   {activeMenu === menu.id && menu.hasSub && (
                     <ul className="flex flex-col gap-4 text-center">
@@ -259,7 +298,7 @@ export default function Header() {
               </button>
             </div>
             <nav className="flex-1 overflow-y-auto py-4">
-              {MENU_DATA.map((menu) => (
+              {filteredMenus.map((menu) => (
                 <div key={menu.id} className="border-b border-[var(--nexus-outline-variant)]/30">
                   {menu.hasSub ? (
                     <>
