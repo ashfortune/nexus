@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   Search,
@@ -20,8 +21,11 @@ import {
   PieChart,
   MessageSquare,
 } from 'lucide-react';
+import ServiceGuideModal from '@/components/home/ServiceGuideModal';
 
 export default function Home() {
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-[var(--nexus-bg)] text-[var(--nexus-on-bg)] font-inter selection:bg-[var(--nexus-primary-container)] selection:text-[var(--nexus-on-primary-container)] overflow-x-hidden">
       {/* 01. 히어로 섹션: 비전 영역 */}
@@ -32,7 +36,7 @@ export default function Home() {
           <div className="flex flex-col items-center gap-10">
             <div className="flex items-center gap-3 px-4 py-2 bg-[var(--nexus-surface-container)] rounded-full text-[var(--nexus-primary)] text-[10px] font-black tracking-[0.3em] uppercase">
               <Sparkles size={14} className="animate-pulse" />
-              AI 공동 창업자 넥서스 영역
+              Your AI Co-Founder: NEXUS
             </div>
 
             <div className="space-y-6">
@@ -50,15 +54,12 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-5 w-full sm:w-auto justify-center">
-              <Link
-                href="/branding"
+              <button 
+                onClick={() => setIsGuideOpen(true)}
                 className="flex items-center justify-center gap-3 bg-[var(--nexus-primary)] text-white px-10 py-5 rounded-2xl text-xl font-bold hover:bg-[var(--nexus-primary-container)] transition-all duration-300 shadow-[0_20px_40px_-15px_rgba(11,26,125,0.3)] group"
               >
-                브랜딩 시작
-                <ArrowRight className="w-6 h-6 group-hover:translate-x-1.5 transition-transform" />
-              </Link>
-              <button className="flex items-center justify-center gap-3 bg-white border border-[var(--nexus-outline-variant)] text-[var(--nexus-primary)] px-10 py-5 rounded-2xl text-xl font-bold hover:bg-[var(--nexus-surface-low)] transition-all duration-300">
-                서비스 가이드 영역
+                서비스 가이드 보기
+                <Sparkles size={18} className="opacity-40 group-hover:opacity-100 transition-opacity" />
               </button>
             </div>
           </div>
@@ -98,11 +99,11 @@ export default function Home() {
                 </p>
               </div>
               <div className="mt-auto flex gap-2">
-                <span className="px-3 py-1 rounded-full border border-current text-[10px] font-bold opacity-40">
-                  BI 생성 영역
+                <span className="px-3 py-1 rounded-full border border-[var(--nexus-primary)] text-[10px] font-bold text-[var(--nexus-primary)]">
+                  Branding Identity
                 </span>
-                <span className="px-3 py-1 rounded-full border border-current text-[10px] font-bold opacity-40">
-                  로고 디자인 영역
+                <span className="px-3 py-1 rounded-full border border-[var(--nexus-primary)] text-[10px] font-bold text-[var(--nexus-primary)]">
+                  Logo Design
                 </span>
               </div>
             </div>
@@ -120,11 +121,11 @@ export default function Home() {
                 </p>
               </div>
               <div className="mt-auto flex gap-2">
-                <span className="px-3 py-1 rounded-full border border-current text-[10px] font-bold opacity-40">
-                  상권 분석 영역
+                <span className="px-3 py-1 rounded-full border border-[var(--nexus-secondary)] text-[10px] font-bold text-[var(--nexus-secondary)]">
+                  Location Analysis
                 </span>
-                <span className="px-3 py-1 rounded-full border border-current text-[10px] font-bold opacity-40">
-                  비용 예측 영역
+                <span className="px-3 py-1 rounded-full border border-[var(--nexus-secondary)] text-[10px] font-bold text-[var(--nexus-secondary)]">
+                  Cost Simulation
                 </span>
               </div>
             </div>
@@ -142,11 +143,11 @@ export default function Home() {
                 </p>
               </div>
               <div className="mt-auto flex gap-2">
-                <span className="px-3 py-1 rounded-full border border-current text-[10px] font-bold opacity-40">
-                  노무 가이드 영역
+                <span className="px-3 py-1 rounded-full border border-[var(--nexus-tertiary)] text-[10px] font-bold text-[var(--nexus-tertiary)]">
+                  HR Guide
                 </span>
-                <span className="px-3 py-1 rounded-full border border-current text-[10px] font-bold opacity-40">
-                  지원 정책 영역
+                <span className="px-3 py-1 rounded-full border border-[var(--nexus-tertiary)] text-[10px] font-bold text-[var(--nexus-tertiary)]">
+                  Policy Support
                 </span>
               </div>
             </div>
@@ -164,8 +165,8 @@ export default function Home() {
                 </p>
               </div>
               <div className="mt-auto flex gap-2">
-                <span className="px-3 py-1 rounded-full border border-current text-[10px] font-bold opacity-40">
-                  공동 구매 영역
+                <span className="px-3 py-1 rounded-full border border-[var(--nexus-primary)] text-[10px] font-bold text-[var(--nexus-primary)]">
+                  Group Buy
                 </span>
                 <Link 
                   href="/expert"
@@ -183,27 +184,25 @@ export default function Home() {
                   <LayoutDashboard className="w-8 h-8 text-[var(--nexus-on-bg)]" />
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-bold font-manrope">통합 운영 분석 대시보드</h3>
+                  <h3 className="text-2xl font-bold font-manrope">통합 매출 분석 및 예측</h3>
                   <p className="text-base opacity-60 leading-relaxed">
-                    POS 및 배달 앱 데이터를 연동하여 AI 기반의 주간 매출 예측 및 고객 리뷰 감성 분석
-                    보고서를 매주 월요일 제공합니다.
+                    사용자가 직접 업로드한 매출 데이터를 분석하여 AI 기반의 차주 매출 예측 보고서를
+                    매주 월요일 제공합니다. 효율적인 경영 의사결정을 돕습니다.
                   </p>
                 </div>
                 <div className="mt-auto flex gap-2">
-                  <span className="px-3 py-1 rounded-full border border-current text-[10px] font-bold opacity-40">
-                    매출 예측 데이터
+                  <span className="px-3 py-1 rounded-full border border-[var(--nexus-on-bg)] text-[10px] font-bold text-[var(--nexus-on-bg)]">
+                    Sales Prediction
                   </span>
-                  <span className="px-3 py-1 rounded-full border border-current text-[10px] font-bold opacity-40">
-                    리뷰 분석 정보
+                  <span className="px-3 py-1 rounded-full border border-[var(--nexus-on-bg)] text-[10px] font-bold text-[var(--nexus-on-bg)]">
+                    Trend Analysis
                   </span>
                 </div>
               </div>
-              <div className="flex-1 bg-white/5 rounded-3xl p-6 border border-white/10 flex flex-col gap-6 justify-center">
-                <div className="text-[10px] font-bold opacity-40">대시보드 시각화 데이터 영역</div>
-                <div className="h-2 w-[60%] bg-white/20 rounded-full" />
-                <div className="h-2 w-[80%] bg-[var(--nexus-tertiary-fixed)] rounded-full" />
-                <div className="h-2 w-[40%] bg-white/20 rounded-full" />
-                <div className="h-2 w-[70%] bg-white/20 rounded-full" />
+              <div className="flex-1 bg-[var(--nexus-surface-container)] rounded-3xl p-10 border border-[var(--nexus-outline-variant)] flex items-center justify-center text-center">
+                <p className="text-sm font-medium opacity-40 break-keep">
+                  추후에 실제 시각화 데이터나 차트가 들어갈 부분입니다.
+                </p>
               </div>
             </div>
           </div>
@@ -218,29 +217,34 @@ export default function Home() {
               당신의 창업 여정, 넥서스가 설계합니다.
             </h2>
             <p className="text-lg opacity-60">
-              아이디어 구상부터 안정적 운영까지, 단계별 마스터 플랜 가이드 영역
+              아이디어 구상부터 안정적 운영까지, 단계별 마스터 플랜 가이드를 제공합니다.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
             <div className="hidden md:block absolute top-10 left-0 w-full h-[2px] bg-[var(--nexus-outline-variant)] opacity-20 -z-10" />
 
             {[
               {
                 icon: Sparkles,
-                title: '01. 브랜드 설계 영역',
+                title: '01. Brand Design',
                 desc: 'AI 브랜드 정체성 및 로고 구축',
               },
-              { icon: Search, title: '02. 정밀 분석 영역', desc: '상권 데이터 및 창업 비용 산출' },
+              { icon: Search, title: '02. Data Analysis', desc: '상권 데이터 및 창업 비용 산출' },
               {
                 icon: ShieldCheck,
-                title: '03. 인허가 & 노무 영역',
+                title: '03. Compliance',
                 desc: '행정 절차 및 근로계약 완료',
               },
               {
+                icon: Users,
+                title: '04. Community',
+                desc: '사장님 네트워크 및 정보 공유',
+              },
+              {
                 icon: TrendingUp,
-                title: '04. 스마트 운영 영역',
-                desc: '매출 예측 및 대시보드 관리',
+                title: '05. Smart Ops',
+                desc: '매출 예측 및 데이터 관리',
               },
             ].map((step, i) => (
               <div key={i} className="flex flex-col items-center text-center gap-6 p-8 group">
@@ -265,40 +269,40 @@ export default function Home() {
               감(感)이 아닌 <br />{' '}
               <span className="text-[var(--nexus-tertiary-fixed)]">데이터의 힘</span>으로.
             </h2>
-            <p className="text-xl opacity-70 font-light leading-relaxed">
+            <p className="text-xl opacity-90 font-light leading-relaxed">
               국토교통부 실거래 데이터, 법령 RAG 엔진, 시계열 예측 모델 등 넥서스만의 기술
               아카이브가 당신의 창업 리스크를 최소화합니다.
             </p>
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-2">
-                <div className="text-3xl font-black font-manrope">누적 데이터 영역</div>
-                <div className="text-xs font-bold uppercase opacity-50">
-                  실거래가 데이터 연동 상태
+                <div className="text-3xl font-black font-manrope text-[var(--nexus-tertiary-fixed)]">1,240,000+</div>
+                <div className="text-xs font-bold uppercase opacity-75 tracking-wider">
+                  실시간 연동 데이터 (국토교통부)
                 </div>
               </div>
               <div className="space-y-2">
-                <div className="text-3xl font-black font-manrope">기술 명칭 영역</div>
-                <div className="text-xs font-bold uppercase opacity-50">지능형 법령 검색 엔진</div>
+                <div className="text-3xl font-black font-manrope text-[var(--nexus-tertiary-fixed)]">Nexus RAG v2.0</div>
+                <div className="text-xs font-bold uppercase opacity-75 tracking-wider">지능형 법령 검색 엔진</div>
               </div>
             </div>
           </div>
           <div className="nexus-glass bg-white/10 p-10 rounded-[40px] border border-white/20">
             <div className="space-y-6">
               {[
-                { label: '실거래 데이터 연동 상태 영역', status: '활성 상태' },
-                { label: '법령 검색 엔진 가동 영역', status: '안정 상태' },
-                { label: '매출 예측 모델 준비 영역', status: '준비 상태' },
-                { label: '이미지 생성 파이프라인 영역', status: '활성 상태' },
+                { label: '국토교통부 실거래 데이터 API', status: 'ACTIVE' },
+                { label: '법제처 법령 정보 RAG 엔진', status: 'STABLE' },
+                { label: '시계열 매출 예측 머신러닝 모델', status: 'READY' },
+                { label: 'DALL-E 3 기반 브랜드 이미지 엔진', status: 'ACTIVE' },
               ].map((item, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between p-4 bg-white/5 rounded-xl"
+                  className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5"
                 >
                   <div className="flex items-center gap-3">
                     <CheckCircle2 size={16} className="text-[var(--nexus-tertiary-fixed)]" />
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <span className="text-sm font-medium opacity-90">{item.label}</span>
                   </div>
-                  <span className="text-[10px] font-black opacity-40">{item.status}</span>
+                  <span className="text-[10px] font-black text-[var(--nexus-tertiary-fixed)]">{item.status}</span>
                 </div>
               ))}
             </div>
@@ -317,12 +321,17 @@ export default function Home() {
             데이터와 지능형 에이전트가 함께하는 스마트한 창업을 시작하세요.
           </p>
           <div className="flex justify-center">
-            <button className="px-16 py-6 bg-[var(--nexus-primary)] text-white rounded-2xl text-2xl font-black hover:scale-105 transition-all shadow-2xl">
-              서비스 시작하기 영역
-            </button>
+            <Link 
+              href="/branding"
+              className="px-16 py-6 bg-[var(--nexus-primary)] text-white rounded-2xl text-2xl font-black hover:scale-105 transition-all shadow-2xl"
+            >
+              넥서스와 함께 창업 시작하기
+            </Link>
           </div>
         </div>
       </section>
+      {/* 서비스 가이드 모달 */}
+      <ServiceGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
     </div>
   );
 }
