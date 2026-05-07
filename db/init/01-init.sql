@@ -22,9 +22,7 @@ CREATE TABLE users (
     deleted_at TIMESTAMPTZ
 );
 
--- 테스트용 유저 데이터 삽입 (비밀번호: test)
-INSERT INTO users (id, nickname, email, passwd, user_type)
-VALUES ('11111111-1111-1111-1111-111111111111', 'test', 'test@test.com', '$2a$10$Uq9Cq6RizB7hXWJ91xN2WeK1V.7D.pYV91z0k7r8oZ.h8aV6C7u8S', 0);
+
 
 
 CREATE TABLE industry_categories (
