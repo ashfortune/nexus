@@ -12,7 +12,7 @@ router = APIRouter()
 
 @router.get("/analysis", response_model=PredictionResponseSchema)
 async def getAnalysis(
-    userId: str = "3394857b-7033-4f96-8095-2022830f785b",  # TODO: 인증 연동 필요
+    userId: str = "11111111-1111-1111-1111-111111111111",  # TODO: 인증 연동 필요
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """

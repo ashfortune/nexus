@@ -11,7 +11,9 @@ class PredictionDetailSchema(BaseModel):
 
 class DailyStatSchema(BaseModel):
     date: str
-    actual: int
+    actual: Optional[int] = None
+    predicted: Optional[int] = None
+    timesfm: Optional[int] = None
     movingAverage: Optional[float] = None
     returnRate: Optional[float] = None
 
