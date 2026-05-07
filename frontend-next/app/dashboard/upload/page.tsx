@@ -60,16 +60,16 @@ const UploadPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
+    <div className="min-h-screen p-8 text-[var(--nexus-on-bg)]">
       <div className="max-w-6xl mx-auto">
         <header className="mb-12">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/20">
+            <div className="p-3 bg-[var(--nexus-primary)] text-[var(--nexus-on-primary)] rounded-2xl shadow-lg">
               <Upload size={24} />
             </div>
             <h1 className="text-3xl font-bold tracking-tight">데이터 업로드</h1>
           </div>
-          <p className="text-white/60 max-w-2xl text-lg">
+          <p className="text-[var(--nexus-outline)] max-w-2xl text-lg">
             과거 매출 내역이 담긴 CSV 파일을 업로드하여 데이터베이스에 저장하세요. 저장된 데이터는
             분석 및 예측 시스템의 기초 자료로 활용됩니다.
           </p>
@@ -77,24 +77,24 @@ const UploadPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+            <div className="nexus-card border border-[var(--nexus-outline-variant)] rounded-3xl p-8 shadow-2xl">
               {!success ? (
                 <>
                   <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-2 text-indigo-400">CSV 파일 업로드</h2>
-                    <p className="text-white/40 text-sm">
+                    <h2 className="text-xl font-semibold mb-2 text-[var(--nexus-primary)]">CSV 파일 업로드</h2>
+                    <p className="text-[var(--nexus-outline)] text-sm">
                       분석할 매출 내역이 담긴 CSV 파일을 드래그 앤 드롭 하세요.
                     </p>
                   </div>
                   <DropZone onFilesSelected={handleFileUpload} isLoading={isLoading} />
                   {isLoading && (
-                    <div className="mt-6 flex items-center justify-center gap-3 text-indigo-400 animate-pulse">
-                      <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="mt-6 flex items-center justify-center gap-3 text-[var(--nexus-primary)] animate-pulse">
+                      <div className="w-5 h-5 border-2 border-[var(--nexus-primary)] border-t-transparent rounded-full animate-spin"></div>
                       <span className="font-medium">데이터를 안전하게 적재 중입니다...</span>
                     </div>
                   )}
                   {error && (
-                    <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 text-sm">
+                    <div className="mt-6 p-4 bg-[var(--nexus-error)]/10 border border-[var(--nexus-error)]/20 rounded-xl flex items-center gap-3 text-[var(--nexus-error)] text-sm">
                       <AlertCircle size={18} />
                       {error}
                     </div>
@@ -102,24 +102,24 @@ const UploadPage = () => {
                 </>
               ) : (
                 <div className="py-12 flex flex-col items-center text-center animate-in zoom-in duration-500">
-                  <div className="p-6 bg-green-500/20 rounded-full mb-6 text-green-400 ring-8 ring-green-500/5">
+                  <div className="p-6 bg-[#059669]/20 rounded-full mb-6 text-[#059669] ring-8 ring-[#059669]/5">
                     <CheckCircle2 size={48} />
                   </div>
-                  <h2 className="text-2xl font-bold mb-2">업로드 완료!</h2>
-                  <p className="text-white/60 mb-8 max-w-md">
+                  <h2 className="text-2xl font-bold mb-2 text-[var(--nexus-on-bg)]">업로드 완료!</h2>
+                  <p className="text-[var(--nexus-outline)] mb-8 max-w-md">
                     {success} <br />
                     이제 '예측 및 분석' 메뉴에서 적재된 데이터를 확인하실 수 있습니다.
                   </p>
                   <div className="flex gap-4">
                     <button
                       onClick={() => setSuccess(null)}
-                      className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all"
+                      className="px-6 py-3 bg-[var(--nexus-surface-container)] hover:bg-[var(--nexus-surface-container-high)] border border-[var(--nexus-outline-variant)] text-[var(--nexus-on-bg)] rounded-xl transition-all"
                     >
                       추가 업로드
                     </button>
                     <Link
                       href="/dashboard/predict"
-                      className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-600/20"
+                      className="px-6 py-3 bg-[var(--nexus-primary)] hover:bg-[var(--nexus-secondary)] text-[var(--nexus-on-primary)] rounded-xl font-semibold transition-all shadow-lg"
                     >
                       분석 결과 보러가기
                     </Link>
@@ -131,22 +131,22 @@ const UploadPage = () => {
           <div>
             <div className="space-y-6">
               <InfoCard />
-              <div className="bg-gradient-to-br from-indigo-600/20 to-purple-600/20 border border-white/10 rounded-2xl p-6">
-                <h3 className="font-bold mb-4 flex items-center gap-2">
-                  <FileText size={18} className="text-indigo-400" />
+              <div className="bg-[var(--nexus-surface-container-highest)] border border-[var(--nexus-outline-variant)] rounded-2xl p-6">
+                <h3 className="font-bold mb-4 flex items-center gap-2 text-[var(--nexus-on-bg)]">
+                  <FileText size={18} className="text-[var(--nexus-primary)]" />
                   파일 가이드
                 </h3>
-                <ul className="text-sm text-white/60 space-y-3">
+                <ul className="text-sm text-[var(--nexus-outline)] space-y-3">
                   <li className="flex gap-2">
-                    <span className="text-indigo-400">•</span>첫 번째 열은 '날짜'여야 합니다. (예:
+                    <span className="text-[var(--nexus-primary)]">•</span>첫 번째 열은 '날짜'여야 합니다. (예:
                     2024-04-30)
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-indigo-400">•</span>두 번째 열은 '매출액'이어야 합니다.
+                    <span className="text-[var(--nexus-primary)]">•</span>두 번째 열은 '매출액'이어야 합니다.
                     (예: 500000)
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-indigo-400">•</span>
+                    <span className="text-[var(--nexus-primary)]">•</span>
                     헤더(Header)가 포함되어 있어도 자동으로 인식합니다.
                   </li>
                 </ul>

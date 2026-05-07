@@ -19,7 +19,7 @@ async def getRoot() -> Dict[str, str]:
 @router.post("/upload-sales", response_model=SalesUploadResponseSchema)
 async def uploadSales(
     file: UploadFile = File(...),
-    userId: str = "3394857b-7033-4f96-8095-2022830f785b",  # TODO: 인증 연동 필요
+    userId: str = "11111111-1111-1111-1111-111111111111",  # TODO: 인증 연동 필요
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """매출 내역 CSV 파일을 업로드하여 마스터 테이블에 적재합니다."""
