@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -138,11 +138,15 @@ public class ChatServiceImpl implements ChatService {
             room.setLastMessageAt(LocalDateTime.now());
             chatRoomRepository.save(room);
 
+            // 발신자 프로필 이미지 조회
+            User sender = userRepository.findById(savedMessage.getUserId()).orElse(null);
+            String profileImageUrl = (sender != null && sender.getProfileImage() != null) ? sender.getProfileImage() : "";
+
             return ChatMessageResponseDto.builder()
                     .roomId(savedMessage.getRoomId())
                     .senderId(savedMessage.getUserId())
                     .senderNickname(savedMessage.getSenderNickname())
-                    .senderProfileImageUrl("")
+                    .senderProfileImageUrl(profileImageUrl)
                     .message(savedMessage.getContent())
                     .type(savedMessage.getType())
                     .fileUrl(savedMessage.getFileUrl())
@@ -166,13 +170,26 @@ public class ChatServiceImpl implements ChatService {
                     .map(ChatParticipant::getJoinedAt)
                     .orElse(LocalDateTime.MIN);
             
-            return chatMessageRepository.findByRoomIdAndCreatedAtAfterOrderByCreatedAtAsc(roomId, joinedAt)
-                    .stream()
+            List<ChatMessage> messages = chatMessageRepository.findByRoomIdAndCreatedAtAfterOrderByCreatedAtAsc(roomId, joinedAt);
+            
+            // 발신자들의 프로필 이미지 미리 조회 (N+1 방지)
+            Set<UUID> userIds = messages.stream()
+                    .map(ChatMessage::getUserId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            
+            Map<UUID, String> profileImageMap = userRepository.findAllById(userIds).stream()
+                    .collect(Collectors.toMap(
+                            User::getId, 
+                            u -> u.getProfileImage() != null ? u.getProfileImage() : ""
+                    ));
+            
+            return messages.stream()
                     .map(msg -> ChatMessageResponseDto.builder()
                             .roomId(roomId)
                             .senderId(msg.getUserId())
                             .senderNickname(msg.getSenderNickname() != null ? msg.getSenderNickname() : "익명")
-                            .senderProfileImageUrl("") 
+                            .senderProfileImageUrl(profileImageMap.getOrDefault(msg.getUserId(), "")) 
                             .message(msg.getContent())
                             .type(msg.getType())
                             .fileUrl(msg.getFileUrl())
@@ -321,10 +338,15 @@ public class ChatServiceImpl implements ChatService {
         
         chatMessageRepository.save(chatMessage);
         
+        // 발신자 프로필 이미지 조회
+        User user = userRepository.findById(userId).orElse(null);
+        String profileImageUrl = (user != null && user.getProfileImage() != null) ? user.getProfileImage() : "";
+
         ChatMessageResponseDto responseDto = ChatMessageResponseDto.builder()
                 .roomId(roomId)
                 .senderId(userId)
-                .senderNickname("시스템")
+                .senderNickname(nickname)
+                .senderProfileImageUrl(profileImageUrl)
                 .message(content)
                 .type(type)
                 .participantCount(chatParticipantRepository.countByRoomId(roomId))
