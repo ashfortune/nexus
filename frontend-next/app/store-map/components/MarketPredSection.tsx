@@ -76,7 +76,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
         const err = await res.json();
         throw new Error(err.detail ?? '예측 오류');
       }
-      
+
       const data = await res.json();
       setResult(data);
     } catch (e: any) {
@@ -145,7 +145,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
             <div className="space-y-2">
               <p>
                 • <strong className="text-indigo-950">예측 범위:</strong> 서울시 내 7대 주요 업종에
-                대해 최적화되어 있으며, 3년 이내 폐업 가능성을 예측합니다.
+                대해 최적화되어 있으며, 2년 이내 폐업 가능성을 예측합니다.
               </p>
               <p>
                 • <strong className="text-indigo-950">참고 사항:</strong> 본 결과는 통계적
@@ -280,9 +280,8 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
 
           {result && (
             <div
-              className={`h-full border animate-in zoom-in-95 duration-500 rounded-3xl overflow-hidden bg-white shadow-xl shadow-slate-200/50 ${
-                result.label === 'caution' ? 'border-red-100' : 'border-emerald-100'
-              }`}
+              className={`h-full border animate-in zoom-in-95 duration-500 rounded-3xl overflow-hidden bg-white shadow-xl shadow-slate-200/50 ${result.label === 'caution' ? 'border-red-100' : 'border-emerald-100'
+                }`}
             >
               {/* 상단 컬러 바 */}
               <div
@@ -332,11 +331,10 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                     <div>
                       <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
                         <span
-                          className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${
-                            result.label === 'caution'
+                          className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${result.label === 'caution'
                               ? 'bg-red-100 text-red-700'
                               : 'bg-emerald-100 text-emerald-700'
-                          }`}
+                            }`}
                         >
                           {result.label_kor} 상태
                         </span>

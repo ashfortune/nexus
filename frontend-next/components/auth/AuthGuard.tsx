@@ -6,10 +6,10 @@ import { useAuthStore } from '@/store/useAuthStore';
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  requiredRole?: number; // 0: GENERAL, 1: BIZ, 2: ADMIN
+  allowedRoles?: number[]; // 0: GENERAL, 1: BIZ, 2: ADMIN
 }
 
-export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
+export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   const router = useRouter();
   const { user, isAuthenticated, _hasHydrated } = useAuthStore();
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -25,9 +25,9 @@ export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
       return;
     }
 
-    // 2. 권한 확인 (requiredRole이 설정된 경우)
-    if (requiredRole !== undefined) {
-      if (user?.userType !== requiredRole) {
+    // 2. 권한 확인 (allowedRoles가 설정된 경우)
+    if (allowedRoles !== undefined && allowedRoles.length > 0) {
+      if (!user || !allowedRoles.includes(user.userType)) {
         alert('해당 페이지에 접근할 권한이 없습니다.');
         router.push('/');
         return;
@@ -35,7 +35,7 @@ export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
     }
 
     setIsAuthorized(true);
-  }, [isAuthenticated, user, requiredRole, router]);
+  }, [isAuthenticated, user, allowedRoles, router, _hasHydrated]);
 
   // 권한 확인 중이거나 권한이 없는 경우 아무것도 렌더링하지 않음
   if (!isAuthorized) {

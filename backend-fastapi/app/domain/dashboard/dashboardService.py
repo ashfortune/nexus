@@ -59,18 +59,51 @@ def prepareSalesData(df: pd.DataFrame, fileName: str) -> List[Dict[str, Any]]:
 
 
 async def saveSalesToDb(dataList: List[Dict[str, Any]], userId: str, db: AsyncSession) -> int:
-    """클렌징된 데이터를 DB에 저장합니다."""
+    """클렌징된 데이터를 DB에 저장하되, 동일 날짜 중복 시 최대 매출액으로 대체합니다."""
+    from sqlalchemy import select
     userUuid = uuid.UUID(userId)
+    
+    # 1. DB에서 이 유저의 기존 매출 데이터를 모두 가져옵니다.
+    stmt = select(Sale).where(Sale.user_id == userUuid)
+    result = await db.execute(stmt)
+    existing_sales_list = result.scalars().all()
+    
+    # 날짜(date) -> Sale 객체 매핑 딕셔너리 생성 (TIMESTAMPTZ를 naive date로 정규화)
+    existing_map = {}
+    for s in existing_sales_list:
+        naive_date = s.sales_date.date() if hasattr(s.sales_date, "date") else s.sales_date
+        existing_map[naive_date] = s
+
+    # 2. 업로드된 데이터 내에서도 동일 날짜가 중복될 수 있으므로 날짜별 최대 매출액으로 단일화합니다.
+    aggregated_data = {}
     for item in dataList:
-        newSale = Sale(
-            id=uuid.uuid4(),
-            user_id=userUuid,
-            sales_date=item["date"],
-            total_amount=item["amount"],
-            store_number="CSV_UPLOAD",
-            file_url=item["fileName"],
-        )
-        db.add(newSale)
+        item_date = item["date"].date() if hasattr(item["date"], "date") else item["date"]
+        amount = item["amount"]
+        if item_date not in aggregated_data or amount > aggregated_data[item_date]["amount"]:
+            aggregated_data[item_date] = item
+
+    count = 0
+    # 3. DB 업데이트 또는 신규 추가
+    for item_date, item in aggregated_data.items():
+        if item_date in existing_map:
+            # 기존 데이터가 있는 경우: 기존 매출보다 큰 경우에만 최대 매출 값으로 대체
+            db_sale = existing_map[item_date]
+            if item["amount"] > db_sale.total_amount:
+                db_sale.total_amount = item["amount"]
+                db_sale.file_url = item["fileName"]  # 파일명도 최신 파일로 갱신
+                count += 1
+        else:
+            # 기존 데이터가 없는 경우: 신규 추가
+            newSale = Sale(
+                id=uuid.uuid4(),
+                user_id=userUuid,
+                sales_date=item["date"],
+                total_amount=item["amount"],
+                store_number="CSV_UPLOAD",
+                file_url=item["fileName"],
+            )
+            db.add(newSale)
+            count += 1
 
     await db.commit()
-    return len(dataList)
+    return count

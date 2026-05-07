@@ -2,6 +2,7 @@ import base64
 import json
 import os
 import uuid
+from typing import List, Optional, Dict, Any
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +25,17 @@ INDUSTRY_CACHE = {
     "map": {},  # ID -> IndustryCategory (이름, 부모ID 등 포함)
     "initialized": False,
 }
+
+# [추가] 사용자가 선택 가능한 마케팅 에셋 마스터 목록
+AVAILABLE_MARKETING_ASSETS = [
+    {"type": "BUSINESS_CARD", "name": "명함", "description": "브랜드 로고가 담긴 세련된 비즈니스 카드"},
+    {"type": "MENU", "name": "메뉴판/가격표", "description": "가독성 좋은 브랜드 전용 메뉴판"},
+    {"type": "POSTER", "name": "포스터", "description": "매장 홍보 및 분위기를 살려주는 포스터"},
+    {"type": "INSTAGRAM_POST", "name": "인스타그램 홍보물", "description": "SNS 마케팅을 위한 최적화된 콘텐츠"},
+    {"type": "SIGNBOARD", "name": "간판 디자인", "description": "매장의 얼굴이 되는 세련된 간판"},
+    {"type": "BROCHURE", "name": "브로슈어/전단지", "description": "상세한 브랜드 정보를 담은 홍보물"},
+    {"type": "STICKER", "name": "브랜드 스티커", "description": "패키지나 굿즈에 활용 가능한 스티커"},
+]
 
 
 async def initialize_industry_cache(db: AsyncSession):
@@ -515,37 +527,33 @@ async def generate_brand_logo(db: AsyncSession, identity_id: uuid.UUID):
 
 # [추가] 마케팅 에셋(목업) 생성 프롬프트 메이커
 MOCKUP_PROMPT_MAKER = """
-브랜드 정보와 로고를 바탕으로, 실제 제품에 로고가 적용된 고품질 마케팅 목업 이미지(명함, 메뉴판/브로슈어, 포스터) 3종을 위한 프롬프트를 생성하세요.
+브랜드 정보와 로고를 바탕으로, 실제 제품에 로고가 적용된 고품질 마케팅 목업 이미지 프롬프트를 생성하세요.
+
+**생성 대상 목록**:
+{asset_types_list}
 
 **중요 규칙**:
-1. 반드시 3개의 에셋(Business Card, Menu, Poster)을 생성하세요.
+1. 반드시 위 목록에 명시된 에셋들에 대해서만 프롬프트를 생성하세요.
 2. 각 에셋 블록은 '---' (하이픈 3개)로 구분하세요.
 3. 각 블록 내에 Type, Title, Description, Prompt 필드를 반드시 포함하세요.
 4. Prompt는 반드시 10자 이상의 상세한 영어 문장이어야 합니다.
-5. [가장 중요] 이미지는 멀리서 찍은 풍경이 아니라, 해당 아이템(명함이면 딱 명함만, 메뉴판이면 딱 메뉴판만)이 화면에 꽉 차게(fill the frame), 클로즈업(close-up shot, macro shot)으로 선명하게 보이도록 프롬프트를 작성하세요. 배경은 단순하고 깔끔하게 처리하여 오직 아이템 자체에만 온전히 집중되도록 해야 합니다 (예: top-down view on a minimal solid color desk, studio lighting, strictly focused entirely on the single object).
+5. [품질 가이드] 이미지는 해당 아이템이 화면에 꽉 차게(fill the frame), 클로즈업(close-up shot)으로 선명하게 보이도록 작성하세요. 배경은 단순하고 깔끔해야 하며 아이템 자체에만 집중되도록 하세요.
 
-응답 형식:
-Type: Business Card
+응답 형식 예시 (항목별로 반복):
+Type: [에셋 타입 명칭]
 Title: [에셋 제목]
 Description: [한 줄 설명]
 Prompt: [영어 프롬프트]
 ---
-Type: Menu
-Title: [에셋 제목]
-Description: [한 줄 설명]
-Prompt: [영어 프롬프트]
----
-Type: Poster
-Title: [에셋 제목]
-Description: [한 줄 설명]
-Prompt: [영어 프롬프트]
 """
 
 
-async def generate_marketing_assets(db: AsyncSession, identity_id: uuid.UUID):
-    """최종 선정된 로고를 바탕으로 명함, 메뉴판 등의 마케팅 에셋 목업 이미지를 생성합니다."""
+async def generate_marketing_assets(
+    db: AsyncSession, identity_id: uuid.UUID, asset_types: List[str]
+):
+    """최종 선정된 로고를 바탕으로 사용자가 선택한 마케팅 에셋 목업 이미지를 생성합니다."""
     try:
-        # 1. 브랜드 아이덴티티, 로고 정보, 그리고 부모 객체인 branding 정보까지 한 번에 Eager Loading 조회
+        # 1. 브랜드 정보 및 로고 조회
         from sqlalchemy.orm import joinedload
 
         stmt = (
@@ -557,17 +565,19 @@ async def generate_marketing_assets(db: AsyncSession, identity_id: uuid.UUID):
         identity = result.unique().scalar_one_or_none()
 
         if not identity or not identity.logo_assets:
-            print(f"DEBUG: Identity or LogoAssets not found for {identity_id}")
             return None
 
-        # 가장 최근에 확정된 로고 사용
         final_logo = identity.logo_assets[-1]
 
-        # 2. 에셋용 시각화 프롬프트 3종 생성 (LLM 활용)
+        # 2. 요청된 에셋 목록을 문자열로 변환하여 프롬프트에 삽입
+        asset_types_str = "\n".join([f"- {at}" for at in asset_types])
+        formatted_system_prompt = MOCKUP_PROMPT_MAKER.replace("{asset_types_list}", asset_types_str)
+
+        # 3. 에셋용 시각화 프롬프트 생성 (LLM 활용)
         ai_llm_client = get_ai_client("gemini")
         context = f"브랜드명: {identity.brand_name}, 슬로건: {identity.slogan}, 스토리: {identity.brand_story}, 확정된로고특징: {final_logo.image_url}"
         raw_response = await ai_llm_client.generate_response(
-            MOCKUP_PROMPT_MAKER, [{"role": "user", "content": context}]
+            formatted_system_prompt, [{"role": "user", "content": context}]
         )
 
         # 3. 응답 파싱
@@ -625,7 +635,7 @@ async def generate_marketing_assets(db: AsyncSession, identity_id: uuid.UUID):
                 print(f"Asset generation error: {str(e)}")
             return None
 
-        tasks = [create_asset_file(b, i) for i, b in enumerate(asset_blocks[:3])]
+        tasks = [create_asset_file(b, i) for i, b in enumerate(asset_blocks)]
         results = await asyncio.gather(*tasks)
 
         # [DB 저장] 생성된 에셋 정보를 marketing_assets 테이블에 저장
@@ -701,7 +711,7 @@ async def finalize_brand_logo(db: AsyncSession, identity_id: uuid.UUID, image_ur
         await db.execute(
             update(Branding)
             .where(Branding.id == identity.branding_id)
-            .values(title=identity.brand_name, current_step="LOGO_GENERATION")
+            .values(title=identity.brand_name, current_step="ASSET_SELECT")
         )
         # 아이덴티티 선택 상태 보장
         identity.is_selected = True

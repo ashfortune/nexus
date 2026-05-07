@@ -29,3 +29,5 @@ langchain-google-genai
 langchain-postgres
 pypdf
 ruff
+timesfm
+jax
