@@ -15,7 +15,7 @@ import java.util.Map;
 @Tag(name = "Authentication", description = "인증 및 회원가입 관련 API")
 @RestController
 @RequestMapping("/api/v1/auth")
-@CrossOrigin(origins = "${frontend.url:http://localhost:3000}", allowCredentials = "true")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RequiredArgsConstructor
 public class AuthController {
 

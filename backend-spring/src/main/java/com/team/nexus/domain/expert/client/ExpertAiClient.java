@@ -16,7 +16,7 @@ public class ExpertAiClient {
     private final WebClient webClient;
 
     public ExpertAiClient(WebClient.Builder webClientBuilder,
-            @Value("http://localhost:8000}") String fastApiUrl) {
+            @Value("${fastapi.url:http://localhost:8000}") String fastApiUrl) {
         this.webClient = webClientBuilder.baseUrl(fastApiUrl).build();
     }
 
