@@ -34,6 +34,7 @@ public class AdminDashboardDto {
         private String id;
         private String title;
         private String authorNickname;
+        private String boardType;
         private LocalDateTime createdAt;
     }
 
@@ -44,6 +45,8 @@ public class AdminDashboardDto {
         private String content;
         private String authorNickname;
         private String boardTitle;
+        private String boardId;
+        private String boardType;
         private LocalDateTime createdAt;
     }
 
