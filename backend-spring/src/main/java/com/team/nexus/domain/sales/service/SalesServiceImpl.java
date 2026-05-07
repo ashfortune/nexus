@@ -2,7 +2,11 @@ package com.team.nexus.domain.sales.service;
 
 import com.team.nexus.domain.auth.repository.UserRepository;
 import com.team.nexus.domain.sales.dto.SalesDataDTO;
+import com.team.nexus.domain.sales.repository.DailyPredictionRepository;
+import com.team.nexus.domain.sales.repository.PredictionRepository;
 import com.team.nexus.domain.sales.repository.SaleRepository;
+import com.team.nexus.global.entity.DailyPrediction;
+import com.team.nexus.global.entity.Prediction;
 import com.team.nexus.global.entity.Sale;
 import com.team.nexus.global.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -27,6 +32,73 @@ public class SalesServiceImpl implements SalesService {
 
     private final SaleRepository saleRepository;
     private final UserRepository userRepository;
+    private final com.team.nexus.client.FastApiClient fastApiClient;
+    private final PredictionRepository predictionRepository;
+    private final DailyPredictionRepository dailyPredictionRepository;
+
+    @Override
+    public Map<String, Object> getLatestAnalysis(String userId) {
+        log.info("최근 AI 분석 결과 조회 요청: userId={}", userId);
+        
+        UUID userUuid = UUID.fromString(userId);
+        User user = userRepository.findById(userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+
+        // 1. 최신 예측 결과 조회
+        return predictionRepository.findFirstByUserOrderByCreatedAtDesc(user)
+                .map(prediction -> {
+                    Map<String, Object> data = new java.util.HashMap<>();
+                    data.put("status", "success");
+                    
+                    Map<String, Object> result = new java.util.HashMap<>();
+                    result.put("movingAverage", prediction.getMovingAverage());
+                    result.put("returnRate", prediction.getReturnRate());
+                    result.put("predictedSales", prediction.getPredictedCost());
+                    
+                    // 예측 상세 정보 (날짜 등)
+                    Map<String, Object> predInfo = new java.util.HashMap<>();
+                    predInfo.put("amount", prediction.getPredictedCost());
+                    predInfo.put("date", prediction.getBaseDate() != null ? 
+                        prediction.getBaseDate().toLocalDate().plusDays(1).toString() : "내일");
+                    result.put("prediction", predInfo);
+
+                    // 2. 그래프용 상세 데이터 조회
+                    List<Map<String, Object>> analysisData = new ArrayList<>();
+                    List<DailyPrediction> dailyList = dailyPredictionRepository.findAllByPredictionOrderByTargetDateAsc(prediction);
+                    
+                    for (DailyPrediction dp : dailyList) {
+                        Map<String, Object> row = new java.util.HashMap<>();
+                        row.put("date", dp.getTargetDate().toLocalDate().toString());
+                        row.put("sales", dp.getActualSales());
+                        row.put("predictedSales", dp.getPredSales());
+                        row.put("movingAverage", dp.getMovingAverage());
+                        analysisData.add(row);
+                    }
+                    result.put("analysisData", analysisData);
+                    
+                    data.put("data", result);
+                    return data;
+                })
+                .orElseGet(() -> {
+                    log.info("기존 분석 결과가 없습니다: userId={}", userId);
+                    return Map.of("status", "no_data", "message", "아직 분석된 데이터가 없습니다. 먼저 매출 데이터를 저장해주세요.");
+                });
+    }
+
+    @Override
+    public Map<String, Object> triggerAnalysis(String userId) {
+        log.info("AI 매출 분석 트리거 요청 시작: userId={}", userId);
+        
+        try {
+            // FastApiClient를 통해 FastAPI 서버에 분석 지시
+            Map result = fastApiClient.triggerSalesAnalysis(userId).block();
+            log.info("FastAPI 분석 요청 성공: {}", result);
+            return result != null ? result : Map.of("status", "error", "message", "분석 결과가 비어있습니다.");
+        } catch (Exception e) {
+            log.error("FastAPI 통신 중 오류 발생: {}", e.getMessage());
+            return Map.of("status", "error", "message", "AI 서버와의 통신에 실패했습니다: " + e.getMessage());
+        }
+    }
 
     @Override
     @Transactional

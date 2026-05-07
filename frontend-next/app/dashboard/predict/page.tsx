@@ -19,11 +19,10 @@ const PredictPage = () => {
   const fetchAnalysis = async () => {
     setIsLoading(true);
     setError(null);
-    setAnalysisResult(null); // 이전 결과 초기화
     try {
       const { user } = useAuthStore.getState();
-      const response = await api.get('/api/v1/ai/prediction/analysis', {
-        baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000',
+      // 저장 시 자동 분석된 결과를 단순히 조회(GET)함
+      const response = await api.get('/api/v1/sales/results', {
         params: { userId: user?.id || '' }
       });
       
@@ -44,9 +43,9 @@ const PredictPage = () => {
     }
   };
 
-  // useEffect에서 fetchAnalysis() 제거 (사용자 클릭 시에만 실행되도록)
+  // 페이지 진입 시 자동으로 최신 분석 결과 로드
   useEffect(() => {
-    // 초기에는 아무것도 하지 않음
+    fetchAnalysis();
   }, []);
 
   return (
@@ -73,7 +72,7 @@ const PredictPage = () => {
               className="flex items-center gap-2 px-6 py-3 bg-[var(--nexus-surface-container)] hover:bg-[var(--nexus-surface-container-high)] border border-[var(--nexus-outline-variant)] rounded-2xl transition-all disabled:opacity-50 text-[var(--nexus-on-bg)]"
             >
               <RefreshCcw size={18} className={isLoading ? 'animate-spin' : ''} />
-              다시 분석하기
+              리포트 새로고침
             </button>
           )}
         </header>
@@ -82,19 +81,19 @@ const PredictPage = () => {
           <div className="h-[60vh] flex flex-col items-center justify-center space-y-6">
             <div className="w-16 h-16 border-4 border-[var(--nexus-primary)] border-t-transparent rounded-full animate-spin"></div>
             <p className="text-[var(--nexus-primary)] font-medium text-lg">
-              AI가 데이터를 심층 분석하고 있습니다...
+              최신 분석 리포트를 불러오고 있습니다...
             </p>
           </div>
         ) : !analysisResult && !error ? (
           // 초기 진입 상태: 분석 시작 버튼 표시
           <div className="h-[50vh] nexus-card border border-[var(--nexus-outline-variant)] rounded-[2.5rem] flex flex-col items-center justify-center p-12 text-center shadow-xl">
             <div className="p-6 bg-[var(--nexus-primary)]/10 rounded-full mb-6 text-[var(--nexus-primary)]">
-              <RefreshCcw size={48} />
+              <Database size={48} />
             </div>
-            <h2 className="text-2xl font-bold mb-4 text-[var(--nexus-on-bg)]">AI 매출 분석 시작하기</h2>
+            <h2 className="text-2xl font-bold mb-4 text-[var(--nexus-on-bg)]">분석 리포트가 준비되었습니다</h2>
             <p className="text-[var(--nexus-outline)] mb-8 max-w-md text-lg">
-              지금까지 입력된 매출 데이터를 바탕으로 <br />
-              내일의 매출을 정밀하게 예측해 드립니다.
+              저장된 매출 데이터를 바탕으로 생성된 <br />
+              최신 분석 리포트를 확인해 보세요.
             </p>
             <button
               onClick={fetchAnalysis}
