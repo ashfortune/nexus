@@ -158,35 +158,14 @@ export default function ExpertMatchPage() {
                   </div>
                 </div>
 
-        {/* Step 2: Request Input */}
-        {step === 2 && (
-          <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-right-8 duration-500">
-            <button
-              onClick={() => setStep(1)}
-              className="flex items-center gap-2 text-[var(--nexus-outline)] hover:text-[var(--nexus-primary)] font-semibold transition-colors mb-6"
-            >
-              <ChevronLeft className="w-5 h-5" /> 뒤로 가기
-            </button>
+                <textarea
+                  value={requestContent}
+                  onChange={(e) => setRequestContent(e.target.value)}
+                  placeholder="예: 앱 출시를 앞두고 초기 유저를 모을 마케팅 전략이 필요합니다. 예산은 500만원 정도이며, 인스타그램 광고 세팅부터 도와주실 분을 찾습니다."
+                  className="w-full h-48 bg-[var(--nexus-surface)] border border-[var(--nexus-outline-variant)] rounded-xl p-5 text-[var(--nexus-on-bg)] placeholder:text-[var(--nexus-outline)] focus:outline-none focus:ring-2 focus:ring-[var(--nexus-primary)]/30 focus:border-[var(--nexus-primary)] transition-all resize-none mb-8 text-lg"
+                />
 
-            <div className="bg-[var(--nexus-surface-lowest)] border border-[var(--nexus-outline-variant)] rounded-3xl p-8 md:p-10 shadow-xl">
-              <div className="flex items-center gap-5 mb-8 pb-8 border-b border-[var(--nexus-surface-container-high)]">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${selectedCategory?.color}`}>
-                  {selectedCategory && <selectedCategory.icon className="w-8 h-8" />}
-                </div>
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-black text-[var(--nexus-on-bg)]">{selectedCategory?.name}</h2>
-                  <p className="text-[var(--nexus-outline)] font-medium mt-1">어떤 도움이 필요하신가요?</p>
-                </div>
-              </div>
-
-              <textarea
-                value={requestContent}
-                onChange={(e) => setRequestContent(e.target.value)}
-                placeholder="예: 앱 출시를 앞두고 초기 유저를 모을 마케팅 전략이 필요합니다. 예산은 500만원 정도이며, 인스타그램 광고 세팅부터 도와주실 분을 찾습니다."
-                className="w-full h-48 bg-[var(--nexus-surface)] border border-[var(--nexus-outline-variant)] rounded-xl p-5 text-[var(--nexus-on-bg)] placeholder:text-[var(--nexus-outline)] focus:outline-none focus:ring-2 focus:ring-[var(--nexus-primary)]/30 focus:border-[var(--nexus-primary)] transition-all resize-none mb-8 text-lg"
-              />
-
-                <button
+                <button 
                   onClick={handleSubmit}
                   disabled={!requestContent.trim()}
                   className="w-full py-5 rounded-xl font-bold text-lg bg-[var(--nexus-primary)] hover:bg-[var(--nexus-primary-container)] text-white shadow-lg shadow-[var(--nexus-primary)]/20 transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -221,15 +200,16 @@ export default function ExpertMatchPage() {
                 <p className="text-[var(--nexus-outline)] font-medium text-lg">요구사항과 가장 적합한 TOP 3 전문가입니다.</p>
               </div>
 
-            <div className="space-y-8">
-              {result.experts && result.experts.length > 0 ? (
-                result.experts.map((expert: any, index: number) => (
-                  <div key={expert.matchedExpertId || index} className="bg-[var(--nexus-surface-lowest)] border border-[var(--nexus-outline-variant)] rounded-[2rem] overflow-hidden shadow-2xl shadow-[var(--nexus-primary)]/5">
-
-                    <div className="h-24 bg-gradient-to-r from-[var(--nexus-primary)] to-[var(--nexus-secondary)] relative">
-                      <div className="absolute -bottom-8 left-8">
-                        <div className="w-20 h-20 rounded-2xl bg-[var(--nexus-surface-lowest)] border-[4px] border-[var(--nexus-surface-lowest)] flex items-center justify-center overflow-hidden shadow-lg">
-                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${expert.expertName}&backgroundColor=cfe6f2`} alt="Expert" className="w-full h-full object-cover" />
+              <div className="space-y-8">
+                {result.experts && result.experts.length > 0 ? (
+                  result.experts.map((expert: any, index: number) => (
+                    <div key={expert.matchedExpertId || index} className="bg-[var(--nexus-surface-lowest)] border border-[var(--nexus-outline-variant)] rounded-[2rem] overflow-hidden shadow-2xl shadow-[var(--nexus-primary)]/5">
+                      
+                      <div className="h-24 bg-gradient-to-r from-[var(--nexus-primary)] to-[var(--nexus-secondary)] relative">
+                        <div className="absolute -bottom-8 left-8">
+                          <div className="w-20 h-20 rounded-2xl bg-[var(--nexus-surface-lowest)] border-[4px] border-[var(--nexus-surface-lowest)] flex items-center justify-center overflow-hidden shadow-lg">
+                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${expert.expertName}&backgroundColor=cfe6f2`} alt="Expert" className="w-full h-full object-cover" />
+                          </div>
                         </div>
                       </div>
 
@@ -252,27 +232,7 @@ export default function ExpertMatchPage() {
                               {expert.expertPortfolio}
                             </p>
                           </div>
-                          <div className="flex flex-col gap-2">
-                            <button 
-                              onClick={() => {
-                                setSelectedExpert(expert);
-                                setIsModalOpen(true);
-                              }}
-                              className="px-6 py-3 bg-[var(--nexus-surface-container-highest)] text-[var(--nexus-on-bg)] font-bold text-md rounded-xl hover:bg-[var(--nexus-surface-container-high)] transition-colors active:scale-95 shrink-0"
-                            >
-                              상세 보기
-                            </button>
-                          </div>
-                          <p className="text-[var(--nexus-primary)] font-bold text-sm flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--nexus-primary)]" />
-                            {expert.expertPhone}
-                          </p>
-                          <p className="text-[var(--nexus-outline)] font-medium mt-2 text-sm leading-relaxed">
-                            {expert.expertPortfolio}
-                          </p>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <button
+                          <button 
                             onClick={() => {
                               setSelectedExpert(expert);
                               setIsModalOpen(true);
@@ -303,51 +263,13 @@ export default function ExpertMatchPage() {
                   <div className="text-center p-10 bg-[var(--nexus-surface-lowest)] rounded-3xl border border-[var(--nexus-outline-variant)]">
                     <p className="text-xl font-bold text-[var(--nexus-on-bg)]">전문가를 찾을 수 없습니다.</p>
                   </div>
-                ))
-              ) : (
-                <div className="text-center p-10 bg-[var(--nexus-surface-lowest)] rounded-3xl border border-[var(--nexus-outline-variant)]">
-                  <p className="text-xl font-bold text-[var(--nexus-on-bg)]">전문가를 찾을 수 없습니다.</p>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-10 text-center">
-              <button
-                onClick={() => setStep(1)}
-                className="text-[var(--nexus-outline)] font-bold hover:text-[var(--nexus-primary)] transition-colors underline underline-offset-8"
-              >
-                다른 분야 전문가 다시 찾기
-              </button>
-            </div>
-          </div>
-        )}
-
-      </div>
-
-      {/* Expert Detail Modal */}
-      {isModalOpen && selectedExpert && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="relative bg-[var(--nexus-surface-lowest)] w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="h-32 bg-gradient-to-r from-[var(--nexus-primary)] to-[var(--nexus-secondary)]" />
-            <div className="px-10 pb-10">
-              <div className="relative -mt-12 mb-6">
-                <div className="w-24 h-24 rounded-3xl bg-[var(--nexus-surface-lowest)] border-[5px] border-[var(--nexus-surface-lowest)] shadow-xl overflow-hidden">
-                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedExpert.expertName}&backgroundColor=cfe6f2`} alt="Expert" className="w-full h-full object-cover" />
-                </div>
+                )}
               </div>
 
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <h2 className="text-3xl font-black text-[var(--nexus-on-bg)] mb-2">{selectedExpert.expertName}</h2>
-                  <div className="flex items-center gap-4">
-                    <span className="text-[var(--nexus-primary)] font-bold text-lg">{selectedExpert.expertPhone}</span>
-                    <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-sm font-bold border border-amber-100">★ {selectedExpert.rating || '5.0'}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="w-10 h-10 rounded-full bg-[var(--nexus-surface-container)] flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+              <div className="mt-10 text-center">
+                <button 
+                  onClick={() => setStep(1)}
+                  className="text-[var(--nexus-outline)] font-bold hover:text-[var(--nexus-primary)] transition-colors underline underline-offset-8"
                 >
                   다른 분야 전문가 다시 찾기
                 </button>
@@ -370,10 +292,13 @@ export default function ExpertMatchPage() {
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="text-sm font-bold text-[var(--nexus-primary)] uppercase tracking-widest mb-3">AI 매칭 인사이트</h4>
-                  <div className="bg-[var(--nexus-primary)]/5 p-6 rounded-2xl border border-[var(--nexus-primary)]/10 text-[var(--nexus-primary)] font-semibold italic">
-                    "{selectedExpert.matchReason}"
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h2 className="text-3xl font-black text-[var(--nexus-on-bg)] mb-2">{selectedExpert.expertName}</h2>
+                    <div className="flex items-center gap-4">
+                      <span className="text-[var(--nexus-primary)] font-bold text-lg">{selectedExpert.expertPhone}</span>
+                      <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-sm font-bold border border-amber-100">★ {selectedExpert.rating || '5.0'}</span>
+                    </div>
                   </div>
                   <button 
                     onClick={() => setIsModalOpen(false)}
@@ -383,13 +308,39 @@ export default function ExpertMatchPage() {
                   </button>
                 </div>
 
-              <div className="mt-10 flex gap-4">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-5 bg-[var(--nexus-surface-container-highest)] text-[var(--nexus-on-bg)] font-bold rounded-2xl hover:bg-gray-200 transition-all"
-                >
-                  닫기
-                </button>
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-sm font-bold text-[var(--nexus-outline)] uppercase tracking-widest mb-3">전문 분야 및 포트폴리오</h4>
+                    <p className="text-[var(--nexus-on-bg)] leading-relaxed font-medium">
+                      {selectedExpert.expertPortfolio}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-bold text-[var(--nexus-primary)] uppercase tracking-widest mb-3">AI 매칭 인사이트</h4>
+                    <div className="bg-[var(--nexus-primary)]/5 p-6 rounded-2xl border border-[var(--nexus-primary)]/10 text-[var(--nexus-primary)] font-semibold italic">
+                      "{selectedExpert.matchReason}"
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-10 flex gap-4">
+                  <button 
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 py-5 bg-[var(--nexus-surface-container-highest)] text-[var(--nexus-on-bg)] font-bold rounded-2xl hover:bg-gray-200 transition-all"
+                  >
+                    닫기
+                  </button>
+                  <button 
+                    onClick={() => {
+                      alert('전문가에게 연락 요청이 전송되었습니다.');
+                      setIsModalOpen(false);
+                    }}
+                    className="flex-[2] py-5 bg-[var(--nexus-primary)] text-white font-bold rounded-2xl hover:bg-[var(--nexus-primary-container)] transition-all shadow-lg shadow-[var(--nexus-primary)]/20"
+                  >
+                    상담 신청하기
+                  </button>
+                </div>
               </div>
             </div>
           </div>
