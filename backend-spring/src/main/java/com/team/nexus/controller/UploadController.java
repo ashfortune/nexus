@@ -88,6 +88,14 @@ public class UploadController {
                 String uploadUrl = String.format("%s/storage/v1/object/%s/%s", supabaseUrl, supabaseBucket,
                         storagePath);
 
+                log.info("[Supabase Debug] Upload URL: {}", uploadUrl);
+                log.info("[Supabase Debug] Bucket: {}", supabaseBucket);
+                if (supabaseKey != null && supabaseKey.length() > 10) {
+                    log.info("[Supabase Debug] Key Prefix: {}", supabaseKey.substring(0, 10));
+                } else {
+                    log.warn("[Supabase Debug] Key is null or too short!");
+                }
+
                 HttpHeaders headers = new HttpHeaders();
                 headers.set("apikey", supabaseKey);
                 headers.set("Authorization", "Bearer " + supabaseKey);
