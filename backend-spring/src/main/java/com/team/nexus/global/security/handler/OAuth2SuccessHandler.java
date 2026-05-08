@@ -48,8 +48,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .getAuthorizedClientRegistrationId();
             log.info("OAuth2 Login Success: {} (ID: {}), Provider: {}", email, user.getId(), provider);
 
+            // 접속한 서버 주소에 따라 프론트엔드 URL 결정
+            String host = request.getServerName();
+            String baseUrl = (host.equals("localhost") || host.equals("127.0.0.1")) 
+                             ? "http://localhost:3000" 
+                             : "https://nexus-sigma-gilt.vercel.app";
+
             // 닉네임 한글 인코딩 및 URL 생성
-            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/auth/oauth-callback")
+            String targetUrl = UriComponentsBuilder.fromUriString(baseUrl + "/auth/oauth-callback")
                     .queryParam("token", token)
                     .queryParam("userId", user.getId().toString())
                     .queryParam("nickname", user.getNickname())
@@ -58,22 +64,18 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .queryParam("provider", provider)
                     .queryParam("profileImage", user.getProfileImage())
                     .build()
-                    .encode(java.nio.charset.StandardCharsets.UTF_8) // 명시적 인코딩 추가
+                    .encode(java.nio.charset.StandardCharsets.UTF_8)
                     .toUriString();
-            log.info("Redirecting to: {}", targetUrl);
-            // 디버깅을 위한 파일 로그 (콘솔 확인이 어려울 때 사용)
-            try (java.io.FileWriter fw = new java.io.FileWriter("C:/nexus/oauth_debug.log", true)) {
-                fw.write(new java.util.Date() + " - Redirecting to: " + targetUrl + "\n");
-            }
+            
+            log.info("Redirecting to (Host: {}): {}", host, targetUrl);
             getRedirectStrategy().sendRedirect(request, response, targetUrl);
         } catch (Exception e) {
             log.error("OAuth2 Success Handler Error: ", e);
-            try (java.io.FileWriter fw = new java.io.FileWriter("C:/nexus/oauth_debug.log", true)) {
-                fw.write(new java.util.Date() + " - Error: " + e.getMessage() + "\n");
-                java.io.PrintWriter pw = new java.io.PrintWriter(fw);
-                e.printStackTrace(pw);
-            }
-            response.sendRedirect("http://localhost:3000/auth/login?error=auth_failed");
+            String host = request.getServerName();
+            String errorBaseUrl = (host.equals("localhost") || host.equals("127.0.0.1")) 
+                                  ? "http://localhost:3000" 
+                                  : "https://nexus-sigma-gilt.vercel.app";
+            response.sendRedirect(errorBaseUrl + "/auth/login?error=auth_failed");
         }
     }
 }
