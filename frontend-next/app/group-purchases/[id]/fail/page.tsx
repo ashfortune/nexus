@@ -2,8 +2,9 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { XCircle, ChevronLeft } from 'lucide-react';
+import { Suspense } from 'react';
 
-export default function PaymentFailPage() {
+function PaymentFailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const code = searchParams.get('code');
@@ -48,5 +49,17 @@ export default function PaymentFailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentFailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[var(--nexus-bg)] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-24 w-24 border-b-4 border-[var(--nexus-primary)]"></div>
+      </div>
+    }>
+      <PaymentFailContent />
+    </Suspense>
   );
 }

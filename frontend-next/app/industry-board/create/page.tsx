@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   ArrowLeft, 
@@ -25,7 +25,7 @@ interface Category {
   name: string;
 }
 
-export default function IndustryBoardCreatePage() {
+function IndustryBoardCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [title, setTitle] = useState("");
@@ -304,5 +304,18 @@ export default function IndustryBoardCreatePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function IndustryBoardCreatePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-10 h-10 text-[var(--nexus-primary)] animate-spin" />
+        <p className="text-zinc-400 font-black text-[10px] tracking-widest uppercase">Loading...</p>
+      </div>
+    }>
+      <IndustryBoardCreateContent />
+    </Suspense>
   );
 }

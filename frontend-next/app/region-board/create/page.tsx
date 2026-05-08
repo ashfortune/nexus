@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   ArrowLeft, 
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
 
-export default function BoardCreatePage() {
+function BoardCreateContent() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -278,5 +278,17 @@ export default function BoardCreatePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BoardCreatePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[var(--nexus-bg)] flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-[var(--nexus-primary)] animate-spin" />
+      </div>
+    }>
+      <BoardCreateContent />
+    </Suspense>
   );
 }
