@@ -2,9 +2,8 @@ import datetime
 import logging
 import os
 import uuid
-from typing import Any, Dict, List
+from typing import Any, Dict
 
-import numpy as np
 import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,7 +28,7 @@ async def fetchSalesData(userId: uuid.UUID, db: AsyncSession) -> pd.DataFrame:
 
     if len(rows) == 0:
         raise ValueError("등록된 매출 데이터가 없습니다. 먼저 매출 데이터를 업로드해 주세요.")
-    
+
     if len(rows) < 2:
         raise ValueError("분석을 시작하려면 최소 2일 이상의 매출 데이터가 필요합니다.")
 
@@ -56,15 +55,15 @@ async def predictWithBasicStats(df: pd.DataFrame) -> tuple[pd.DataFrame, Dict[st
     stats = analyzeStatistics(df)
     forecastValue = int(stats["currentMa"])
     nextDate = df["date"].iloc[-1] + datetime.timedelta(days=1)
-    
+
     # 분석용 가상 피팅 데이터 생성 (과거치 = 실제치)
     df["predicted"] = df["actual"]
-    
+
     # 미래 1일 데이터만 추가 (그냥 내일 예측값만 주고)
     future_dates = [nextDate]
     future_df = pd.DataFrame({"date": future_dates, "predicted": [forecastValue]})
     df = pd.concat([df, future_df], ignore_index=True)
-    
+
     return df, {
         "forecastValue": forecastValue,
         "nextDate": nextDate.strftime("%Y-%m-%d"),
@@ -79,14 +78,14 @@ async def predictWithStatsmodels(df: pd.DataFrame) -> tuple[pd.DataFrame, Dict[s
     df["predicted"] = model.fittedvalues
     forecast = model.forecast(1)
     forecast_val = int(forecast.iloc[0])
-    
+
     nextDate = df["date"].iloc[-1] + datetime.timedelta(days=1)
-    
+
     # 미래 1일 데이터만 추가 (그냥 내일 예측값만 주고)
     future_dates = [nextDate]
     future_df = pd.DataFrame({"date": future_dates, "predicted": [forecast_val]})
     df = pd.concat([df, future_df], ignore_index=True)
-    
+
     return df, {
         "forecastValue": forecast_val,
         "nextDate": nextDate.strftime("%Y-%m-%d"),
@@ -100,16 +99,16 @@ async def predictWithTimesFM(df: pd.DataFrame) -> Dict[str, Any]:
     # CPU 전용 모드 및 환경 변수 설정
     os.environ["JAX_PLATFORM_NAME"] = "cpu"
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
-    
+
     try:
         import timesfm
-        
+
         # 최신 사전학습 모델 google/timesfm-2.5-200m-pytorch 로드
         tfm = timesfm.TimesFM_2p5_200M_torch.from_pretrained(
             "google/timesfm-2.5-200m-pytorch",
             compile=True
         )
-        
+
         # ForecastConfig 컴파일 (기본 설정 구성)
         tfm.compile(
             timesfm.ForecastConfig(
@@ -122,27 +121,27 @@ async def predictWithTimesFM(df: pd.DataFrame) -> Dict[str, Any]:
                 fix_quantile_crossing=True,
             )
         )
-        
+
         # 데이터 준비: [B, T] 형태의 리스트 필요
         actual_data = df["actual"].values.tolist()
-        
+
         # 예측 수행 (내일 및 한 달 예측 수치 도출)
         point_forecast, _ = tfm.forecast(
             inputs=[actual_data],
             horizon=30
         )
-        
+
         # 결과 추출 (B=1, H=30)
         forecast_values = point_forecast[0]
         forecastValue = int(forecast_values[0])  # 내일 매출
         nextMonthForecast = forecastValue * 30  # 다음 달(30일) 합산 매출 (내일 예측값 * 30)
-        
+
     except (ImportError, Exception) as e:
         logger.warning(f"TimesFM 2.5 실모델 호출 실패 ({str(e)}).")
         raise e
-    
+
     nextDate = df["date"].iloc[-1] + datetime.timedelta(days=1)
-    
+
     return {
         "forecastValue": forecastValue,
         "nextDate": nextDate.strftime("%Y-%m-%d"),
@@ -160,7 +159,7 @@ async def persistAnalysisResults(
 ) -> Prediction:
     """분석 및 예측 결과를 DB에 저장합니다."""
     nowNaive = datetime.datetime.now().replace(tzinfo=None)
-    
+
     newPred = Prediction(
         id=uuid.uuid4(),
         user_id=userId,
@@ -178,7 +177,7 @@ async def persistAnalysisResults(
         date_obj = row["date"]
         if hasattr(date_obj, "to_pydatetime"):
             date_obj = date_obj.to_pydatetime()
-            
+
         if isinstance(date_obj, datetime.datetime):
             pureDate = date_obj.replace(tzinfo=None)
         else:
@@ -208,10 +207,10 @@ async def getAnalysisFromDb(userId: str, db: AsyncSession) -> Dict[str, Any]:
     """데이터 크기에 따라 모델을 선택하여 분석을 수행합니다."""
     try:
         userUuid = uuid.UUID(userId)
-        
+
         # 1. 오늘 이미 생성된 예측 기록이 있는지 확인 (단, 마지막 분석 이후에 새로운 매출 업로드가 없어야 함)
         today_start = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
-        
+
         check_query = text("""
             SELECT p.id, p.predicted_cost, p.moving_average, p.return_rate, p.created_at
             FROM predictions p
@@ -253,7 +252,7 @@ async def getAnalysisFromDb(userId: str, db: AsyncSession) -> Dict[str, Any]:
             for r in daily_rows:
                 date_str = str(r.target_date.date()) if hasattr(r.target_date, "date") else str(r.target_date)
                 is_tomorrow = (next_date_str is not None and date_str == next_date_str)
-                
+
                 analysis_data.append({
                     "date": date_str,
                     "actual": int(r.actual_sales) if r.actual_sales is not None else None,
@@ -263,7 +262,7 @@ async def getAnalysisFromDb(userId: str, db: AsyncSession) -> Dict[str, Any]:
                     "movingAverage": float(r.moving_average) if r.moving_average is not None else None,
                     "returnRate": float(r.return_rate) if r.return_rate is not None else None,
                 })
-            
+
             return {
                 "prediction": {
                     "amount": existing_pred.predicted_cost,
@@ -280,11 +279,11 @@ async def getAnalysisFromDb(userId: str, db: AsyncSession) -> Dict[str, Any]:
 
         # 2. 캐시된 기록이 없으면 새롭게 데이터 분석
         df = await fetchSalesData(userUuid, db)
-        
+
         # 통계 분석 (실제 데이터에 대해서만)
         stats = analyzeStatistics(df)
         dataSize = len(df)
-        
+
         # 3. 데이터 크기별 예측 모델 분기 및 저장용 데이터 정립
         if dataSize <= 30:
             df, pred = await predictWithBasicStats(df)
@@ -296,7 +295,7 @@ async def getAnalysisFromDb(userId: str, db: AsyncSession) -> Dict[str, Any]:
             # 90일 이상 구간에서의 하이브리드 전략:
             # Statsmodels로 피팅 및 미래 30일 시계열 라인 생성 (daily_predictions)
             df_stats, pred_stats = await predictWithStatsmodels(df.copy())
-            
+
             # TimesFM으로 내일 하루의 핵심 AI 예측값 생성 (predictions.predicted_cost)
             try:
                 pred_timesfm = await predictWithTimesFM(df)

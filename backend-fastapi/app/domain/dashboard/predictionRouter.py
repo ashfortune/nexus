@@ -39,7 +39,7 @@ async def executeAnalysis(userId: str, db: AsyncSession) -> Dict[str, Any]:
         return {"status": "success", "data": result}
     except ValueError as e:
         return {"status": "no_data", "message": str(e), "data": None}
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="서버 내부 오류가 발생했습니다.")

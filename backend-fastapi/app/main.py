@@ -10,14 +10,14 @@ from sqlalchemy import text
 from app.core.ai_client import get_ai_client
 from app.core.database import AsyncSessionLocal, get_db
 from app.domain.auth import authRouter as auth
-from app.domain.expert import expertRouter as expert
 from app.domain.branding import brandingRouter as branding
 from app.domain.branding.brandingService import initialize_industry_cache
 from app.domain.community import communityRouter as community
 from app.domain.compliance import complianceRouter as compliance
 from app.domain.dashboard import dashboardRouter as dashboard
-from app.domain.dashboard import predictionRouter as prediction
 from app.domain.dashboard import operationRouter as operation
+from app.domain.dashboard import predictionRouter as prediction
+from app.domain.expert import expertRouter as expert
 from app.domain.simulation import simulationRouter as simulation
 from app.domain.subsidy import subsidyRouter as subsidy
 from app.domain.subsidy.subsidyRouter import start_scheduler as subsidy_start_scheduler

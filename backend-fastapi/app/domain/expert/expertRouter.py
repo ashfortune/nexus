@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import get_db
 from app.domain.expert import expertSchema, expertService
 
@@ -7,7 +8,7 @@ router = APIRouter()
 
 @router.post("/match", response_model=expertSchema.ExpertMatchResponse)
 async def match_experts(
-    request: expertSchema.ExpertMatchRequest, 
+    request: expertSchema.ExpertMatchRequest,
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -16,8 +17,8 @@ async def match_experts(
     """
     try:
         result = await expertService.match_expert_service(
-            db, 
-            request.request_content, 
+            db,
+            request.request_content,
             request.category_id
         )
         return result

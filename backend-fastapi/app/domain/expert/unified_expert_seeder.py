@@ -1,14 +1,14 @@
 import asyncio
+import logging
 import os
+import random
 import sys
 import uuid
+from typing import Any
+
 import requests
-import random
-import time
-import logging
-from typing import List, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # 로그 설정
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.core.database import AsyncSessionLocal
 from app.core.ai_client import get_ai_client
+from app.core.database import AsyncSessionLocal
 
 # 1. 고품질 수동 시드 데이터 (전문가 매칭의 기준점)
 SEED_EXPERT_DATA = [
@@ -57,14 +57,14 @@ CRAWL_KEYWORDS = [
     ("스타트업 세무", "법무/세무"), ("변리사 특허", "법무/세무"), ("창업 노무 컨설팅", "법무/세무")
 ]
 
-MAX_PAGES_PER_KEYWORD = 10 
+MAX_PAGES_PER_KEYWORD = 10
 TARGET_TOTAL_COUNT = 1000
 
 async def get_or_create_category(db: AsyncSession, category_name: str) -> uuid.UUID:
     """카테고리가 없으면 생성하고 ID를 반환합니다."""
     result = await db.execute(text("SELECT id FROM industry_categories WHERE name = :name LIMIT 1"), {"name": category_name})
     cat_id = result.scalar()
-    
+
     if not cat_id:
         cat_id = uuid.uuid4()
         await db.execute(text("INSERT INTO industry_categories (id, name, level, created_at) VALUES (:id, :name, 1, NOW())"), {"id": cat_id, "name": category_name})
@@ -118,7 +118,7 @@ async def run_unified_seeder():
         for data in SEED_EXPERT_DATA:
             cat_id = await get_or_create_category(db, data["category"])
             success = await save_expert(
-                db, ai_client, data["name"], data["phone"], 
+                db, ai_client, data["name"], data["phone"],
                 f"expert_{uuid.uuid4().hex[:6]}@nexus.com", cat_id, data["portfolio"]
             )
             if success:
@@ -129,18 +129,18 @@ async def run_unified_seeder():
         logger.info(f"🌐 [Step 2] 브런치 대규모 크롤링 시작 (목표: {TARGET_TOTAL_COUNT}명)...")
         for keyword, category in CRAWL_KEYWORDS:
             if total_saved >= TARGET_TOTAL_COUNT: break
-            
+
             logger.info(f"🔍 키워드 검색: {keyword} ({category})")
             cat_id = await get_or_create_category(db, category)
-            
+
             for page in range(1, MAX_PAGES_PER_KEYWORD + 1):
                 if total_saved >= TARGET_TOTAL_COUNT: break
-                
+
                 url = f"https://api.brunch.co.kr/v1/search/article?q={keyword}&page={page}"
                 try:
                     res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
                     if res.status_code != 200: break
-                    
+
                     articles = res.json().get('data', {}).get('list', [])
                     if not articles: break
 
@@ -151,11 +151,11 @@ async def run_unified_seeder():
                         title = art.get('title', '')
 
                         if not user_desc or user_name in seen_names: continue
-                        
+
                         portfolio = f"[{user_name} 전문가의 소개]\n{user_desc}\n\n[주요 활동 및 기고]\n{title}"
-                        
+
                         success = await save_expert(
-                            db, ai_client, user_name, 
+                            db, ai_client, user_name,
                             f"010-{random.randint(1000,9999)}-{random.randint(1000,9999)}",
                             f"brunch_{uuid.uuid4().hex[:6]}@nexus.com", cat_id, portfolio
                         )
@@ -164,13 +164,13 @@ async def run_unified_seeder():
                             seen_names.add(user_name)
                             if total_saved % 10 == 0:
                                 logger.info(f"✅ 현재까지 {total_saved}명의 전문가가 등록되었습니다.")
-                        
+
                         # AI API 할당량 조절을 위한 짧은 휴식
                         await asyncio.sleep(0.5)
 
                 except Exception as e:
                     logger.warning(f"크롤링 중 일시적 오류: {e}")
-                
+
                 await asyncio.sleep(1) # IP 차단 방지
 
     logger.info(f"✨ 모든 작업이 완료되었습니다. 총 {total_saved}명의 전문가 데이터가 구축되었습니다.")

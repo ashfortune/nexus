@@ -1,17 +1,18 @@
 import os
 import re
+import shutil
+import tempfile
 from typing import List
+
 from dotenv import load_dotenv
+from fastapi import UploadFile
 
 # LangChain 관련 임포트
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_postgres import PGVector
-from langchain_core.documents import Document
-from fastapi import UploadFile
-import tempfile
-import shutil
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # 1. 환경 변수 로드 및 설정
 load_dotenv()
@@ -41,10 +42,10 @@ def get_metadata_from_filename(filename: str):
     # 연도(4자리 숫자)와 분기(숫자 + Q) 추출을 위한 정규표현식
     year_match = re.search(r"(\d{4})", filename)
     quarter_match = re.search(r"(\d)Q", filename, re.IGNORECASE)
-    
+
     year = year_match.group(1) if year_match else "Unknown"
     quarter = f"{quarter_match.group(1)}Q" if quarter_match else "Unknown"
-    
+
     return {
         "source": filename,
         "year": year,
@@ -58,15 +59,15 @@ def split_pdf_by_parts(file_path: str) -> List[dict]:
     print(f"[1/4] PDF 로딩 및 섹션 분리 중: {os.path.basename(file_path)}")
     loader = PyPDFLoader(file_path)
     pages = loader.load()
-    
+
     # 전체 텍스트 병합
     full_text = "\n".join([p.page_content for p in pages])
-    
+
     # 'Part' 키워드를 기준으로 텍스트 분할 (Regex 사용)
     # Part 1, Part 2 등을 기준으로 나누며, 파트 제목도 함께 캡처하기 위해 split 대신 finditer 사용 고려 가능
     # 여기서는 간단히 Part [숫자]를 구분자로 사용하여 분할
     parts = re.split(r"(Part\s+\d+\.)", full_text)
-    
+
     parts_data = []
     # re.split에 괄호를 사용하면 구분자도 결과에 포함됨 [None, 'Part 1.', '내용...', 'Part 2.', '내용...']
     for i in range(1, len(parts), 2):
@@ -76,7 +77,7 @@ def split_pdf_by_parts(file_path: str) -> List[dict]:
             "part_name": part_title,
             "content": part_content
         })
-        
+
     return parts_data
 
 def chunk_documents(parts_data: List[dict], metadata_base: dict) -> List[Document]:
@@ -90,22 +91,22 @@ def chunk_documents(parts_data: List[dict], metadata_base: dict) -> List[Documen
         length_function=len,
         is_separator_regex=False,
     )
-    
+
     final_docs = []
-    
+
     for part in parts_data:
         # 각 파트의 텍스트를 청크로 분할
         chunks = text_splitter.split_text(part["content"])
-        
+
         for chunk in chunks:
             # 메타데이터 조합
             metadata = metadata_base.copy()
             metadata["part"] = part["part_name"]
-            
+
             # Document 객체 생성
             doc = Document(page_content=chunk, metadata=metadata)
             final_docs.append(doc)
-            
+
     return final_docs
 
 def upsert_to_vector_db(documents: List[Document]):
@@ -113,10 +114,10 @@ def upsert_to_vector_db(documents: List[Document]):
     PGVector를 사용하여 벡터 데이터베이스에 저장(Upsert)합니다.
     """
     print(f"[3/4] 벡터 DB(PostgreSQL) 저장 중... (총 청크 수: {len(documents)})")
-    
+
     # 임베딩 모델 설정
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    
+
     # PGVector 인스턴스 생성 및 데이터 추가
     # langchain_postgres의 PGVector 사용
     vector_store = PGVector(
@@ -125,7 +126,7 @@ def upsert_to_vector_db(documents: List[Document]):
         connection=CONNECTION_STRING,
         use_jsonb=True,
     )
-    
+
     vector_store.add_documents(documents)
     print(f"[4/4] 저장 완료! 테이블명: {COLLECTION_NAME}")
 
@@ -140,16 +141,16 @@ def run_ingestion(pdf_file_path: str) -> int:
     # 1. 파일명에서 기본 메타데이터 추출
     filename = os.path.basename(pdf_file_path)
     metadata_base = get_metadata_from_filename(filename)
-    
+
     # 2. PDF 로드 및 Part 단위 분리
     parts_data = split_pdf_by_parts(pdf_file_path)
-    
+
     # 3. 세부 청킹 및 Document 객체 생성
     final_docs = chunk_documents(parts_data, metadata_base)
-    
+
     # 4. 벡터 DB 저장
     upsert_to_vector_db(final_docs)
-    
+
     return len(final_docs)
 
 def process_pdf_upload(file: UploadFile) -> dict:

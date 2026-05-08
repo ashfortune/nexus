@@ -151,7 +151,7 @@ async def finalize_logo_api(
         final_logo = await brandingService.finalize_brand_logo(db, identity_id, request.imageUrl)
 
         return brandingSchema.LogoFinalizeResponse(
-            success=True, 
+            success=True,
             logoAssetId=final_logo.id,
             availableAssetTypes=brandingService.AVAILABLE_MARKETING_ASSETS
         )

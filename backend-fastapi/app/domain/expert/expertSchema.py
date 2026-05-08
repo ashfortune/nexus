@@ -1,6 +1,8 @@
 import uuid
 from typing import List, Optional
+
 from pydantic import BaseModel
+
 
 class ExpertMatchRequest(BaseModel):
     request_content: str

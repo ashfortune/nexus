@@ -18,7 +18,7 @@ async def processSalesCsv(file: UploadFile, userId: str, db: AsyncSession) -> Di
     try:
         contents = await file.read()
         logger.info(f"파일 수신 완료: {file.filename} (크기: {len(contents)} bytes)")
-        
+
         logger.info("CSV 파싱 시작...")
         df = pd.read_csv(io.BytesIO(contents))
         logger.info(f"CSV 파싱 완료: 총 {len(df)}행 추출됨")
@@ -28,7 +28,7 @@ async def processSalesCsv(file: UploadFile, userId: str, db: AsyncSession) -> Di
 
         logger.info("데이터 정제 및 클렌징 작업 중...")
         cleanedData = prepareSalesData(df, file.filename)
-        
+
         logger.info(f"DB 적재 시작 (대상: {len(cleanedData)}건)...")
         count = await saveSalesToDb(cleanedData, userId, db)
 
@@ -71,12 +71,12 @@ async def saveSalesToDb(dataList: List[Dict[str, Any]], userId: str, db: AsyncSe
     """클렌징된 데이터를 DB에 저장하되, 동일 날짜 중복 시 최대 매출액으로 대체합니다."""
     from sqlalchemy import select
     userUuid = uuid.UUID(userId)
-    
+
     # 1. DB에서 이 유저의 기존 매출 데이터를 모두 가져옵니다.
     stmt = select(Sale).where(Sale.user_id == userUuid)
     result = await db.execute(stmt)
     existing_sales_list = result.scalars().all()
-    
+
     # 날짜(date) -> Sale 객체 매핑 딕셔너리 생성 (TIMESTAMPTZ를 naive date로 정규화)
     existing_map = {}
     for s in existing_sales_list:
@@ -96,7 +96,7 @@ async def saveSalesToDb(dataList: List[Dict[str, Any]], userId: str, db: AsyncSe
     for idx, (item_date, item) in enumerate(aggregated_data.items()):
         if (idx + 1) % 100 == 0:
             logger.info(f"진행 중... ({idx + 1}/{len(aggregated_data)} 건 처리 완료)")
-            
+
         if item_date in existing_map:
             # 기존 데이터가 있는 경우: 최신 업로드 데이터로 업데이트하고 타임스탬프 갱신 (캐시 무효화용)
             db_sale = existing_map[item_date]
