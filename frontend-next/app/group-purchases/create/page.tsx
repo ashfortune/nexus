@@ -560,6 +560,7 @@ export default function GroupBuyCreatePage() {
             )}
           </button>
         </form>
+        </div>
       </div>
     </AuthGuard>
   );

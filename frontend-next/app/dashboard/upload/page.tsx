@@ -355,6 +355,7 @@ const UploadPage = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
     </AuthGuard>
   );

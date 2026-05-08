@@ -128,6 +128,7 @@ const PredictPage = () => {
             <AnalysisReport data={analysisResult} />
           </div>
         )}
+        </div>
       </div>
     </AuthGuard>
   );
