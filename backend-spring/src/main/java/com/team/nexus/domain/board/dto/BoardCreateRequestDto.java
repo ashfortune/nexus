@@ -15,6 +15,7 @@ public class BoardCreateRequestDto {
     private String regionName;
     private String categoryName;
     private Boolean isAnonymous;
+    @com.fasterxml.jackson.annotation.JsonProperty("imageUrls")
     private List<String> imageUrls;
     private String industryCategoryId;
 }

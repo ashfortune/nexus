@@ -107,6 +107,13 @@ public class UploadController {
             }
         }
 
+        if (!files.isEmpty() && urls.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", "파일 업로드에 실패했습니다. 설정을 확인해 주세요."
+            ));
+        }
+
         return ResponseEntity.ok(Map.of(
                 "status", "success",
                 "message", urls.size() + "개의 파일이 업로드되었습니다.",

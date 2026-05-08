@@ -161,12 +161,16 @@ public class BoardServiceImpl implements BoardService {
             }
         }
 
+        String primaryImageUrl = (requestDto.getImageUrls() != null && !requestDto.getImageUrls().isEmpty()) 
+                ? requestDto.getImageUrls().get(0) : null;
+
         Board board = Board.builder()
                 .title(requestDto.getTitle())
                 .content(requestDto.getContent())
                 .regionName(requestDto.getRegionName())
                 .categoryName(requestDto.getCategoryName())
                 .isAnonymous(requestDto.getIsAnonymous() != null && requestDto.getIsAnonymous())
+                .imageUrl(primaryImageUrl)
                 .viewCount(0)
                 .user(user)
                 .build();
@@ -177,15 +181,15 @@ public class BoardServiceImpl implements BoardService {
         }
         
         if (requestDto.getImageUrls() != null && !requestDto.getImageUrls().isEmpty()) {
-            List<BoardImage> boardImages = requestDto.getImageUrls().stream()
-                    .map(url -> BoardImage.builder()
-                            .board(board)
-                            .imageUrl(url)
-                            .sortOrder(requestDto.getImageUrls().indexOf(url))
-                            .build())
-                    .collect(Collectors.toList());
-            board.getImages().addAll(boardImages);
-            board.setImageUrl(requestDto.getImageUrls().get(0));
+            for (int i = 0; i < requestDto.getImageUrls().size(); i++) {
+                String url = requestDto.getImageUrls().get(i);
+                BoardImage boardImage = BoardImage.builder()
+                        .board(board)
+                        .imageUrl(url)
+                        .sortOrder(i)
+                        .build();
+                board.getImages().add(boardImage);
+            }
         }
         
         boardRepository.save(board);
@@ -234,14 +238,15 @@ public class BoardServiceImpl implements BoardService {
 
         board.getImages().clear();
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
-            List<BoardImage> boardImages = request.getImageUrls().stream()
-                    .map(url -> BoardImage.builder()
-                            .board(board)
-                            .imageUrl(url)
-                            .sortOrder(request.getImageUrls().indexOf(url))
-                            .build())
-                    .collect(Collectors.toList());
-            board.getImages().addAll(boardImages);
+            for (int i = 0; i < request.getImageUrls().size(); i++) {
+                String url = request.getImageUrls().get(i);
+                BoardImage boardImage = BoardImage.builder()
+                        .board(board)
+                        .imageUrl(url)
+                        .sortOrder(i)
+                        .build();
+                board.getImages().add(boardImage);
+            }
             board.setImageUrl(request.getImageUrls().get(0));
         } else {
             board.setImageUrl(null);
