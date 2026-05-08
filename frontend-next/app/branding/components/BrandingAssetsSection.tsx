@@ -10,6 +10,11 @@ const API_BASE_PATH = '/api/v1/ai/branding';
 interface Logo {
   id: string;
   url: string;
+  availableAssetTypes?: Array<{
+    type: string;
+    name: string;
+    description: string;
+  }>;
 }
 
 interface Asset {
