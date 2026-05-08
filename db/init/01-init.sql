@@ -134,6 +134,16 @@ CREATE TABLE checklist_steps (
     estimated_days VARCHAR(50)
 );
 
+CREATE TABLE checklist_progresses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    license_id UUID NOT NULL REFERENCES license_industries(id),
+    current_step SMALLINT NOT NULL DEFAULT 1,
+    industry_code VARCHAR(50),
+    conditions JSONB,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 ---------------------------------------
 -- 4. 매출 및 운영 분석 모듈 (Analytics & Operations)
 ---------------------------------------
@@ -361,6 +371,7 @@ CREATE TABLE chat_messages (
     type VARCHAR(20) DEFAULT 'TALK',
     file_url TEXT,
     file_name VARCHAR(255),
+    sender_nickname VARCHAR(50),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
