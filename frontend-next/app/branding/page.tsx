@@ -90,7 +90,7 @@ export default function BrandListPage() {
   };
 
   return (
-    <AuthGuard allowedRoles={[1, 2]}>
+    <AuthGuard allowedRoles={[0, 1, 2]}>
       <div className="min-h-screen bg-[var(--nexus-bg)] text-[var(--nexus-on-bg)] font-sans">
         <main className="max-w-7xl mx-auto px-6 py-16">
           {/* Welcome Section */}

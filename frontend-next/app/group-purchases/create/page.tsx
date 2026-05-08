@@ -5,6 +5,8 @@ import { useAuthStore } from '@/store/useAuthStore';
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Image as ImageIcon, Check } from 'lucide-react';
+import AuthGuard from '@/components/auth/AuthGuard';
+
 
 const regionData: { [key: string]: string[] } = {
   서울특별시: [
@@ -344,7 +346,9 @@ export default function GroupBuyCreatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--nexus-bg)] text-[var(--nexus-on-bg)] p-8 pb-32">
+    <AuthGuard allowedRoles={[1, 2]}>
+      <div className="min-h-screen bg-[var(--nexus-bg)] text-[var(--nexus-on-bg)] p-8 pb-32">
+
       <div className="max-w-4xl mx-auto">
         <header className="mb-12">
           <button
@@ -557,6 +561,6 @@ export default function GroupBuyCreatePage() {
           </button>
         </form>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

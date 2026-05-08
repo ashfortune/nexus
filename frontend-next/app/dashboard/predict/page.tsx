@@ -4,8 +4,8 @@ import { api } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import AnalysisReport from '../components/predict/AnalysisReport';
 import { LineChart, LayoutDashboard, Database, AlertCircle, RefreshCcw } from 'lucide-react';
-import { useAuthStore } from '@/store/useAuthStore';
 import Link from 'next/link';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 /**
  * 매출 데이터를 바탕으로 분석 리포트와 예측 결과를 보여주는 페이지 컴포넌트입니다.
@@ -49,7 +49,9 @@ const PredictPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen p-8 text-[var(--nexus-on-bg)]">
+    <AuthGuard allowedRoles={[1, 2]}>
+      <div className="min-h-screen p-8 text-[var(--nexus-on-bg)]">
+
       <div className="max-w-7xl mx-auto">
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-4">
@@ -127,7 +129,7 @@ const PredictPage = () => {
           </div>
         )}
       </div>
-    </div>
+    </AuthGuard>
   );
 };
 

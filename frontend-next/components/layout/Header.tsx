@@ -31,7 +31,7 @@ const MENU_DATA: MenuItem[] = [
     ],
   },
   { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/subsidy', allowedRoles: [0, 1, 2] },
-  { id: 'creative', title: 'AI 브랜딩', hasSub: false, href: '/branding', allowedRoles: [1, 2] },
+  { id: 'creative', title: 'AI 브랜딩', hasSub: false, href: '/branding', allowedRoles: [0, 1, 2] },
   {
     id: 'compliance',
     title: '창업 가이드',
@@ -52,7 +52,7 @@ const MENU_DATA: MenuItem[] = [
       { name: '자유 게시판', href: '/board', allowedRoles: [0, 1, 2] },
       { name: '지역별 게시판', href: '/region-board', allowedRoles: [0, 1, 2] },
       { name: '업종별 게시판', href: '/industry-board', allowedRoles: [0, 1, 2] },
-      { name: '전문가 매칭', href: '/expert', allowedRoles: [1, 2] },
+      { name: '전문가 매칭', href: '/expert', allowedRoles: [0, 1, 2] },
     ],
   },
   { id: 'group-purchases', title: '공동구매', hasSub: false, href: '/group-purchases', allowedRoles: [0, 1, 2] },

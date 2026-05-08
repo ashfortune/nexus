@@ -88,7 +88,7 @@ export default function ExpertMatchPage() {
   };
 
   return (
-    <AuthGuard allowedRoles={[1, 2]}>
+    <AuthGuard allowedRoles={[0, 1, 2]}>
       <div className="min-h-screen bg-[var(--nexus-bg)] text-[var(--nexus-on-bg)] flex flex-col items-center py-20 px-4 font-sans selection:bg-[var(--nexus-primary)]/20 relative overflow-hidden">
         
         {/* Background Glow Effects matching Hextech Theme */}

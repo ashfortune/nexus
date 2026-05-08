@@ -5,8 +5,8 @@ import React, { useState, useEffect } from 'react';
 import DropZone from '../components/upload/Drop_zone';
 import InfoCard from '../components/upload/Infocard';
 import { Upload, CheckCircle2, AlertCircle, FileText, Plus, Trash2, Download, Save, Table as TableIcon } from 'lucide-react';
-import { useAuthStore } from '@/store/useAuthStore';
 import Link from 'next/link';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 interface SalesRow {
   id: string;
@@ -147,7 +147,9 @@ const UploadPage = () => {
   };
 
   return (
-    <div className="min-h-screen p-8 text-[var(--nexus-on-bg)]">
+    <AuthGuard allowedRoles={[1, 2]}>
+      <div className="min-h-screen p-8 text-[var(--nexus-on-bg)]">
+
       <div className="max-w-6xl mx-auto">
         <header className="mb-12 flex justify-between items-end">
           <div>
@@ -354,7 +356,7 @@ const UploadPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 };
 
