@@ -88,17 +88,19 @@ public class UploadController {
                 String uploadUrl = String.format("%s/storage/v1/object/%s/%s", supabaseUrl, supabaseBucket,
                         storagePath);
 
+                // 환경 변수 공백 제거 (Render 등에서 발생할 수 있는 문제 해결)
+                String trimmedKey = supabaseKey != null ? supabaseKey.trim() : "";
+
                 log.info("[Supabase Debug] Upload URL: {}", uploadUrl);
                 log.info("[Supabase Debug] Bucket: {}", supabaseBucket);
-                if (supabaseKey != null && supabaseKey.length() > 10) {
-                    log.info("[Supabase Debug] Key Prefix: {}", supabaseKey.substring(0, 10));
-                } else {
-                    log.warn("[Supabase Debug] Key is null or too short!");
+                log.info("[Supabase Debug] Key Length: {}", trimmedKey.length());
+                if (trimmedKey.length() > 10) {
+                    log.info("[Supabase Debug] Key Prefix: {}", trimmedKey.substring(0, 10));
                 }
 
                 HttpHeaders headers = new HttpHeaders();
-                headers.set("apikey", supabaseKey);
-                headers.set("Authorization", "Bearer " + supabaseKey);
+                headers.set("apikey", trimmedKey);
+                headers.set("Authorization", "Bearer " + trimmedKey);
                 headers.setContentType(
                         MediaType.valueOf(file.getContentType() != null ? file.getContentType() : "image/jpeg"));
 
