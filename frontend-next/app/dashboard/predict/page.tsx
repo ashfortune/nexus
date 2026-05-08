@@ -6,6 +6,7 @@ import AnalysisReport from '../components/predict/AnalysisReport';
 import { LineChart, LayoutDashboard, Database, AlertCircle, RefreshCcw } from 'lucide-react';
 import Link from 'next/link';
 import AuthGuard from '@/components/auth/AuthGuard';
+import { useAuthStore } from '@/store/useAuthStore';
 
 /**
  * 매출 데이터를 바탕으로 분석 리포트와 예측 결과를 보여주는 페이지 컴포넌트입니다.

@@ -7,6 +7,7 @@ import InfoCard from '../components/upload/Infocard';
 import { Upload, CheckCircle2, AlertCircle, FileText, Plus, Trash2, Download, Save, Table as TableIcon } from 'lucide-react';
 import Link from 'next/link';
 import AuthGuard from '@/components/auth/AuthGuard';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface SalesRow {
   id: string;
