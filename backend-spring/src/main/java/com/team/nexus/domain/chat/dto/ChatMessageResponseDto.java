@@ -20,5 +20,6 @@ public class ChatMessageResponseDto {
     private ChatMessage.MessageType type;
     private String fileUrl;
     private String fileName;
+    private Long participantCount;
     private LocalDateTime createdAt;
 }

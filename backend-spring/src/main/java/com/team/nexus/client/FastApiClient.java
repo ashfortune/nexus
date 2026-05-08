@@ -39,4 +39,20 @@ public class FastApiClient {
                 .retrieve()
                 .bodyToMono(Map.class);
     }
+
+    /**
+     * FastAPI 서버에 매출 데이터 분석 및 예측 실행 요청
+     * @param userId 사용자 ID
+     * @return 분석 결과 (JSON)
+     */
+    public Mono<Map> triggerSalesAnalysis(String userId) {
+        return this.webClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/ai/prediction/analysis")
+                        .queryParam("userId", userId)
+                        .build())
+                .retrieve()
+                .bodyToMono(Map.class);
+    }
+
 }

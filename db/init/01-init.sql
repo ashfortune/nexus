@@ -16,8 +16,14 @@ CREATE TABLE users (
     biz_no VARCHAR(12),
     address VARCHAR(255),
     login_type INT DEFAULT 0, 
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    profile_image VARCHAR(255),
+    is_suspended BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ
 );
+
+
+
 
 CREATE TABLE industry_categories (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -33,7 +39,7 @@ CREATE TABLE region_codes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     region_code INT NOT NULL,
     city_name VARCHAR(10) NOT NULL,
-    county_name VARCHAR(10),
+    county_name VARCHAR(10) NOT NULL,
     latitude DECIMAL(13, 10),
     longitude DECIMAL(13, 10)
 );
@@ -136,7 +142,7 @@ CREATE TABLE checklist_steps (
 CREATE TABLE sales (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    sales_date TIMESTAMPTZ NOT NULL,
+    sales_date DATE NOT NULL,
     total_amount INT DEFAULT 0,
     store_number VARCHAR(255),
     file_url VARCHAR(255),
@@ -156,7 +162,7 @@ CREATE TABLE sales_items (
 CREATE TABLE predictions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    base_date TIMESTAMPTZ NOT NULL,
+    base_date DATE NOT NULL,
     total_sales INT,
     predicted_cost INT,
     moving_average DOUBLE PRECISION,
@@ -168,7 +174,7 @@ CREATE TABLE predictions (
 CREATE TABLE daily_predictions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     prediction_id UUID NOT NULL REFERENCES predictions(id) ON DELETE CASCADE,
-    target_date TIMESTAMPTZ NOT NULL,
+    target_date DATE NOT NULL,
     pred_sales INT,
     actual_sales INT,
     moving_average DOUBLE PRECISION,
@@ -202,30 +208,28 @@ CREATE TABLE ai_reports (
 ---------------------------------------
 
 CREATE TABLE subsidies (
-    id              uuid                     default gen_random_uuid() not null
-        primary key,
-    name            varchar(200)                                       not null,
-    organization    varchar(100)                                       not null,
-    region          varchar(100),
-    industry        varchar(100),
-    min_age         smallint,
-    max_age         smallint,
-    max_amount      integer,
-    deadline        date,
-    start_date      date,
-    description     text,
+    id uuid default gen_random_uuid() not null primary key,
+    name varchar(200) not null,
+    organization varchar(100) not null,
+    region varchar(100),
+    industry varchar(100),
+    min_age smallint,
+    max_age smallint,
+    max_amount integer,
+    deadline date,
+    start_date date,
+    description text,
     support_content text,
-    target          text,
-    how_to_apply    text,
-    contact         text,
-    apply_url       text,
-    source_url      varchar(500)
-        unique,
-    embedding       vector(768),
-    is_active       boolean                  default true,
-    life_cycle      varchar(20),
-    created_at      timestamp with time zone default now(),
-    updated_at      timestamp with time zone default now()
+    target text,
+    how_to_apply text,
+    contact text,
+    apply_url text,
+    source_url varchar(500) unique,
+    embedding vector(768),
+    is_active boolean default true,
+    life_cycle varchar(20),
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now()
 );
 
 CREATE TABLE equipment_prices (
@@ -265,13 +269,29 @@ CREATE TABLE labor_contracts (
 CREATE TABLE boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    industry_category_id UUID REFERENCES industry_categories(id),
     title VARCHAR(100) NOT NULL,
     content TEXT,
     region_name VARCHAR(20),
     category_name VARCHAR(20),
     view_count INT DEFAULT 0,
+    like_count INT DEFAULT 0,
     image_url VARCHAR(255),
     is_anonymous BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE board_images (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    sort_order INT DEFAULT 0
+);
+
+CREATE TABLE board_likes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -281,6 +301,7 @@ CREATE TABLE comments (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     parent_comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    report_count INT DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -306,10 +327,10 @@ CREATE TABLE group_orders (
     user_id UUID NOT NULL REFERENCES users(id),
     order_count INT DEFAULT 1,
     total_price INT NOT NULL,
-    pg_provider VARCHAR(20) CHECK (pg_provider IN ('TOSS', 'KAKAO')),
-    pg_tid VARCHAR(200),
-    payment_method VARCHAR(50),
-    payment_status VARCHAR(20) CHECK (payment_status IN ('READY', 'PAID', 'CANCELLED', 'FAILED')) DEFAULT 'READY',
+    payment_provider VARCHAR(100),
+    payment_key TEXT,
+    payment_method VARCHAR(100),
+    payment_status VARCHAR(50),
     paid_at TIMESTAMPTZ
 );
 
@@ -319,6 +340,7 @@ CREATE TABLE chat_rooms (
     description TEXT,
     image_url VARCHAR(500),
     type VARCHAR(20) DEFAULT 'GROUP',
+    user_id UUID REFERENCES users(id),
     password VARCHAR(255),
     last_message_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -367,3 +389,30 @@ CREATE TABLE IF NOT EXISTS administrative_boundaries (
 
 CREATE INDEX IF NOT EXISTS idx_administrative_boundaries_adm_cd
     ON administrative_boundaries (adm_cd);
+
+---------------------------------------
+-- 9. 전문가 추천 및 매칭 모듈 (AI Expert)
+---------------------------------------
+
+CREATE TABLE experts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(50) NOT NULL,
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    industry_category_id UUID REFERENCES industry_categories(id),
+    portfolio_text TEXT,
+    rating DOUBLE PRECISION DEFAULT 0.0,
+    embedding VECTOR(768),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE expert_match_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    industry_category_id UUID REFERENCES industry_categories(id),
+    request_content TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, MATCHED, COMPLETED, FAILED
+    matched_expert_id UUID REFERENCES experts(id),
+    match_reason TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);

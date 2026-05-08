@@ -1,7 +1,9 @@
 package com.team.nexus.global.config;
 
+import com.team.nexus.global.security.filter.JwtAuthenticationFilter;
 import com.team.nexus.global.security.handler.OAuth2SuccessHandler;
 import com.team.nexus.global.security.service.CustomOAuth2UserService;
+import com.team.nexus.global.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +13,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -19,6 +22,7 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -28,17 +32,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> cors.configure(http))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/api/v1/status/**", "/api/v1/comm/**", "/login/oauth2/**", "/oauth2/**").permitAll()
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .anyRequest().permitAll() // 개발 편의를 위해 일단 모두 허용
-            )
-            .oauth2Login(oauth2 -> oauth2
-                .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                .successHandler(oAuth2SuccessHandler)
-            );
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configure(http))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/status/**", "/api/v1/comm/**", "/login/oauth2/**",
+                                "/oauth2/**")
+                        .permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().permitAll() // 개발 편의를 위해 일단 모두 허용
+                )
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(oAuth2SuccessHandler));
 
         return http.build();
     }

@@ -9,7 +9,10 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,7 +30,7 @@ public class ChatFileCompatibilityController {
         try {
             String cleanPath = fileName.startsWith("/") ? fileName.substring(1) : fileName;
             Path path = Paths.get("uploads").resolve(cleanPath).normalize();
-            
+
             log.info("Attempting to display old file: {}", path.toAbsolutePath());
 
             Resource resource = new UrlResource(path.toUri());
@@ -35,11 +38,15 @@ public class ChatFileCompatibilityController {
             if (resource.exists() || resource.isReadable()) {
                 String contentType = "application/octet-stream";
                 String name = path.getFileName().toString().toLowerCase();
-                
-                if (name.endsWith(".png")) contentType = "image/png";
-                else if (name.endsWith(".jpg") || name.endsWith(".jpeg")) contentType = "image/jpeg";
-                else if (name.endsWith(".gif")) contentType = "image/gif";
-                else if (name.endsWith(".webp")) contentType = "image/webp";
+
+                if (name.endsWith(".png"))
+                    contentType = "image/png";
+                else if (name.endsWith(".jpg") || name.endsWith(".jpeg"))
+                    contentType = "image/jpeg";
+                else if (name.endsWith(".gif"))
+                    contentType = "image/gif";
+                else if (name.endsWith(".webp"))
+                    contentType = "image/webp";
 
                 return ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_TYPE, contentType)
@@ -60,7 +67,7 @@ public class ChatFileCompatibilityController {
         try {
             String cleanPath = fileName.startsWith("/") ? fileName.substring(1) : fileName;
             Path path = Paths.get("uploads").resolve(cleanPath).normalize();
-            
+
             log.info("Attempting to download old file: {}", path.toAbsolutePath());
 
             Resource resource = new UrlResource(path.toUri());

@@ -1,0 +1,12 @@
+package com.team.nexus.domain.mypage.admin.service;
+
+import com.team.nexus.domain.mypage.admin.dto.AdminDashboardDto;
+
+import java.util.UUID;
+
+public interface AdminService {
+    AdminDashboardDto getDashboardData();
+    void deleteBoard(UUID boardId);
+    void deleteComment(UUID commentId);
+    void toggleUserSuspension(UUID userId);
+}

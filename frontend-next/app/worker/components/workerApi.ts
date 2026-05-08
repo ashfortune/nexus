@@ -1,50 +1,26 @@
+import { api } from '@/lib/api';
 import type {
-    WorkerCalculateForm,
-    WorkerCalculateResponse,
-    WorkerContractRequest,
-} from "./workerTypes";
-
-const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  WorkerCalculateForm,
+  WorkerCalculateResponse,
+  WorkerContractRequest,
+} from './workerTypes';
 
 export async function calculateWorkerGuide(
-    form: WorkerCalculateForm
+  form: WorkerCalculateForm
 ): Promise<WorkerCalculateResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/worker/calculate`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            employeeCount: Number(form.workerCount),
-            dailyWorkHours: Number(form.dailyWorkHours),
-            weeklyWorkDays: Number(form.weeklyWorkDays),
-            hourlyWage: Number(form.hourlyWage),
-            employeeType: form.workerType,
-        }),
-    });
+  const response = await api.post('/api/v1/worker/calculate', {
+    employeeCount: Number(form.workerCount),
+    dailyWorkHours: Number(form.dailyWorkHours),
+    weeklyWorkDays: Number(form.weeklyWorkDays),
+    hourlyWage: Number(form.hourlyWage),
+    employeeType: form.workerType,
+  });
 
-    if (!response.ok) {
-        throw new Error("고용가이드 계산에 실패했습니다.");
-    }
-
-    return response.json();
+  return response.json();
 }
 
-export async function createWorkerContractPdf(
-    payload: WorkerContractRequest
-): Promise<Blob> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/worker/contract/pdf`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-    });
+export async function createWorkerContractPdf(payload: WorkerContractRequest): Promise<Blob> {
+  const response = await api.post('/api/v1/worker/contract/pdf', payload);
 
-    if (!response.ok) {
-        throw new Error("근로계약서 PDF 생성에 실패했습니다.");
-    }
-
-    return response.blob();
+  return response.blob();
 }

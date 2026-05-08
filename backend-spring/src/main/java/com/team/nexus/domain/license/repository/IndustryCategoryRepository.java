@@ -12,4 +12,6 @@ public interface IndustryCategoryRepository extends JpaRepository<IndustryCatego
 
     List<IndustryCategory> findByParentIsNull();
     List<IndustryCategory> findByParentId(UUID parentId);
+    List<IndustryCategory> findByLevelOrderByLevelAscNameAsc(Short level);
+    List<IndustryCategory> findByParentIdOrderByLevelAscNameAsc(UUID parentId);
 }

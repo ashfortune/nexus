@@ -53,7 +53,7 @@ public class GroupPurchaseScheduler {
         for (GroupOrder order : orders) {
             try {
                 // TODO: 실제 PG사(토스/카카오페이) 환불 API 호출 로직이 들어갈 자리
-                log.info("Refunding order {} for user {} via {}", order.getId(), order.getUser().getId(), order.getPgProvider());
+                log.info("Refunding order {} for user {} via {}", order.getId(), order.getUser().getId(), order.getPaymentProvider());
                 
                 // 가상의 환불 성공 처리
                 order.setPaymentStatus("REFUNDED");

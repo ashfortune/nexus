@@ -11,7 +11,6 @@ import com.team.nexus.domain.simulation.repository.AdministrativeBoundaryReposit
 import com.team.nexus.domain.simulation.repository.RegionCodeRepository;
 import com.team.nexus.global.entity.AdministrativeBoundaries;
 import com.team.nexus.global.entity.RegionCode;
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;

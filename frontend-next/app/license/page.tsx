@@ -1,5 +1,5 @@
-import GuidePage from "./components/GuidePage";
+import GuidePage from './components/GuidePage';
 
 export default function LicensePage() {
-    return <GuidePage />;
+  return <GuidePage />;
 }
