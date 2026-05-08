@@ -6,4 +6,5 @@ public interface AuthService {
     void signup(SignupRequestDto request);
     LoginResponseDto login(LoginRequestDto request);
     PasswordResetResponseDto resetPassword(PasswordResetRequestDto request);
+    boolean checkEmailDuplication(String email);
 }
