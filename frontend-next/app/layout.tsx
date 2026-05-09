@@ -34,7 +34,7 @@ export default function RootLayout({
       </head>
       <body className="h-screen flex flex-col font-inter bg-[var(--nexus-bg)] text-[var(--nexus-on-bg)]">
         <Header />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pt-20">{children}</main>
         <Footer />
       </body>
     </html>

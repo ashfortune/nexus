@@ -61,15 +61,30 @@ body {
   border: none !important;
 }
 
-.nexus-glass {
-  background: var(--nexus-glass-bg);
-  backdrop-filter: blur(var(--nexus-glass-blur));
-  -webkit-backdrop-filter: blur(var(--nexus-glass-blur));
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.nexus-card {
-  background: var(--nexus-surface-lowest);
-  border-radius: 16px;
+@keyframes slideInFromTop {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-in {
+  animation-duration: 400ms;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.slide-in-from-top-2 {
+  animation-name: slideInFromTop;
 }
 
 .nexus-glass {
