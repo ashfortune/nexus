@@ -144,11 +144,13 @@ export default function Header() {
     window.location.href = '/';
   };
 
-  const isSubMenuOpen = activeMenu && filteredMenus.find(m => m.id === activeMenu)?.hasSub;
+  const activeMenuData = activeMenu ? filteredMenus.find(m => m.id === activeMenu) : null;
+  const isSubMenuOpen = activeMenuData?.hasSub;
+  const subMenuLength = activeMenuData?.subMenu?.length || 0;
 
   return (
     <header 
-      className={`fixed top-0 left-0 w-full bg-white border-b border-[var(--nexus-outline-variant)] z-[99999] transition-all duration-500 ease-in-out overflow-hidden ${isSubMenuOpen ? 'h-[220px]' : 'h-20'}`}
+      className={`fixed top-0 left-0 w-full bg-white border-b border-[var(--nexus-outline-variant)] z-[99999] transition-all duration-500 ease-in-out ${isSubMenuOpen ? (subMenuLength >= 3 ? 'h-[300px]' : 'h-[250px]') : 'h-20'}`}
       onMouseLeave={() => setActiveMenu(null)}
     >
       <div className="max-w-[1440px] mx-auto h-20 px-6 md:px-8 flex items-center justify-between gap-4">
