@@ -21,7 +21,7 @@ import {
   PieChart,
   MessageSquare,
 } from 'lucide-react';
-import ServiceGuideModal from '@/components/home/ServiceGuideModal';
+import ServiceGuideModal from '@/components/guide/ServiceGuideModal';
 
 export default function Home() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);

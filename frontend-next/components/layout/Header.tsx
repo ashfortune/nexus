@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useStartupModeStore, StartupMode } from '@/store/useStartupModeStore';
 
 interface SubMenu {
   name: string;
@@ -18,44 +19,59 @@ interface MenuItem {
   href?: string;
   subMenu?: SubMenu[];
   allowedRoles?: number[];
+  modes: StartupMode[]; // 'BEFORE' | 'AFTER' 둘 다 포함될 수 있음
 }
 
 const MENU_DATA: MenuItem[] = [
+  // 창업 전 (BEFORE) 전용 또는 공통
   {
     id: 'analysis',
     title: '창업 분석',
     hasSub: true,
+    modes: ['BEFORE'],
     subMenu: [
       { name: '창업 비용 시뮬레이션', href: '/simulation' },
       { name: '상권 분석 지도', href: '/store-map' },
     ],
   },
-  { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/subsidy', allowedRoles: [0, 1, 2] },
-  { id: 'creative', title: 'AI 브랜딩', hasSub: false, href: '/branding', allowedRoles: [0, 1, 2] },
+  { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/subsidy', allowedRoles: [0, 1, 2], modes: ['BEFORE'] },
+  { id: 'creative', title: 'AI 브랜딩', hasSub: false, href: '/branding', allowedRoles: [0, 1, 2], modes: ['BEFORE'] },
   {
-    id: 'compliance',
-    title: '창업 가이드',
-    hasSub: true,
+    id: 'compliance-before',
+    title: '인허가 가이드',
+    hasSub: false,
+    href: '/license',
     allowedRoles: [0, 1, 2],
+    modes: ['BEFORE'],
+  },
+  
+  // 창업 후 (AFTER) 전용
+  {
+    id: 'management',
+    title: '운영 효율화',
+    hasSub: true,
+    modes: ['AFTER'],
     subMenu: [
-      { name: '서류 가이드', href: '/license', allowedRoles: [0, 1, 2] },
-      { name: '고용 가이드', href: '/worker', allowedRoles: [0, 1, 2] },
+      { name: '직원 고용 가이드', href: '/worker', allowedRoles: [0, 1, 2] },
+      { name: '전문가 매칭', href: '/expert', allowedRoles: [0, 1, 2] },
     ],
   },
+  { id: 'group-purchases', title: '공동구매', hasSub: false, href: '/group-purchases', allowedRoles: [0, 1, 2], modes: ['AFTER'] },
+
+  // 공통 (BEFORE & AFTER)
   {
     id: 'community',
     title: '커뮤니티',
     hasSub: true,
     href: '/board',
     allowedRoles: [0, 1, 2],
+    modes: ['BEFORE', 'AFTER'],
     subMenu: [
       { name: '자유 게시판', href: '/board', allowedRoles: [0, 1, 2] },
       { name: '지역별 게시판', href: '/region-board', allowedRoles: [0, 1, 2] },
       { name: '업종별 게시판', href: '/industry-board', allowedRoles: [0, 1, 2] },
-      { name: '전문가 매칭', href: '/expert', allowedRoles: [0, 1, 2] },
     ],
   },
-  { id: 'group-purchases', title: '공동구매', hasSub: false, href: '/group-purchases', allowedRoles: [0, 1, 2] },
 ];
 
 export default function Header() {
@@ -83,34 +99,36 @@ export default function Header() {
     };
   }, []);
 
-  // 권한에 따른 메뉴 필터링
-  const filteredMenus = useMemo(() => {
-    // 비로그인 상태일 때는 전체 노출 (클릭 시 가드에서 처리)
-    if (!isAuthenticated) return MENU_DATA;
+  const { mode, setMode } = useStartupModeStore();
 
+  // 권한 및 창업 단계에 따른 메뉴 필터링
+  const filteredMenus = useMemo(() => {
     const userType = user?.userType ?? 0;
 
     return MENU_DATA.filter(menu => {
-      // 메인 메뉴 권한 체크
-      const isMenuAllowed = !menu.allowedRoles || menu.allowedRoles.includes(userType);
-      if (!isMenuAllowed) return false;
+      // 1. 창업 단계(모드) 필터링
+      if (!menu.modes.includes(mode)) return false;
 
-      // 서브 메뉴 권한 필터링
-      if (menu.subMenu) {
+      // 2. 메인 메뉴 권한 체크
+      if (isAuthenticated) {
+        const isMenuAllowed = !menu.allowedRoles || menu.allowedRoles.includes(userType);
+        if (!isMenuAllowed) return false;
+      }
+
+      // 3. 서브 메뉴 권한 필터링
+      if (menu.subMenu && isAuthenticated) {
         menu.subMenu = menu.subMenu.filter(sub => 
           !sub.allowedRoles || sub.allowedRoles.includes(userType)
         );
       }
       return true;
     });
-  }, [isAuthenticated, user?.userType]);
+  }, [isAuthenticated, user?.userType, mode]);
 
   const handleMenuHover = (menuId: string | null, hasSub: boolean) => {
+    setActiveMenu(menuId);
     if (hasSub) {
-      setActiveMenu(menuId);
       setIsProfileOpen(false);
-    } else {
-      setActiveMenu(null);
     }
   };
 
@@ -126,35 +144,83 @@ export default function Header() {
     window.location.href = '/';
   };
 
+  const activeMenuData = activeMenu ? filteredMenus.find(m => m.id === activeMenu) : null;
+  const isSubMenuOpen = activeMenuData?.hasSub;
+  const subMenuLength = activeMenuData?.subMenu?.length || 0;
+
   return (
-    <header className="relative w-full bg-[var(--nexus-surface-lowest)] border-b border-[var(--nexus-outline-variant)] z-[100]">
-      <div className="max-w-[1440px] mx-auto h-20 px-6 md:px-8 flex items-center justify-between">
-        <div className="w-[100px] lg:w-[160px] shrink-0">
+    <header 
+      className={`fixed top-0 left-0 w-full bg-white border-b border-[var(--nexus-outline-variant)] z-[99999] transition-all duration-500 ease-in-out ${isSubMenuOpen ? (subMenuLength >= 3 ? 'h-[300px]' : 'h-[250px]') : 'h-20'}`}
+      onMouseLeave={() => setActiveMenu(null)}
+    >
+      <div className="max-w-[1440px] mx-auto h-20 px-6 md:px-8 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-8 shrink-0">
           <Link
             href="/"
-            className="text-xl md:text-2xl font-black tracking-tighter text-[var(--nexus-primary)]"
+            className="text-xl md:text-2xl font-black tracking-tighter text-[var(--nexus-primary)] hover:scale-105 transition-transform"
           >
             NEXUS
           </Link>
+
+          {/* 창업 단계 전환 스위치 (데스크탑) */}
+          <div className="hidden md:flex bg-[var(--nexus-surface-low)] p-1 rounded-full border border-[var(--nexus-outline-variant)] relative h-10 w-48 overflow-hidden shadow-inner">
+            <div 
+              className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[var(--nexus-primary)] rounded-full transition-all duration-500 ease-in-out shadow-md ${mode === 'AFTER' ? 'translate-x-[calc(100%+0px)]' : 'translate-x-0'}`}
+            />
+            <button 
+              onClick={() => setMode('BEFORE')}
+              className={`flex-1 relative z-10 text-[13px] font-bold transition-colors duration-300 ${mode === 'BEFORE' ? 'text-white' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              창업 준비
+            </button>
+            <button 
+              onClick={() => setMode('AFTER')}
+              className={`flex-1 relative z-10 text-[13px] font-bold transition-colors duration-300 ${mode === 'AFTER' ? 'text-white' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              창업 운영
+            </button>
+          </div>
         </div>
 
-        <nav className="hidden lg:block flex-grow h-full">
+        <nav 
+          className="hidden lg:block flex-grow h-full max-w-[60%]"
+          onMouseLeave={() => setActiveMenu(null)}
+        >
           {mounted && _hasHydrated ? (
-            <ul className="grid grid-cols-6 h-full items-center">
+            <ul className="flex items-center justify-center gap-10 h-full">
               {filteredMenus.map((menu) => (
                 <li
                   key={menu.id}
-                  className="relative flex items-center justify-center h-full cursor-pointer"
+                  className="relative flex items-center h-full cursor-pointer group"
                   onMouseEnter={() => handleMenuHover(menu.id, menu.hasSub)}
                 >
                   <Link
                     href={menu.href || '#'}
-                    className={`text-[15px] xl:text-[16px] font-bold whitespace-nowrap transition-colors ${activeMenu === menu.id ? 'text-[var(--nexus-primary)]' : 'text-[var(--nexus-on-bg)]'}`}
+                    className={`text-[15px] xl:text-[16px] font-bold whitespace-nowrap transition-all duration-300 ${activeMenu === menu.id ? 'text-[var(--nexus-primary)] scale-105' : 'text-[var(--nexus-on-bg)] hover:text-[var(--nexus-primary)]'}`}
                   >
                     {menu.title}
                   </Link>
-                  {activeMenu === menu.id && (
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-[3px] bg-[var(--nexus-primary)]" />
+                  <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-[3px] bg-[var(--nexus-primary)] transition-all duration-300 ease-out ${activeMenu === menu.id ? 'w-full opacity-100' : 'w-0 opacity-0 group-hover:w-8 group-hover:opacity-50'}`} />
+                  
+                  {/* 개별 서브 메뉴 (상위 메뉴 위치에 정렬) */}
+                  {activeMenu === menu.id && menu.hasSub && (
+                    <div className="absolute top-20 left-1/2 -translate-x-1/2 min-w-[180px] pt-10 pb-10 z-[100001]">
+                      <ul className="flex flex-col gap-6 text-center animate-in fade-in slide-in-from-top-2 duration-300">
+                        {menu.subMenu?.map((sub, sIdx) => (
+                          <li key={sIdx}>
+                            <Link
+                              href={sub.href}
+                              className="group flex flex-col items-center"
+                            >
+                              <span className="text-[15px] text-gray-700 hover:text-[var(--nexus-primary)] font-bold transition-colors whitespace-nowrap">
+                                {sub.name}
+                              </span>
+                              <span className="w-0 h-[2.5px] bg-[var(--nexus-primary)] transition-all duration-300 group-hover:w-full mt-1.5" />
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </li>
               ))}
@@ -245,37 +311,7 @@ export default function Header() {
         </div>
       </div>
 
-      {mounted && _hasHydrated && (
-        <div
-          onMouseLeave={() => setActiveMenu(null)}
-          className={`hidden lg:block absolute top-20 left-0 w-full bg-[var(--nexus-surface-lowest)] border-b border-[var(--nexus-outline-variant)] shadow-lg transition-all duration-300 ease-in-out overflow-hidden ${activeMenu ? 'max-h-[250px] opacity-100 py-8' : 'max-h-0 opacity-0 py-0'}`}
-        >
-          <div className="max-w-[1440px] mx-auto px-6 md:px-8 flex items-start justify-between">
-            <div className="w-[160px] shrink-0" />
-            <div className="flex-grow grid grid-cols-6">
-              {filteredMenus.map((menu) => (
-                <div key={menu.id} className="flex flex-col items-center">
-                  {activeMenu === menu.id && menu.hasSub && (
-                    <ul className="flex flex-col gap-4 text-center">
-                      {menu.subMenu?.map((sub, sIdx) => (
-                        <li key={sIdx}>
-                          <Link
-                            href={sub.href}
-                            className="text-[14px] text-gray-500 hover:text-[var(--nexus-primary)] hover:underline underline-offset-4 font-medium whitespace-nowrap"
-                          >
-                            {sub.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="w-[160px] shrink-0" />
-          </div>
-        </div>
-      )}
+      {/* 모바일 사이드바 드로어 ── */}
       {/* ── 모바일 사이드바 드로어 ── */}
       {mounted && isMobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-[200]" onClick={() => setIsMobileMenuOpen(false)}>
@@ -297,6 +333,28 @@ export default function Header() {
                 <span className="text-2xl leading-none">✕</span>
               </button>
             </div>
+            
+            {/* 모바일 단계 전환 스위치 */}
+            <div className="px-6 py-6 border-b border-[var(--nexus-outline-variant)]/30">
+              <div className="flex bg-[var(--nexus-surface-low)] p-1 rounded-xl border border-[var(--nexus-outline-variant)] relative h-12 overflow-hidden shadow-inner">
+                <div 
+                  className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[var(--nexus-primary)] rounded-lg transition-all duration-500 ease-in-out shadow-md ${mode === 'AFTER' ? 'translate-x-[calc(100%+0px)]' : 'translate-x-0'}`}
+                />
+                <button 
+                  onClick={() => setMode('BEFORE')}
+                  className={`flex-1 relative z-10 text-sm font-bold transition-colors duration-300 ${mode === 'BEFORE' ? 'text-white' : 'text-gray-500'}`}
+                >
+                  창업 준비
+                </button>
+                <button 
+                  onClick={() => setMode('AFTER')}
+                  className={`flex-1 relative z-10 text-sm font-bold transition-colors duration-300 ${mode === 'AFTER' ? 'text-white' : 'text-gray-500'}`}
+                >
+                  창업 운영
+                </button>
+              </div>
+            </div>
+
             <nav className="flex-1 overflow-y-auto py-4">
               {filteredMenus.map((menu) => (
                 <div key={menu.id} className="border-b border-[var(--nexus-outline-variant)]/30">
