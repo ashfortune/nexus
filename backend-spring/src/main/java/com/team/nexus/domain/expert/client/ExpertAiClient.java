@@ -27,12 +27,17 @@ public class ExpertAiClient {
      * @param requestContent 사용자 요청 내용
      * @return 매칭 결과 (전문가 목록 및 추천 사유)
      */
-    public Mono<Map> requestExpertMatch(String categoryId, String requestContent) {
+    public Mono<Map> requestExpertMatch(java.util.UUID userId, java.util.UUID categoryId, String requestContent) {
+        java.util.Map<String, Object> body = new java.util.HashMap<>();
+        body.put("user_id", userId);
+        body.put("request_content", requestContent);
+        if (categoryId != null) {
+            body.put("category_id", categoryId);
+        }
+        
         return this.webClient.post()
                 .uri("/api/v1/ai/experts/match")
-                .bodyValue(Map.of(
-                        "industry_category_id", categoryId,
-                        "request_content", requestContent))
+                .bodyValue(body)
                 .retrieve()
                 .bodyToMono(Map.class);
     }
