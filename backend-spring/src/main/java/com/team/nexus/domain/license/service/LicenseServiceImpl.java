@@ -1,4 +1,3 @@
-// domain/license/service/LicenseServiceImpl.java
 package com.team.nexus.domain.license.service;
 
 import com.team.nexus.domain.license.dto.*;
@@ -79,7 +78,7 @@ public class LicenseServiceImpl implements LicenseService {
 
         List<UUID> trueSurveyIds = request.getAnswers().stream()
                 .filter(a -> Boolean.TRUE.equals(a.getAnswer()))
-                .map(a -> a.getSurveyId())
+                .map(ChecklistRequestDto.SurveyAnswerDto::getSurveyId)
                 .collect(Collectors.toList());
 
         List<Document> additionalDocuments = surveyDocumentRepository
@@ -91,6 +90,7 @@ public class LicenseServiceImpl implements LicenseService {
         List<String> documentSummary = commonDocuments.stream()
                 .map(Document::getName)
                 .collect(Collectors.toList());
+
         additionalDocuments.stream()
                 .map(Document::getName)
                 .forEach(documentSummary::add);
@@ -98,6 +98,13 @@ public class LicenseServiceImpl implements LicenseService {
         List<ChecklistResponseDto.StepDto> steps = checklistStepRepository
                 .findByLicenseIndustryIdOrderByOrderNumAsc(licenseIndustry.getId())
                 .stream()
+                .filter(step ->
+                        step.getSurvey() == null ||
+                                (
+                                        Boolean.TRUE.equals(step.getRequiredAnswer()) &&
+                                                trueSurveyIds.contains(step.getSurvey().getId())
+                                )
+                )
                 .map(step -> ChecklistResponseDto.StepDto.builder()
                         .orderNum(step.getOrderNum())
                         .place(step.getPlace())
