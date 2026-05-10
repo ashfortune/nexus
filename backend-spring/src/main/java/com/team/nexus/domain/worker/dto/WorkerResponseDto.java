@@ -22,6 +22,7 @@ public class WorkerResponseDto {
         private boolean applicable;
         private int amount;
         private String reason;
+        private double weeklyAllowanceHours;
     }
 
     @Getter

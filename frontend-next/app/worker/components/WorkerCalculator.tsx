@@ -14,7 +14,7 @@ const initialForm: WorkerCalculateForm = {
   dailyWorkHours: '',
   weeklyWorkDays: '',
   hourlyWage: '',
-  workerType: 'PART_TIME',
+  workerType: 'FULL_TIME',
 };
 
 export function WorkerCalculator({
@@ -140,8 +140,8 @@ export function WorkerCalculator({
               onChange={(e) => updateField('workerType', e.target.value)}
               className="h-11 w-full rounded-md border border-[var(--nexus-outline-variant)] bg-[var(--nexus-surface-lowest)] px-3 text-sm outline-none focus:border-[var(--nexus-primary)]"
             >
-              <option value="PART_TIME">단시간 근로자</option>
               <option value="FULL_TIME">상용 근로자</option>
+              <option value="PART_TIME">단시간 근로자</option>
               <option value="DAILY">일용 근로자</option>
             </select>
           </Field>
