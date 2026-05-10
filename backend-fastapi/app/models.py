@@ -2,6 +2,7 @@ import datetime
 import uuid
 from typing import List, Optional
 
+
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     DOUBLE_PRECISION,
@@ -309,8 +310,15 @@ class ChecklistStep(Base):
     task: Mapped[str] = mapped_column(String(300), nullable=False)
     estimated_days: Mapped[Optional[str]] = mapped_column(String(50))
 
+    survey_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("surveys.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    required_answer: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+
     # Relationships
     license_industry: Mapped["LicenseIndustry"] = relationship(back_populates="checklist_steps")
+    survey: Mapped[Optional["Survey"]] = relationship()
 
 
 class LicenseIndustryMapping(Base):
