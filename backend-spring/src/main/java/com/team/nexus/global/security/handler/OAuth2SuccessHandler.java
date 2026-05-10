@@ -49,7 +49,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             log.info("OAuth2 Login Success: {} (ID: {}), Provider: {}", email, user.getId(), provider);
 
             // 닉네임 한글 인코딩 및 URL 생성
-            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/auth/oauth-callback")
+            String targetUrl = UriComponentsBuilder.fromUriString("https://nexus-sigma-gilt.vercel.app/auth/oauth-callback")
                     .queryParam("token", token)
                     .queryParam("userId", user.getId().toString())
                     .queryParam("nickname", user.getNickname())
@@ -58,22 +58,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .queryParam("provider", provider)
                     .queryParam("profileImage", user.getProfileImage())
                     .build()
-                    .encode(java.nio.charset.StandardCharsets.UTF_8) // 명시적 인코딩 추가
+                    .encode(java.nio.charset.StandardCharsets.UTF_8)
                     .toUriString();
             log.info("Redirecting to: {}", targetUrl);
-            // 디버깅을 위한 파일 로그 (콘솔 확인이 어려울 때 사용)
-            try (java.io.FileWriter fw = new java.io.FileWriter("C:/nexus/oauth_debug.log", true)) {
-                fw.write(new java.util.Date() + " - Redirecting to: " + targetUrl + "\n");
-            }
+            
             getRedirectStrategy().sendRedirect(request, response, targetUrl);
         } catch (Exception e) {
             log.error("OAuth2 Success Handler Error: ", e);
-            try (java.io.FileWriter fw = new java.io.FileWriter("C:/nexus/oauth_debug.log", true)) {
-                fw.write(new java.util.Date() + " - Error: " + e.getMessage() + "\n");
-                java.io.PrintWriter pw = new java.io.PrintWriter(fw);
-                e.printStackTrace(pw);
-            }
-            response.sendRedirect("http://localhost:3000/auth/login?error=auth_failed");
+            response.sendRedirect("https://nexus-sigma-gilt.vercel.app/auth/login?error=auth_failed");
         }
     }
 }

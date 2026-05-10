@@ -27,8 +27,6 @@ public class Expert {
     @Column(name = "phone", length = 20)
     private String phone;
 
-    @Column(length = 100)
-    private String email;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "industry_category_id")

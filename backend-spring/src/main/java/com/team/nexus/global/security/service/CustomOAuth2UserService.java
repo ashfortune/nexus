@@ -36,13 +36,14 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
 
         Map<String, Object> attributes = oAuth2User.getAttributes();
-        
+
         try (java.io.FileWriter fw = new java.io.FileWriter("C:/nexus/oauth_debug.log", true)) {
-            fw.write(new java.util.Date() + " - CustomOAuth2UserService.loadUser started for: " + registrationId + "\n");
+            fw.write(
+                    new java.util.Date() + " - CustomOAuth2UserService.loadUser started for: " + registrationId + "\n");
         } catch (java.io.IOException e) {
             log.error("Log file write error", e);
         }
-        
+
         String email = "";
         String nickname = "";
         int loginType = 0; // 0: Local, 1: Google, 2: Kakao
@@ -70,18 +71,19 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
                 attributes,
-                userNameAttributeName
-        );
+                userNameAttributeName);
     }
 
     private void saveOrUpdate(String email, String nickname, int loginType) {
         Optional<User> userOptional = userRepository.findByEmail(email);
-        
+
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            // 닉네임 정도만 업데이트하거나 필요 로직 추가
-            user.setNickname(nickname);
-            userRepository.save(user);
+            // 배포 환경: 이미 등록된 실명(전문가 닉네임)이 덮어씌워지는 것을 방지
+            if (user.getNickname() == null || user.getNickname().trim().isEmpty()) {
+                user.setNickname(nickname);
+                userRepository.save(user);
+            }
         } else {
             User user = User.builder()
                     .email(email)
