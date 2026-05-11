@@ -471,6 +471,7 @@ class DailyPrediction(Base):
     target_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     pred_sales: Mapped[Optional[int]] = mapped_column(Integer)
     actual_sales: Mapped[Optional[int]] = mapped_column(Integer)
+    timesfm_sales: Mapped[Optional[int]] = mapped_column(Integer)
     moving_average: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION)
     return_rate: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION)
 

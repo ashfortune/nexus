@@ -188,6 +188,7 @@ CREATE TABLE daily_predictions (
     target_date DATE NOT NULL,
     pred_sales INT,
     actual_sales INT,
+    timesfm_sales INT,
     moving_average DOUBLE PRECISION,
     return_rate DOUBLE PRECISION
 );
