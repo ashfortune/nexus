@@ -160,6 +160,9 @@ class Branding(Base):
         String(20), server_default=text("'INTERVIEW'")
     )
     created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+    last_modified_at: Mapped[datetime.datetime] = mapped_column(
+        TIMESTAMP, server_default=text("NOW()"), onupdate=datetime.datetime.now
+    )
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="brandings")
