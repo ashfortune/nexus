@@ -24,8 +24,6 @@ interface AnalysisReportProps {
 }
 
 const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
-  const [activeTab, setActiveTab] = React.useState<'comparison' | 'trends'>('comparison');
-
   const predictedSales = data?.prediction?.amount ?? data?.predictedSales ?? 0;
   const analysisData = data?.analysisData ?? [];
   const totalDays = analysisData.length;
@@ -119,7 +117,6 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* 매출 분석 보고서 섹션 주석 처리 
       <div className="nexus-card border border-[var(--nexus-outline-variant)] rounded-3xl p-8 shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div className="space-y-1">
@@ -131,72 +128,37 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
                 </span>
               )}
             </div>
-            <p className="text-xs text-[var(--nexus-outline)]">차트 탭을 전환하여 분석 기준을 선택해 보세요.</p>
+            <p className="text-xs text-[var(--nexus-outline)]">지표별 시계열 분석 그래프를 확인해 보세요.</p>
           </div>
           
           <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-            <div className="flex bg-[var(--nexus-surface-container)] p-1 rounded-2xl border border-[var(--nexus-outline-variant)]">
-              <button
-                onClick={() => setActiveTab('comparison')}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                  activeTab === 'comparison'
-                    ? 'bg-[var(--nexus-primary)] text-[var(--nexus-on-primary)] shadow-lg'
-                    : 'text-[var(--nexus-outline)] hover:text-[var(--nexus-on-bg)] hover:bg-[var(--nexus-surface-container-high)]'
-                }`}
-              >
-                실제 vs AI 예측 비교 (TimesFM)
-              </button>
-              <button
-                onClick={() => setActiveTab('trends')}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                  activeTab === 'trends'
-                    ? 'bg-[var(--nexus-primary)] text-[var(--nexus-on-primary)] shadow-lg'
-                    : 'text-[var(--nexus-outline)] hover:text-[var(--nexus-on-bg)] hover:bg-[var(--nexus-surface-container-high)]'
-                }`}
-              >
-                실제 vs 통계 트렌드 비교 (Statsmodels)
-              </button>
-            </div>
-
-            <div className="flex items-center gap-4 text-xs font-medium">
-              {activeTab === 'comparison' ? (
-                <>
-                  <div className="flex items-center gap-2 bg-[var(--nexus-primary-container)]/10 px-3 py-1.5 rounded-full border border-[var(--nexus-primary)]/20">
-                    <span className="w-2 h-2 rounded-full bg-[var(--nexus-primary)] shadow-[0_0_8px_rgba(11,26,125,0.4)]"></span>
-                    <span className="text-[var(--nexus-on-bg)]/80">실제 매출</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-[#0ea5e9]/10 px-3 py-1.5 rounded-full border border-[#0ea5e9]/20">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#0ea5e9] shadow-[0_0_10px_#0ea5e9]"></span>
-                    <span className="text-[var(--nexus-on-bg)]/80 font-bold">TimesFM AI 예측점</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2 bg-[#8884d8]/10 px-3 py-1.5 rounded-full border border-[#8884d8]/20">
-                    <span className="w-2 h-2 rounded-full bg-[#8884d8]"></span>
-                    <span className="text-[var(--nexus-on-bg)]/80">실제 매출</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-[#f59e0b]/10 px-3 py-1.5 rounded-full border border-[#f59e0b]/20">
-                    <span className="w-2 h-2 rounded-full bg-[#f59e0b] shadow-[0_0_8px_rgba(245,158,11,0.4)]"></span>
-                    <span className="text-[var(--nexus-on-bg)]/80">Statsmodels 통계 예측선</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-[#ffc658]/10 px-3 py-1.5 rounded-full border border-[#ffc658]/20">
-                    <span className="w-2 h-2 rounded-full bg-[#ffc658]"></span>
-                    <span className="text-[var(--nexus-on-bg)]/80">7일 이동평균</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-[#82ca9d]/10 px-3 py-1.5 rounded-full border border-[#82ca9d]/20">
-                    <span className="w-2 h-2 rounded-full bg-[#82ca9d]"></span>
-                    <span className="text-[var(--nexus-on-bg)]/80">일별 수익률</span>
-                  </div>
-                </>
-              )}
+            <div className="flex flex-wrap items-center gap-3.5 text-xs font-medium">
+              <div className="flex items-center gap-2 bg-[var(--nexus-primary-container)]/10 px-3 py-1.5 rounded-full border border-[var(--nexus-primary)]/20">
+                <span className="w-2 h-2 rounded-full bg-[var(--nexus-primary)] shadow-[0_0_8px_rgba(11,26,125,0.4)]"></span>
+                <span className="text-[var(--nexus-on-bg)]/80">실제 매출</span>
+              </div>
+              <div className="flex items-center gap-2 bg-[#0ea5e9]/10 px-3 py-1.5 rounded-full border border-[#0ea5e9]/20">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#0ea5e9] shadow-[0_0_10px_#0ea5e9]"></span>
+                <span className="text-[var(--nexus-on-bg)]/80 font-bold">TimesFM AI 예측점</span>
+              </div>
+              <div className="flex items-center gap-2 bg-[#f59e0b]/10 px-3 py-1.5 rounded-full border border-[#f59e0b]/20">
+                <span className="w-2 h-2 rounded-full bg-[#f59e0b] shadow-[0_0_8px_rgba(245,158,11,0.4)]"></span>
+                <span className="text-[var(--nexus-on-bg)]/80">Statsmodels 통계 예측선</span>
+              </div>
+              <div className="flex items-center gap-2 bg-[#ffc658]/10 px-3 py-1.5 rounded-full border border-[#ffc658]/20">
+                <span className="w-2 h-2 rounded-full bg-[#ffc658]"></span>
+                <span className="text-[var(--nexus-on-bg)]/80">7일 이동평균</span>
+              </div>
+              <div className="flex items-center gap-2 bg-[#10b981]/10 px-3 py-1.5 rounded-full border border-[#10b981]/20">
+                <span className="w-2 h-2 rounded-full bg-[#10b981]"></span>
+                <span className="text-[var(--nexus-on-bg)]/80">일별 수익률</span>
+              </div>
             </div>
           </div>
         </div>
         
         <SalesAnalysisGraph 
           data={analysisData} 
-          mode={activeTab}
         />
       </div>
 
@@ -245,7 +207,6 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
           )}
         </div>
       </div>
-      */}
     </div>
   );
 };
