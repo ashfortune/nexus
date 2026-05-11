@@ -31,3 +31,5 @@ ruff
 timesfm
 jax
 torch
+anthropic
+openpyxl
