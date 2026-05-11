@@ -1,14 +1,11 @@
 import os
-import redis
+import redis.asyncio as aioredis
 from dotenv import load_dotenv
 
 load_dotenv()
 
-REDIS_URL = os.getenv("REDIS_URL")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
-redis_client = redis.Redis.from_url(
-    REDIS_URL,
-    decode_responses=True
-)
+redis_client = aioredis.from_url(REDIS_URL, decode_responses=True)
 
 AUTOCOMPLETE_KEY = "equipment:autocomplete"
