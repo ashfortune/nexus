@@ -56,7 +56,8 @@ CREATE TABLE brandings (
     keywords JSONB,
     chat_history JSONB,
     current_step VARCHAR(20) DEFAULT 'INTERVIEW',
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_modified_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE brand_identities (

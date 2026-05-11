@@ -23,6 +23,7 @@ interface Brand {
   industryCategoryId: string;
   currentStep: string;
   createdAt: string;
+  lastModifiedAt?: string;
   logoUrl?: string;
 }
 
@@ -86,6 +87,24 @@ export default function BrandListPage() {
         return <ShieldCheck className="w-12 h-12 text-orange-500" />;
       default:
         return <LayoutGrid className="w-12 h-12 text-gray-400" />;
+    }
+  };
+
+  const formatRelativeTime = (dateStr: string | undefined) => {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+      if (isNaN(date.getTime())) return dateStr; // Fallback to raw string if invalid
+      if (diffInSeconds < 60) return 'Just now';
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+      if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+      return dateStr.split('T')[0];
+    } catch (e) {
+      return dateStr;
     }
   };
 
@@ -255,19 +274,37 @@ export default function BrandListPage() {
                           Project History
                         </h5>
                         <div className="space-y-4">
-                          {[1, 2].map((i) => (
+                          {/* 동적 히스토리 생성 */}
+                          {[
+                            {
+                              id: 'last-modified',
+                              label: `Current Step: ${selectedBrand.currentStep}`,
+                              time: selectedBrand.lastModifiedAt,
+                              active: true,
+                            },
+                            {
+                              id: 'created',
+                              label: 'Project Initialized',
+                              time: selectedBrand.createdAt,
+                              active: false,
+                            },
+                          ].map((item) => (
                             <div
-                              key={i}
+                              key={item.id}
                               className="flex items-center justify-between p-4 bg-[var(--nexus-surface-low)] rounded-2xl border border-[var(--nexus-outline-variant)]/20"
                             >
                               <div className="flex items-center gap-4">
-                                <div className="w-2 h-2 bg-[var(--nexus-primary)] rounded-full" />
+                                <div
+                                  className={`w-2 h-2 rounded-full ${
+                                    item.active ? 'bg-[var(--nexus-primary)]' : 'bg-gray-300'
+                                  }`}
+                                />
                                 <span className="text-xs font-bold text-[var(--nexus-on-bg)]">
-                                  Metadata Synchronized
+                                  {item.label}
                                 </span>
                               </div>
                               <span className="text-[10px] font-bold text-gray-400 uppercase">
-                                2d ago
+                                {formatRelativeTime(item.time)}
                               </span>
                             </div>
                           ))}

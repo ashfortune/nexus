@@ -47,4 +47,8 @@ public class Branding {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private java.time.LocalDateTime createdAt;
+
+    @org.hibernate.annotations.UpdateTimestamp
+    @Column(name = "last_modified_at")
+    private java.time.LocalDateTime lastModifiedAt;
 }
