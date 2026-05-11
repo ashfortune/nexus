@@ -48,8 +48,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .getAuthorizedClientRegistrationId();
             log.info("OAuth2 Login Success: {} (ID: {}), Provider: {}", email, user.getId(), provider);
 
+            // 접속한 서버 주소에 따라 프론트엔드 URL 결정
+            String host = request.getServerName();
+            String baseUrl = (host.equals("localhost") || host.equals("127.0.0.1")) 
+                             ? "http://localhost:3000" 
+                             : "https://nexus-sigma-gilt.vercel.app";
+
             // 닉네임 한글 인코딩 및 URL 생성
-            String targetUrl = UriComponentsBuilder.fromUriString("https://nexus-sigma-gilt.vercel.app/auth/oauth-callback")
+            String targetUrl = UriComponentsBuilder.fromUriString(baseUrl + "/auth/oauth-callback")
                     .queryParam("token", token)
                     .queryParam("userId", user.getId().toString())
                     .queryParam("nickname", user.getNickname())
@@ -60,12 +66,16 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .build()
                     .encode(java.nio.charset.StandardCharsets.UTF_8)
                     .toUriString();
-            log.info("Redirecting to: {}", targetUrl);
             
+            log.info("Redirecting to (Host: {}): {}", host, targetUrl);
             getRedirectStrategy().sendRedirect(request, response, targetUrl);
         } catch (Exception e) {
             log.error("OAuth2 Success Handler Error: ", e);
-            response.sendRedirect("https://nexus-sigma-gilt.vercel.app/auth/login?error=auth_failed");
+            String host = request.getServerName();
+            String errorBaseUrl = (host.equals("localhost") || host.equals("127.0.0.1")) 
+                                  ? "http://localhost:3000" 
+                                  : "https://nexus-sigma-gilt.vercel.app";
+            response.sendRedirect(errorBaseUrl + "/auth/login?error=auth_failed");
         }
     }
 }

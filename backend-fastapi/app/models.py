@@ -2,6 +2,7 @@ import datetime
 import uuid
 from typing import List, Optional
 
+
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     DOUBLE_PRECISION,
@@ -159,6 +160,9 @@ class Branding(Base):
         String(20), server_default=text("'INTERVIEW'")
     )
     created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+    last_modified_at: Mapped[datetime.datetime] = mapped_column(
+        TIMESTAMP, server_default=text("NOW()"), onupdate=datetime.datetime.now
+    )
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="brandings")
@@ -309,8 +313,15 @@ class ChecklistStep(Base):
     task: Mapped[str] = mapped_column(String(300), nullable=False)
     estimated_days: Mapped[Optional[str]] = mapped_column(String(50))
 
+    survey_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("surveys.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    required_answer: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+
     # Relationships
     license_industry: Mapped["LicenseIndustry"] = relationship(back_populates="checklist_steps")
+    survey: Mapped[Optional["Survey"]] = relationship()
 
 
 class LicenseIndustryMapping(Base):
@@ -460,6 +471,7 @@ class DailyPrediction(Base):
     target_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     pred_sales: Mapped[Optional[int]] = mapped_column(Integer)
     actual_sales: Mapped[Optional[int]] = mapped_column(Integer)
+    timesfm_sales: Mapped[Optional[int]] = mapped_column(Integer)
     moving_average: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION)
     return_rate: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION)
 

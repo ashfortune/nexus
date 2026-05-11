@@ -5,13 +5,14 @@ export type WorkerCalculateForm = {
   dailyWorkHours: string;
   weeklyWorkDays: string;
   hourlyWage: string;
-  workerType: string;
+  workerType: 'FULL_TIME' | 'PART_TIME' | 'DAILY';
 };
 
 export type WorkerCalculateResponse = {
   weeklyAllowance: {
     applicable: boolean;
     amount: number;
+    weeklyAllowanceHours: number;
     reason: string;
   };
   breakTime: {

@@ -36,4 +36,11 @@ public class ChecklistStep {
 
     @Column(name = "estimated_days", length = 50)
     private String estimatedDays;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "survey_id")
+    private Survey survey;
+
+    @Column(name = "required_answer")
+    private Boolean requiredAnswer;
 }
