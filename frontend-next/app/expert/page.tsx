@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import AuthGuard from '@/components/auth/AuthGuard';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Laptop, TrendingUp, Landmark, Scale, Palette, ArrowRight, CheckCircle, ChevronLeft, Search, Sparkles } from 'lucide-react';
 
 const CATEGORIES = [
@@ -13,6 +14,7 @@ const CATEGORIES = [
 ];
 
 export default function ExpertMatchPage() {
+  const { user } = useAuthStore();
   const [step, setStep] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [requestContent, setRequestContent] = useState('');
@@ -37,24 +39,37 @@ export default function ExpertMatchPage() {
     setTimeout(() => setLoadingText('가장 적합한 전문가를 선별 중입니다...'), 3000);
 
     try {
-      // TODO: 실제 유저 ID로 교체 필요
-      const dummyUserId = '123e4567-e89b-12d3-a456-426614174000';
+      // 실제 유저 ID 사용 (미로그인 시 null 처리되지만 AuthGuard가 보호함)
+      const userId = user?.id || '00000000-0000-0000-0000-000000000001';
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/experts/match`, {
+      // FastAPI 직접 호출 (환경변수 우선 사용)
+      const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
+      const response = await fetch(`${fastApiUrl}/api/v1/ai/experts/match`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: dummyUserId,
-          industryCategoryId: selectedCategory?.id,
-          requestContent: requestContent,
+          user_id: userId,
+          category_id: selectedCategory?.id || null,
+          request_content: requestContent,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setResult(data);
+        // FastAPI 응답(matches, snake_case)을 프론트 표시 형식(experts, camelCase)으로 변환
+        const converted = {
+          experts: (data.matches || []).map((m: any) => ({
+            matchedExpertId: m.matched_expert_id,
+            expertName: m.expert_name,
+            expertPhone: m.expert_phone,
+            matchReason: m.match_reason,
+            rating: m.rating,
+            expertPortfolio: m.portfolio,
+          }))
+        };
+        setResult(converted);
       } else {
         console.error("Server Error Status:", response.status);
         const errorData = await response.text();

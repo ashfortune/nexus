@@ -99,10 +99,14 @@ async def run_unified_seeder():
                 if not KOREAN_NAME_PATTERN.match(data["name"]) or data["name"] in seen_names:
                     continue
                     
-                cat_name = map_category(data["company"] + " " + " ".join(data.get("tags", [])))
+                pos = data.get("position", "전문가")
+                career = data.get("career", "대한민국 공식 인증 멘토입니다.")
+                tags = ", ".join(data.get("tags", []))
+                
+                cat_name = map_category(data["company"] + " " + tags)
                 cat_id = await get_or_create_category(db, cat_name)
                 
-                portfolio = f"[{data['name']} 전문가]\n소속: {data['company']}\n분야: {', '.join(data.get('tags', []))}\n대한민국 공식 인증 멘토입니다."
+                portfolio = f"[{data['name']} {pos}]\n소속: {data['company']}\n전문분야: {tags}\n\n[주요 경력]\n{career}"
                 
                 # 가짜 전화번호 생성 (실제 연락은 서비스 내에서 중개)
                 fake_phone = f"010-{random.randint(1000,9999)}-{random.randint(1000,9999)}"
