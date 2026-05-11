@@ -4,7 +4,6 @@ httpx
 sqlalchemy>=2.0
 asyncpg
 python-dotenv
-pytesseract
 pillow
 ollama
 python-multipart
@@ -16,7 +15,6 @@ sentence-transformers
 greenlet
 langchain-community
 langchain-core
-tensorflow
 scikit-learn
 pandas
 numpy
@@ -31,3 +29,4 @@ pypdf
 ruff
 timesfm
 jax
+torch
