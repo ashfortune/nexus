@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 
 class ExpertMatchRequest(BaseModel):
+    user_id: uuid.UUID
     request_content: str
     category_id: Optional[uuid.UUID] = None
 

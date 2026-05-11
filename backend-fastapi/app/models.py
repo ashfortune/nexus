@@ -718,7 +718,6 @@ class Expert(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     phone: Mapped[Optional[str]] = mapped_column(String(20))
-    email: Mapped[Optional[str]] = mapped_column(String(100))
     industry_category_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         ForeignKey("industry_categories.id")
     )

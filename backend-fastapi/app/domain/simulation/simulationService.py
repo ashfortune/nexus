@@ -80,10 +80,10 @@ def _load_model():
             _model = joblib.load(model_path)
 
         print(
-            f"✅ [Simulation] AI 시뮬레이션 모델 로드 완료 (Source: {'Local' if 'pd_models' in model_path else 'HuggingFace'})"
+            f"[Simulation] AI simulation model loaded successfully (Source: {'Local' if 'pd_models' in model_path else 'HuggingFace'})"
         )
     except Exception as e:
-        print(f"❌ [Simulation] 모델 로드 실패: {e}")
+        print(f"[Simulation] Model load failed: {e}")
         raise e
 
 
