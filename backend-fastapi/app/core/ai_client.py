@@ -46,7 +46,7 @@ def retry_async(max_retries=3, delay=2):
                 except Exception as e:
                     last_exc = e
                     # 500 에러나 네트워크 에러 등 재시도가 필요한 경우만 로깅
-                    print(f"[AI Retry {i + 1}/{max_retries}] Temporary error occurred: {str(e)[:100]}...")
+                    print(f"⚠️ [AI Retry {i + 1}/{max_retries}] 일시적 오류 발생: {str(e)[:100]}...")
                     if i < max_retries - 1:
                         await asyncio.sleep(delay * (i + 1))  # 지수 백오프 적용
             raise last_exc
@@ -62,16 +62,15 @@ class GeminiClient(BaseAIClient):
     def __init__(self):
         api_key = os.getenv("GOOGLE_API_KEY")
         self.client = genai.Client(api_key=api_key)
-        self.model_name = os.getenv("MODEL_NAME", "gemini-2.0-flash")
+        self.model_name = "models/gemma-4-31b-it"
 
         # 로컬 임베딩 모델 로드 (최초 1회)
         if GeminiClient._local_model is None:
-            print("[AI Client] Local model (768d) loading... please wait.")
-            embedding_model = os.getenv("EMBEDDING_MODEL_NAME", "paraphrase-multilingual-mpnet-base-v2")
-            GeminiClient._local_model = SentenceTransformer(embedding_model)
-            print("[AI Client] Local model loaded successfully!")
+            print("🧠 로컬 임베딩 모델(768차원) 로딩 중... 잠시만 기다려주세요.")
+            GeminiClient._local_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
+            print("✅ 로컬 모델 로딩 완료!")
 
-    @retry_async(max_retries=1, delay=0)
+    @retry_async(max_retries=3, delay=2)
     async def generate_response(
         self, system_instruction: str, chat_history: List[Dict[str, str]]
     ) -> str:
@@ -247,12 +246,12 @@ async def calculate_alignment_score(text: str, base64_image: str) -> float:
     """텍스트와 Base64 이미지 간의 의미적 일치도를 계산합니다 (0.0 ~ 100.0)"""
     global _CLIP_TEXT_MODEL, _CLIP_IMAGE_MODEL
     if _CLIP_TEXT_MODEL is None:
-        print("[CLIP] Local multilingual CLIP text model loading...")
+        print("🧠 로컬 다국어 CLIP 텍스트 모델 로딩 중...")
         _CLIP_TEXT_MODEL = SentenceTransformer("clip-ViT-B-32-multilingual-v1")
     if _CLIP_IMAGE_MODEL is None:
-        print("[CLIP] Local CLIP image model loading...")
+        print("🧠 로컬 CLIP 이미지 모델 로딩 중...")
         _CLIP_IMAGE_MODEL = SentenceTransformer("clip-ViT-B-32")
-        print("[CLIP] CLIP model set loaded successfully!")
+        print("✅ CLIP 모델 세트 로딩 완료!")
 
     try:
         if base64_image.startswith("data:image"):
@@ -281,5 +280,5 @@ async def calculate_alignment_score(text: str, base64_image: str) -> float:
         return normalized_score
 
     except Exception as e:
-        print(f"[Alignment] Score calculation failed: {str(e)}")
+        print(f"⚠️ Alignment Score 계산 실패: {str(e)}")
         return 0.0
