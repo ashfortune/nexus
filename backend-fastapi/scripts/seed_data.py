@@ -4,8 +4,11 @@ import pandas as pd
 import anthropic
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
+from app.core.redis import redis_client, AUTOCOMPLETE_KEY
 
 load_dotenv(Path(__file__).parent.parent / ".env")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+AUTOCOMPLETE_KEY = "equipment:autocomplete"
 
 BASE_DIR        = Path(__file__).parent
 EXCEL_EQUIPMENT = BASE_DIR / "음식_설비.xlsx"
@@ -13,7 +16,7 @@ EXCEL_TYPES     = BASE_DIR / "음식업종_분류.xlsx"
 CSV_SURVIVAL    = BASE_DIR / "영세_자영업_신생기업생존율_20260511154402.csv"
 
 DB_URL = os.environ["DATABASE_URL"].replace("postgresql+asyncpg://", "postgresql://")
-API_KEY = os.environ["ANTHROPIC_API_KEY"]
+#API_KEY = os.environ["ANTHROPIC_API_KEY"]
 
 KOSIS_CATEGORIES = [
     "한식 일반 음식점업", "한식 면 요리 전문점", "한식 육류 요리 전문점",
@@ -166,21 +169,45 @@ def insert_equipment_map(engine, rt_rows, eq_rows, client):
             time.sleep(0.5)
     print("[restaurant_equipment_map 완료]")
 
+def cache_equipment_to_redis(eq_rows):
+    pipe = redis_client.pipeline()
+
+    pipe.delete(AUTOCOMPLETE_KEY)
+
+    for eq in eq_rows:
+        name = eq["name"]
+
+        pipe.zadd(AUTOCOMPLETE_KEY, {name: 0})
+
+        pipe.hset(
+            f"equipment:detail:{name}",
+            mapping={
+                "id": eq["id"],
+                "name": eq["name"],
+                "category": eq["category"],
+            }
+        )
+
+    pipe.execute()
+
+    print(f"[redis] 설비 캐싱 완료: {len(eq_rows)}개")
+
 def main():
     print("=== seed_data.py 시작 ===")
-    client = anthropic.Anthropic(api_key=API_KEY)
+    # client = anthropic.Anthropic(api_key=API_KEY)
     engine = create_engine(DB_URL)
 
     eq_rows = load_equipment()
     insert_equipment(engine, eq_rows)
+    cache_equipment_to_redis(eq_rows)
 
     rt_rows = load_restaurant_types()
     insert_restaurant_types(engine, rt_rows)
 
-    survival_rates = load_survival_rates()
-    update_kosis_and_survival(engine, rt_rows, survival_rates, client)
+    # survival_rates = load_survival_rates()
+    # update_kosis_and_survival(engine, rt_rows, survival_rates, client)
 
-    insert_equipment_map(engine, rt_rows, eq_rows, client)
+    # insert_equipment_map(engine, rt_rows, eq_rows, client)
 
     print("=== 완료 ===")
 
