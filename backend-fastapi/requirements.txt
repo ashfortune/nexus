@@ -17,6 +17,7 @@ langchain-community
 langchain-core
 scikit-learn
 pandas
+tensorflow
 numpy
 statsmodels
 google-genai>=1.0.0
