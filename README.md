@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="frontend-next/public/assets/logo.png" width="200" alt="Nexus Logo"/>
   <h1>🌌 Nexus (넥서스)</h1>
   <p><b>AI 기반 통합 미디어 브랜딩 및 데이터 기반 창업 지원 플랫폼</b></p>
 
@@ -12,7 +11,23 @@
 
 ---
 
-## 🚀 1. 프로젝트 개요 (Overview)
+## 📅 1. 프로젝트 정보 (Project Info)
+- **개발 기간**: 2026.03.27 ~ 2026.05.15
+- **팀 구성**: 5명 (PM 1, PL 1, DEV 3)
+
+### 👥 팀원 및 역할 (Team Members)
+
+| 역할 | 이름 | 담당 업무 (Main Responsibilities) |
+| :--- | :--- | :--- |
+| **PM** | **유재복** | AI 브랜딩, 기획/개발환경 설계 및 세팅, 인프라 구축(MSA), CI/CD 자동화 |
+| **PL** | **탁유제** | 창업 시뮬레이션, 상권 분석, WBS 작성, AI 모델 학습 및 검증 |
+| **DEV** | **문광명** | 인증(로그인/회원가입), 커뮤니티, 공동구매, 실시간 채팅, 정책 정의 |
+| **DEV** | **최지원** | 창업/고용 가이드, 지원금 조회, 문서 취합 및 관리, 테스트 케이스(TC) 작성 |
+| **DEV** | **강민재** | 매출 데이터 업로드 및 정제, 매출 분석 AI 엔진, 매장 운영 분석 대시보드 |
+
+---
+
+## 🚀 2. 프로젝트 개요 (Overview)
 **Nexus**는 소상공인과 예비 창업자를 위한 **All-in-One 지능형 창업 지원 플랫폼**입니다. 단순한 정보 제공을 넘어, AI 기술을 활용하여 브랜드 아이덴티티를 구축하고 데이터에 기반한 실질적인 사업 의사결정을 돕습니다.
 
 - **브랜드 정체성 확립**: AI가 네이밍부터 로고, 슬로건까지 맞춤형 브랜딩 에셋을 생성합니다.
@@ -21,7 +36,7 @@
 
 ---
 
-## ✨ 2. 핵심 기능 (Key Features)
+## ✨ 3. 핵심 기능 (Key Features)
 
 ### 🎨 AI 브랜딩 엔진 (AI Branding)
 - **Multi-Stage Workflow**: 단순 생성을 넘어, LLM 기반의 'Self-Correction Loop'를 통해 네이밍과 슬로건의 품질을 자동 검증하고 개선합니다.
@@ -37,7 +52,7 @@
 
 ---
 
-## 🏗️ 3. 시스템 아키텍처 (System Architecture)
+## 🏗️ 4. 시스템 아키텍처 (System Architecture)
 
 Nexus는 확장성과 유지보수성을 극대화하기 위해 **도메인 중심(Domain-Driven) 아키텍처**와 **마이크로 서비스 지향적 구조**를 채택했습니다.
 
@@ -65,7 +80,7 @@ graph TD
 
 ---
 
-## 🤖 4. AI 파이프라인 (AI Pipeline)
+## 🤖 5. AI 파이프라인 (AI Pipeline)
 
 Nexus의 핵심 경쟁력은 AI의 **자기 교정 루프(Self-Correction Loop)**에 있습니다.
 
@@ -89,7 +104,7 @@ sequenceDiagram
 
 ---
 
-## 📂 5. 프로젝트 구조 (Directory Structure)
+## 📂 6. 프로젝트 구조 (Directory Structure)
 
 ```text
 nexus/
@@ -102,7 +117,7 @@ nexus/
 
 ---
 
-## 🛠️ 6. 기술 스택 (Technical Stack)
+## 🛠️ 7. 기술 스택 (Technical Stack)
 
 | 구분 | 기술 (Technology) | 상세 내역 |
 | :--- | :--- | :--- |
@@ -114,7 +129,7 @@ nexus/
 
 ---
 
-## ⚙️ 7. 시작하기 (Quick Start)
+## ⚙️ 8. 시작하기 (Quick Start)
 
 ### 🐘 1단계: 인프라 기동 (Docker)
 ```bash
@@ -130,7 +145,7 @@ docker-compose up -d
 
 ---
 
-## 💎 8. 코드 품질 및 협업 (Quality & Collaboration)
+## 💎 9. 코드 품질 및 협업 (Quality & Collaboration)
 
 - **코드 컨벤션**: `.agent-conventions.md`를 통해 AI와 인간 개발자 간의 일관된 코드 품질을 유지합니다.
 - **린트/포맷**: `Checkstyle`(Java), `Ruff`(Python), `ESLint/Prettier`(TS)를 통해 엄격히 관리됩니다.
