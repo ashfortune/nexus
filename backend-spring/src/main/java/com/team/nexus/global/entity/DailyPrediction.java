@@ -35,6 +35,9 @@ public class DailyPrediction {
     @Column(name = "actual_sales")
     private Integer actualSales;
 
+    @Column(name = "timesfm_sales")
+    private Integer timesfmSales;
+
     @Column(name = "moving_average")
     private Double movingAverage;
 
