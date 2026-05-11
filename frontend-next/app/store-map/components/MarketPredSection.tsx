@@ -50,8 +50,9 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
   const [showInfo, setShowInfo] = useState(false);
 
   const dongs = storesData?.storeByRegionDtoList ?? [];
-  const isSeoul = admCd ? admCd.startsWith('11') : true;
-  const canSubmit = industry && admCd && openYear && openMonth && !isLoading && isSeoul;
+  // 조회된 데이터의 첫 번째 행정동 코드가 11(서울)로 시작하는지 확인
+  const isSeoulRegion = dongs.length > 0 ? String(dongs[0].adongCd).startsWith('11') : true;
+  const canSubmit = industry && admCd && openYear && openMonth && !isLoading && isSeoulRegion;
 
 
   const handlePredict = async () => {
@@ -112,9 +113,9 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
             <Info size={12} className="text-indigo-600" />
             분석 모델 정보
           </button>
-          {!isSeoul && (
+          {!isSeoulRegion && storesData && (
             <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100">
-              서울 지역에 최적화된 모델입니다
+              서울 지역에 최적화된 모델입니다 (현재 지역 예측 불가)
             </span>
           )}
           {!storesData && (
@@ -157,7 +158,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
       )}
 
       <div
-        className={`grid grid-cols-1 lg:grid-cols-12 gap-6 transition-all ${!storesData ? 'opacity-40 pointer-events-none' : ''}`}
+        className={`grid grid-cols-1 lg:grid-cols-12 gap-6 transition-all ${!storesData || !isSeoulRegion ? 'opacity-40 pointer-events-none' : ''}`}
       >
         {/* 입력 폼 (L:4) */}
         <div className="lg:col-span-4 space-y-4">
