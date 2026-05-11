@@ -16,6 +16,7 @@ interface AdminData {
     bizNo: string;
     createdAt: string;
     isSuspended: boolean;
+    isWithdrawn: boolean;
   }>;
   boards: Array<{ id: string; title: string; authorNickname: string; boardType: string; createdAt: string }>;
   comments: Array<{
@@ -281,7 +282,7 @@ export default function AdminPage() {
                     data.users.map((u) => (
                       <tr
                         key={u.id}
-                        className="hover:bg-[var(--nexus-surface-low)]/50 transition-colors"
+                        className={`hover:bg-[var(--nexus-surface-low)]/50 transition-colors ${u.isWithdrawn ? 'opacity-50' : ''}`}
                       >
                         <td 
                           className="px-8 py-6 text-sm font-medium text-[var(--nexus-on-bg)] truncate max-w-[300px]" 
@@ -304,21 +305,30 @@ export default function AdminPage() {
                         </td>
                         <td className="px-8 py-6 whitespace-nowrap">
                           <span
-                            className={`px-3 py-1 rounded-lg text-[10px] font-black ${u.isSuspended ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}
+                            className={`px-3 py-1 rounded-lg text-[10px] font-black ${
+                              u.isWithdrawn 
+                                ? 'bg-gray-500/10 text-gray-500' 
+                                : u.isSuspended 
+                                  ? 'bg-red-500/10 text-red-500' 
+                                  : 'bg-green-500/10 text-green-500'
+                            }`}
                           >
-                            {u.isSuspended ? 'SUSPENDED' : 'ACTIVE'}
+                            {u.isWithdrawn ? 'WITHDRAWN' : u.isSuspended ? 'SUSPENDED' : 'ACTIVE'}
                           </span>
                         </td>
                         <td className="px-8 py-6 text-right whitespace-nowrap">
                           <button
-                            onClick={() => handleToggleSuspension(u.id, u.isSuspended)}
+                            onClick={() => !u.isWithdrawn && handleToggleSuspension(u.id, u.isSuspended)}
+                            disabled={u.isWithdrawn}
                             className={`min-w-[80px] px-4 py-2.5 rounded-xl text-[10px] font-black transition-all shadow-md active:scale-95 ${
-                              u.isSuspended 
-                                ? 'bg-green-500 text-white hover:bg-green-600 shadow-green-500/20' 
-                                : 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/20'
+                              u.isWithdrawn
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : u.isSuspended 
+                                  ? 'bg-green-500 text-white hover:bg-green-600 shadow-green-500/20' 
+                                  : 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/20'
                             }`}
                           >
-                            {u.isSuspended ? '해제' : '정지'}
+                            {u.isWithdrawn ? '탈퇴회원' : u.isSuspended ? '해제' : '정지'}
                           </button>
                         </td>
                       </tr>
