@@ -31,3 +31,4 @@ ruff
 timesfm
 jax
 torch
+transformers
