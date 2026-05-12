@@ -116,6 +116,17 @@ services:
       - nexus-network
     restart: always
 
+  nexus-redis:
+    image: redis:latest
+    container_name: nexus-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+    networks:
+      - nexus-network
+    restart: always
+
 
 networks:
   nexus-network:
