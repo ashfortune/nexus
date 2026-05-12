@@ -245,9 +245,9 @@ const SalesAnalysisGraph: React.FC<GraphProps> = ({ data }) => {
               type="monotone"
               dataKey="timesfm"
               name="AI 예측점"
-              stroke="#0ea5e9"
+              stroke="#2563eb"
               strokeWidth={3}
-              dot={{ r: 8, fill: '#0ea5e9', stroke: '#fff', strokeWidth: 2 }}
+              dot={{ r: 8, fill: '#2563eb', stroke: '#fff', strokeWidth: 2 }}
               connectNulls={true}
             />
 
