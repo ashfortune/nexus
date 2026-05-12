@@ -56,7 +56,8 @@ CREATE TABLE brandings (
     keywords JSONB,
     chat_history JSONB,
     current_step VARCHAR(20) DEFAULT 'INTERVIEW',
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_modified_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE brand_identities (
@@ -187,6 +188,7 @@ CREATE TABLE daily_predictions (
     target_date DATE NOT NULL,
     pred_sales INT,
     actual_sales INT,
+    timesfm_sales INT,
     moving_average DOUBLE PRECISION,
     return_rate DOUBLE PRECISION
 );

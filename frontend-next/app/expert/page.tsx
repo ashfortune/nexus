@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import AuthGuard from '@/components/auth/AuthGuard';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Laptop, TrendingUp, Landmark, Scale, Palette, ArrowRight, CheckCircle, ChevronLeft, Search, Sparkles } from 'lucide-react';
 
 const CATEGORIES = [
@@ -13,6 +14,7 @@ const CATEGORIES = [
 ];
 
 export default function ExpertMatchPage() {
+  const { user } = useAuthStore();
   const [step, setStep] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [requestContent, setRequestContent] = useState('');
@@ -37,24 +39,37 @@ export default function ExpertMatchPage() {
     setTimeout(() => setLoadingText('가장 적합한 전문가를 선별 중입니다...'), 3000);
 
     try {
-      // TODO: 실제 유저 ID로 교체 필요
-      const dummyUserId = '123e4567-e89b-12d3-a456-426614174000';
+      // 실제 유저 ID 사용 (미로그인 시 null 처리되지만 AuthGuard가 보호함)
+      const userId = user?.id || '00000000-0000-0000-0000-000000000001';
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/experts/match`, {
+      // FastAPI 직접 호출 (환경변수 우선 사용)
+      const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
+      const response = await fetch(`${fastApiUrl}/api/v1/ai/experts/match`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: dummyUserId,
-          industryCategoryId: selectedCategory?.id,
-          requestContent: requestContent,
+          user_id: userId,
+          category_id: selectedCategory?.id || null,
+          request_content: requestContent,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setResult(data);
+        // FastAPI 응답(matches, snake_case)을 프론트 표시 형식(experts, camelCase)으로 변환
+        const converted = {
+          experts: (data.matches || []).map((m: any) => ({
+            matchedExpertId: m.matched_expert_id,
+            expertName: m.expert_name,
+            expertPhone: m.expert_phone,
+            matchReason: m.match_reason,
+            rating: m.rating,
+            expertPortfolio: m.portfolio,
+          }))
+        };
+        setResult(converted);
       } else {
         console.error("Server Error Status:", response.status);
         const errorData = await response.text();
@@ -90,13 +105,13 @@ export default function ExpertMatchPage() {
   return (
     <AuthGuard allowedRoles={[0, 1, 2]}>
       <div className="min-h-screen bg-[var(--nexus-bg)] text-[var(--nexus-on-bg)] flex flex-col items-center py-20 px-4 font-sans selection:bg-[var(--nexus-primary)]/20 relative overflow-hidden">
-        
+
         {/* Background Glow Effects matching Hextech Theme */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[var(--nexus-surface-container)] rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#cfe6f2] rounded-full blur-[100px] pointer-events-none" />
 
         <div className="relative z-10 w-full max-w-4xl">
-          
+
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full nexus-glass border border-[var(--nexus-outline-variant)] shadow-sm mb-4">
@@ -140,13 +155,13 @@ export default function ExpertMatchPage() {
           {/* Step 2: Request Input */}
           {step === 2 && (
             <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-right-8 duration-500">
-              <button 
+              <button
                 onClick={() => setStep(1)}
                 className="flex items-center gap-2 text-[var(--nexus-outline)] hover:text-[var(--nexus-primary)] font-semibold transition-colors mb-6"
               >
                 <ChevronLeft className="w-5 h-5" /> 뒤로 가기
               </button>
-              
+
               <div className="bg-[var(--nexus-surface-lowest)] border border-[var(--nexus-outline-variant)] rounded-3xl p-8 md:p-10 shadow-xl">
                 <div className="flex items-center gap-5 mb-8 pb-8 border-b border-[var(--nexus-surface-container-high)]">
                   <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${selectedCategory?.color}`}>
@@ -165,7 +180,7 @@ export default function ExpertMatchPage() {
                   className="w-full h-48 bg-[var(--nexus-surface)] border border-[var(--nexus-outline-variant)] rounded-xl p-5 text-[var(--nexus-on-bg)] placeholder:text-[var(--nexus-outline)] focus:outline-none focus:ring-2 focus:ring-[var(--nexus-primary)]/30 focus:border-[var(--nexus-primary)] transition-all resize-none mb-8 text-lg"
                 />
 
-                <button 
+                <button
                   onClick={handleSubmit}
                   disabled={!requestContent.trim()}
                   className="w-full py-5 rounded-xl font-bold text-lg bg-[var(--nexus-primary)] hover:bg-[var(--nexus-primary-container)] text-white shadow-lg shadow-[var(--nexus-primary)]/20 transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -204,7 +219,7 @@ export default function ExpertMatchPage() {
                 {result.experts && result.experts.length > 0 ? (
                   result.experts.map((expert: any, index: number) => (
                     <div key={expert.matchedExpertId || index} className="bg-[var(--nexus-surface-lowest)] border border-[var(--nexus-outline-variant)] rounded-[2rem] overflow-hidden shadow-2xl shadow-[var(--nexus-primary)]/5">
-                      
+
                       <div className="h-24 bg-gradient-to-r from-[var(--nexus-primary)] to-[var(--nexus-secondary)] relative">
                         <div className="absolute -bottom-8 left-8">
                           <div className="w-20 h-20 rounded-2xl bg-[var(--nexus-surface-lowest)] border-[4px] border-[var(--nexus-surface-lowest)] flex items-center justify-center overflow-hidden shadow-lg">
@@ -232,7 +247,7 @@ export default function ExpertMatchPage() {
                               {expert.expertPortfolio}
                             </p>
                           </div>
-                          <button 
+                          <button
                             onClick={() => {
                               setSelectedExpert(expert);
                               setIsModalOpen(true);
@@ -267,7 +282,7 @@ export default function ExpertMatchPage() {
               </div>
 
               <div className="mt-10 text-center">
-                <button 
+                <button
                   onClick={() => setStep(1)}
                   className="text-[var(--nexus-outline)] font-bold hover:text-[var(--nexus-primary)] transition-colors underline underline-offset-8"
                 >
@@ -300,7 +315,7 @@ export default function ExpertMatchPage() {
                       <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-sm font-bold border border-amber-100">★ {selectedExpert.rating || '5.0'}</span>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setIsModalOpen(false)}
                     className="w-10 h-10 rounded-full bg-[var(--nexus-surface-container)] flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
                   >
@@ -315,7 +330,7 @@ export default function ExpertMatchPage() {
                       {selectedExpert.expertPortfolio}
                     </p>
                   </div>
-                  
+
                   <div>
                     <h4 className="text-sm font-bold text-[var(--nexus-primary)] uppercase tracking-widest mb-3">AI 매칭 인사이트</h4>
                     <div className="bg-[var(--nexus-primary)]/5 p-6 rounded-2xl border border-[var(--nexus-primary)]/10 text-[var(--nexus-primary)] font-semibold italic">
@@ -325,13 +340,13 @@ export default function ExpertMatchPage() {
                 </div>
 
                 <div className="mt-10 flex gap-4">
-                  <button 
+                  <button
                     onClick={() => setIsModalOpen(false)}
                     className="flex-1 py-5 bg-[var(--nexus-surface-container-highest)] text-[var(--nexus-on-bg)] font-bold rounded-2xl hover:bg-gray-200 transition-all"
                   >
                     닫기
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       alert('전문가에게 연락 요청이 전송되었습니다.');
                       setIsModalOpen(false);

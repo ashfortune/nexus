@@ -2,35 +2,58 @@ package com.team.nexus.domain.worker.service;
 
 import com.team.nexus.domain.worker.dto.WorkerRequestDto;
 import com.team.nexus.domain.worker.dto.WorkerResponseDto;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class WorkerServiceImpl implements WorkerService {
-
-    private static final int MINIMUM_WAGE = 10320;
 
     @Override
     public WorkerResponseDto calculate(WorkerRequestDto request) {
-        double weeklyWorkHours = request.getDailyWorkHours() * request.getWeeklyWorkDays();
+        double scheduledWeeklyHours = request.getDailyWorkHours() * request.getWeeklyWorkDays();
+        boolean over5Employees = request.getEmployeeCount() >= 5;
+
         return WorkerResponseDto.builder()
-                .weeklyAllowance(calculateWeeklyAllowance(weeklyWorkHours, request.getHourlyWage()))
+                .weeklyAllowance(calculateWeeklyAllowance(scheduledWeeklyHours, request.getHourlyWage()))
                 .breakTime(calculateBreakTime(request.getDailyWorkHours()))
-                .insurance(calculateInsurance(weeklyWorkHours))
+                .insurance(calculateInsurance(scheduledWeeklyHours))
                 .build();
     }
 
-    private WorkerResponseDto.WeeklyAllowance calculateWeeklyAllowance(double weeklyWorkHours, int hourlyWage) {
-        if (weeklyWorkHours >= 15) {
+    private WorkerResponseDto.WeeklyAllowance calculateWeeklyAllowance(
+            double scheduledWeeklyHours, int hourlyWage) {
+
+        if (scheduledWeeklyHours < 15) {
             return WorkerResponseDto.WeeklyAllowance.builder()
-                    .applicable(true)
-                    .amount(hourlyWage * 8)
-                    .reason("주 15시간 이상 근무 시 주휴수당 발생 (시급 × 8시간)")
+                    .applicable(false)
+                    .amount(0)
+                    .weeklyAllowanceHours(0)
+                    .reason("주 15시간 미만 근무 시 주휴수당 미발생")
                     .build();
         }
+
+        double weeklyAllowanceHours;
+        String reason;
+
+        if (scheduledWeeklyHours >= 40) {
+            weeklyAllowanceHours = 8.0;
+            reason = "주 40시간 이상 근무: 시급 × 8시간";
+        } else {
+            weeklyAllowanceHours = scheduledWeeklyHours / 5.0;
+            reason = String.format(
+                    "파트타임 비례계산: %.1f시간(주 소정근로) ÷ 5 = %.2f시간",
+                    scheduledWeeklyHours, weeklyAllowanceHours
+            );
+        }
+
+        int amount = (int) Math.floor(weeklyAllowanceHours * hourlyWage);
+
         return WorkerResponseDto.WeeklyAllowance.builder()
-                .applicable(false)
-                .amount(0)
-                .reason("주 15시간 미만 근무 시 주휴수당 미발생")
+                .applicable(true)
+                .amount(amount)
+                .weeklyAllowanceHours(weeklyAllowanceHours)
+                .reason(reason)
                 .build();
     }
 
@@ -66,7 +89,7 @@ public class WorkerServiceImpl implements WorkerService {
         return WorkerResponseDto.Insurance.builder()
                 .required(true)
                 .types(new String[]{"산재보험"})
-                .reason("주 15시간 미만 근무 시 산재보험만 의무 (모든 사업장 해당)")
+                .reason("주 15시간 미만 근무 시 산재보험만 의무")
                 .build();
     }
 }

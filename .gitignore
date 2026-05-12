@@ -64,6 +64,7 @@ backend-fastapi/lib64/
 backend-fastapi/app/static/
 backend-fastapi/error_log.txt
 backend-fastapi/app/pd_models/
+backend-fastapi/**/*.json
 
 # --- Backend (Spring Boot) Additional ---
 backend-spring/uploads/
@@ -76,3 +77,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+redis-data/
+*.rdb

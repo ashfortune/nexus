@@ -26,6 +26,7 @@ public class AdminDashboardDto {
         private String bizNo;
         private LocalDateTime createdAt;
         private Boolean isSuspended;
+        private Boolean isWithdrawn;
     }
 
     @Getter

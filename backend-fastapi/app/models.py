@@ -2,6 +2,7 @@ import datetime
 import uuid
 from typing import List, Optional
 
+
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     DOUBLE_PRECISION,
@@ -159,6 +160,9 @@ class Branding(Base):
         String(20), server_default=text("'INTERVIEW'")
     )
     created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+    last_modified_at: Mapped[datetime.datetime] = mapped_column(
+        TIMESTAMP, server_default=text("NOW()"), onupdate=datetime.datetime.now
+    )
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="brandings")
@@ -309,8 +313,15 @@ class ChecklistStep(Base):
     task: Mapped[str] = mapped_column(String(300), nullable=False)
     estimated_days: Mapped[Optional[str]] = mapped_column(String(50))
 
+    survey_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("surveys.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    required_answer: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+
     # Relationships
     license_industry: Mapped["LicenseIndustry"] = relationship(back_populates="checklist_steps")
+    survey: Mapped[Optional["Survey"]] = relationship()
 
 
 class LicenseIndustryMapping(Base):
@@ -460,6 +471,7 @@ class DailyPrediction(Base):
     target_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     pred_sales: Mapped[Optional[int]] = mapped_column(Integer)
     actual_sales: Mapped[Optional[int]] = mapped_column(Integer)
+    timesfm_sales: Mapped[Optional[int]] = mapped_column(Integer)
     moving_average: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION)
     return_rate: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION)
 
@@ -706,7 +718,6 @@ class Expert(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     phone: Mapped[Optional[str]] = mapped_column(String(20))
-    email: Mapped[Optional[str]] = mapped_column(String(100))
     industry_category_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         ForeignKey("industry_categories.id")
     )
@@ -729,3 +740,53 @@ class ExpertMatchRequest(Base):
     matched_expert_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("experts.id"))
     match_reason: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+
+class Equipment(Base):
+    __tablename__ = "equipment"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    category: Mapped[str] = mapped_column(String(50), nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+
+    # Relationships
+    equipment_maps: Mapped[List["RestaurantEquipmentMap"]] = relationship(
+        back_populates="equipment", cascade="all, delete-orphan"
+    )
+
+
+class RestaurantType(Base):
+    __tablename__ = "restaurant_types"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    building_use_code: Mapped[Optional[str]] = mapped_column(String(10))
+    kosis_category: Mapped[Optional[str]] = mapped_column(String(100))
+    survival_rate_1y: Mapped[Optional[float]] = mapped_column(Numeric(5, 2))
+    survival_rate_3y: Mapped[Optional[float]] = mapped_column(Numeric(5, 2))
+    survival_rate_5y: Mapped[Optional[float]] = mapped_column(Numeric(5, 2))
+    created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+
+    # Relationships
+    equipment_maps: Mapped[List["RestaurantEquipmentMap"]] = relationship(
+        back_populates="restaurant_type", cascade="all, delete-orphan"
+    )
+
+
+class RestaurantEquipmentMap(Base):
+    __tablename__ = "restaurant_equipment_map"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    restaurant_type_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("restaurant_types.id", ondelete="CASCADE"), nullable=False
+    )
+    equipment_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("equipment.id", ondelete="CASCADE"), nullable=False
+    )
+    is_required: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text("true"))
+    weight: Mapped[Optional[float]] = mapped_column(Numeric(3, 2), server_default=text("1.0"))
+    created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=text("NOW()"))
+
+    # Relationships
+    restaurant_type: Mapped["RestaurantType"] = relationship(back_populates="equipment_maps")
+    equipment: Mapped["Equipment"] = relationship(back_populates="equipment_maps")

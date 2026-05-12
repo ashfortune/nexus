@@ -4,7 +4,6 @@ httpx
 sqlalchemy>=2.0
 asyncpg
 python-dotenv
-pytesseract
 pillow
 ollama
 python-multipart
@@ -16,9 +15,9 @@ sentence-transformers
 greenlet
 langchain-community
 langchain-core
-tensorflow
 scikit-learn
 pandas
+tensorflow
 numpy
 statsmodels
 google-genai>=1.0.0
@@ -31,3 +30,13 @@ pypdf
 ruff
 timesfm
 jax
+catboost
+joblib
+torch
+anthropic
+openpyxl
+redis
+transformers @git+https://github.com/huggingface/transformers.git
+accelerate
+peft
+pyarrow

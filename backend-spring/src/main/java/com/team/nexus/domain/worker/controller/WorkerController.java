@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriUtils;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/api/v1/worker")
@@ -33,9 +35,12 @@ public class WorkerController {
             @RequestBody LaborContractRequestDto request) throws Exception {
         byte[] pdf = laborContractService.generateContract(request);
 
+        String encodedFilename = UriUtils.encode("근로계약서.pdf", StandardCharsets.UTF_8);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", "근로계약서.pdf");
+        headers.set(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"contract.pdf\"; filename*=UTF-8''" + encodedFilename);
 
         return ResponseEntity.ok()
                 .headers(headers)

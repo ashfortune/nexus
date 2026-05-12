@@ -46,6 +46,7 @@ public class AdminServiceImpl implements AdminService {
                                                                 .createdAt(u.getCreatedAt())
                                                                 .isSuspended(u.getIsSuspended() != null
                                                                                 && u.getIsSuspended())
+                                                                .isWithdrawn(u.getDeletedAt() != null)
                                                                 .build())
                                                 .collect(Collectors.toList()))
                                 .boards(boardRepository.findAll(sortByCreatedAt).stream()

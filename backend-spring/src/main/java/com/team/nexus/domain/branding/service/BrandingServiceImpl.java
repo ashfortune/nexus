@@ -46,6 +46,9 @@ public class BrandingServiceImpl implements BrandingService {
                                                         .createdAt(branding.getCreatedAt() != null
                                                                         ? branding.getCreatedAt().format(DATE_FORMATTER)
                                                                         : null)
+                                                        .lastModifiedAt(branding.getLastModifiedAt() != null
+                                                                        ? branding.getLastModifiedAt().toString()
+                                                                        : null)
                                                         .logoUrl(logoUrl)
                                                         .build();
                                 })
@@ -84,6 +87,9 @@ public class BrandingServiceImpl implements BrandingService {
                                 .currentStep(branding.getCurrentStep())
                                 .createdAt(branding.getCreatedAt() != null
                                                 ? branding.getCreatedAt().format(DATE_FORMATTER)
+                                                : null)
+                                .lastModifiedAt(branding.getLastModifiedAt() != null
+                                                ? branding.getLastModifiedAt().toString()
                                                 : null)
                                 .chatHistory(branding.getChatHistory())
                                 .identities(identities)

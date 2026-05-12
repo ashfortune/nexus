@@ -6,7 +6,7 @@ import type {
 } from './workerTypes';
 
 export async function calculateWorkerGuide(
-  form: WorkerCalculateForm
+    form: WorkerCalculateForm
 ): Promise<WorkerCalculateResponse> {
   const response = await api.post('/api/v1/worker/calculate', {
     employeeCount: Number(form.workerCount),

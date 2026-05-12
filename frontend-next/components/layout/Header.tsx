@@ -31,7 +31,7 @@ const MENU_DATA: MenuItem[] = [
     modes: ['BEFORE'],
     subMenu: [
       { name: '창업 비용 시뮬레이션', href: '/simulation' },
-      { name: '상권 분석 지도', href: '/store-map' },
+      { name: '상권 분석', href: '/store-map' },
     ],
   },
   { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/subsidy', allowedRoles: [0, 1, 2], modes: ['BEFORE'] },
@@ -44,7 +44,7 @@ const MENU_DATA: MenuItem[] = [
     allowedRoles: [0, 1, 2],
     modes: ['BEFORE'],
   },
-  
+
   // 창업 후 (AFTER) 전용
   {
     id: 'management',
@@ -117,7 +117,7 @@ export default function Header() {
 
       // 3. 서브 메뉴 권한 필터링
       if (menu.subMenu && isAuthenticated) {
-        menu.subMenu = menu.subMenu.filter(sub => 
+        menu.subMenu = menu.subMenu.filter(sub =>
           !sub.allowedRoles || sub.allowedRoles.includes(userType)
         );
       }
@@ -149,7 +149,7 @@ export default function Header() {
   const subMenuLength = activeMenuData?.subMenu?.length || 0;
 
   return (
-    <header 
+    <header
       className={`fixed top-0 left-0 w-full bg-white border-b border-[var(--nexus-outline-variant)] z-[99999] transition-all duration-500 ease-in-out ${isSubMenuOpen ? (subMenuLength >= 3 ? 'h-[300px]' : 'h-[250px]') : 'h-20'}`}
       onMouseLeave={() => setActiveMenu(null)}
     >
@@ -164,16 +164,16 @@ export default function Header() {
 
           {/* 창업 단계 전환 스위치 (데스크탑) */}
           <div className="hidden md:flex bg-[var(--nexus-surface-low)] p-1 rounded-full border border-[var(--nexus-outline-variant)] relative h-10 w-48 overflow-hidden shadow-inner">
-            <div 
+            <div
               className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[var(--nexus-primary)] rounded-full transition-all duration-500 ease-in-out shadow-md ${mode === 'AFTER' ? 'translate-x-[calc(100%+0px)]' : 'translate-x-0'}`}
             />
-            <button 
+            <button
               onClick={() => setMode('BEFORE')}
               className={`flex-1 relative z-10 text-[13px] font-bold transition-colors duration-300 ${mode === 'BEFORE' ? 'text-white' : 'text-gray-500 hover:text-gray-700'}`}
             >
               창업 준비
             </button>
-            <button 
+            <button
               onClick={() => setMode('AFTER')}
               className={`flex-1 relative z-10 text-[13px] font-bold transition-colors duration-300 ${mode === 'AFTER' ? 'text-white' : 'text-gray-500 hover:text-gray-700'}`}
             >
@@ -182,7 +182,7 @@ export default function Header() {
           </div>
         </div>
 
-        <nav 
+        <nav
           className="hidden lg:block flex-grow h-full max-w-[60%]"
           onMouseLeave={() => setActiveMenu(null)}
         >
@@ -201,7 +201,7 @@ export default function Header() {
                     {menu.title}
                   </Link>
                   <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-[3px] bg-[var(--nexus-primary)] transition-all duration-300 ease-out ${activeMenu === menu.id ? 'w-full opacity-100' : 'w-0 opacity-0 group-hover:w-8 group-hover:opacity-50'}`} />
-                  
+
                   {/* 개별 서브 메뉴 (상위 메뉴 위치에 정렬) */}
                   {activeMenu === menu.id && menu.hasSub && (
                     <div className="absolute top-20 left-1/2 -translate-x-1/2 min-w-[180px] pt-10 pb-10 z-[100001]">
@@ -333,20 +333,20 @@ export default function Header() {
                 <span className="text-2xl leading-none">✕</span>
               </button>
             </div>
-            
+
             {/* 모바일 단계 전환 스위치 */}
             <div className="px-6 py-6 border-b border-[var(--nexus-outline-variant)]/30">
               <div className="flex bg-[var(--nexus-surface-low)] p-1 rounded-xl border border-[var(--nexus-outline-variant)] relative h-12 overflow-hidden shadow-inner">
-                <div 
+                <div
                   className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[var(--nexus-primary)] rounded-lg transition-all duration-500 ease-in-out shadow-md ${mode === 'AFTER' ? 'translate-x-[calc(100%+0px)]' : 'translate-x-0'}`}
                 />
-                <button 
+                <button
                   onClick={() => setMode('BEFORE')}
                   className={`flex-1 relative z-10 text-sm font-bold transition-colors duration-300 ${mode === 'BEFORE' ? 'text-white' : 'text-gray-500'}`}
                 >
                   창업 준비
                 </button>
-                <button 
+                <button
                   onClick={() => setMode('AFTER')}
                   className={`flex-1 relative z-10 text-sm font-bold transition-colors duration-300 ${mode === 'AFTER' ? 'text-white' : 'text-gray-500'}`}
                 >
