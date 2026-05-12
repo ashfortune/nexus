@@ -63,19 +63,20 @@ interface DeepPredictionResult {
   trdar_area_mean?: number;
   dist_to_trdar?: number;
   type_diversity?: number;
+  trdar_type?: string;
 }
 
-function SearchableSelect({ 
-  options, 
-  value, 
-  onChange, 
-  placeholder, 
+function SearchableSelect({
+  options,
+  value,
+  onChange,
+  placeholder,
   disabled = false,
   direction = 'down'
-}: { 
-  options: {label: string, value: string}[], 
-  value: string, 
-  onChange: (val: string) => void, 
+}: {
+  options: { label: string, value: string }[],
+  value: string,
+  onChange: (val: string) => void,
   placeholder: string,
   disabled?: boolean,
   direction?: 'up' | 'down'
@@ -103,7 +104,7 @@ function SearchableSelect({
 
   return (
     <div className="relative" ref={wrapperRef}>
-      <div 
+      <div
         className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-[14px] font-black outline-none flex items-center justify-between transition-all ${disabled ? 'opacity-50 cursor-not-allowed text-slate-400' : 'cursor-pointer hover:border-indigo-300 text-slate-950'}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
       >
@@ -112,14 +113,13 @@ function SearchableSelect({
         </span>
         <ChevronRight size={16} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-90' : 'rotate-90'}`} />
       </div>
-      
+
       {isOpen && !disabled && (
-        <div className={`absolute z-[100] w-full bg-white border border-slate-200 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] animate-in fade-in duration-200 max-h-80 flex flex-col overflow-hidden ${
-          direction === 'up' ? 'bottom-full mb-2 slide-in-from-bottom-2' : 'top-full mt-2 slide-in-from-top-2'
-        }`}>
+        <div className={`absolute z-[100] w-full bg-white border border-slate-200 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] animate-in fade-in duration-200 max-h-80 flex flex-col overflow-hidden ${direction === 'up' ? 'bottom-full mb-2 slide-in-from-bottom-2' : 'top-full mt-2 slide-in-from-top-2'
+          }`}>
           <div className="p-2 border-b border-slate-100 shrink-0">
-            <input 
-              type="text" 
+            <input
+              type="text"
               className="w-full bg-slate-50 px-3 py-2 rounded-lg text-[13px] font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20"
               placeholder={`${placeholder} 검색...`}
               value={search}
@@ -130,8 +130,8 @@ function SearchableSelect({
           </div>
           <div className="overflow-y-auto custom-scrollbar flex-1 py-1">
             {filteredOptions.length > 0 ? filteredOptions.map(o => (
-              <div 
-                key={o.value} 
+              <div
+                key={o.value}
                 className={`px-4 py-2.5 text-[13px] font-bold cursor-pointer transition-colors ${o.value === value ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700 hover:bg-slate-50'}`}
                 onClick={() => {
                   onChange(o.value);
@@ -191,17 +191,17 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
         map.get(major)!.push(ind);
       }
     });
-    
+
     const majors = Array.from(map.keys()).sort().map(k => ({ label: k, value: k }));
     const minors = deepMajor && map.has(deepMajor)
       ? map.get(deepMajor)!.sort().map(m => ({ label: m, value: m }))
       : [];
-      
+
     return { majorOptions: majors, minorOptions: minors };
   }, [deepIndustries, deepMajor]);
 
-  const currentDeepIndustry = deepMajor && deepMinor 
-    ? (deepIndustries.includes(`${deepMajor}_${deepMinor}`) ? `${deepMajor}_${deepMinor}` : deepMinor) 
+  const currentDeepIndustry = deepMajor && deepMinor
+    ? (deepIndustries.includes(`${deepMajor}_${deepMinor}`) ? `${deepMajor}_${deepMinor}` : deepMinor)
     : '';
 
   useEffect(() => {
@@ -254,7 +254,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
     setIsDeepLoading(true);
     setDeepError(null);
     setDeepResult(null);
-    
+
     const openDate = `${openYear}-${openMonth.padStart(2, '0')}-${openDay.padStart(2, '0')}`;
     try {
       const res = await api.post('/api/v1/ai/simulation/deep-prediction', {
@@ -329,7 +329,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                 <div className="w-2 h-2 bg-indigo-500 rounded-full" /> 기본 분석 모델 (XGBoost v14)
               </div>
               <p className="text-slate-600">
-                서울시 10개년 인허가 빅데이터를 기반으로 한 <strong>31개의 핵심 피처</strong>(계절 소비 성향, 인구 통계 등)를 분석합니다. 
+                서울시 10개년 인허가 빅데이터를 기반으로 한 <strong>31개의 핵심 피처</strong>(계절 소비 성향, 인구 통계 등)를 분석합니다.
                 <span className="block mt-2 text-indigo-700">✓ 임계치(Threshold) 0.3961 기준의 정밀 최적화</span>
                 <span className="block text-indigo-700">✓ 지역별·업종별 거시적 생존 트렌드 반영</span>
               </p>
@@ -339,7 +339,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                 <div className="w-2 h-2 bg-indigo-500 rounded-full" /> 심층 분석 모델 (CatBoost v10)
               </div>
               <p className="text-slate-600">
-                기본 분석에 <strong>서울시 상권분석 서비스(trdar)</strong> 메타데이터를 결합한 고도화 모델입니다. 
+                기본 분석에 <strong>서울시 상권분석 서비스(trdar)</strong> 메타데이터를 결합한 고도화 모델입니다.
                 <span className="block mt-2 text-indigo-700">✓ 상권 밀집도, 총 면적, 입지 근접성 정밀 연산</span>
                 <span className="block text-indigo-700">✓ 업종 다양성(Diversity Index) 기반의 상권 성숙도 분석</span>
                 <span className="block text-indigo-700">✓ 초국소적 입지 특성에 따른 미시적 리스크 산출</span>
@@ -390,7 +390,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                 <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                   <MapPin size={12} className="text-indigo-600" /> 대상 행정동
                 </label>
-                <SearchableSelect 
+                <SearchableSelect
                   options={dongs.map((d: any) => ({ label: d.adongNm, value: d.adongCd }))}
                   value={admCd}
                   onChange={setAdmCd}
@@ -403,7 +403,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                   <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                     <Store size={12} className="text-indigo-600" /> 창업 업종 (기본 분석)
                   </label>
-                  <SearchableSelect 
+                  <SearchableSelect
                     options={INDUSTRIES.map(i => ({ label: i, value: i }))}
                     value={industry}
                     onChange={setIndustry}
@@ -419,7 +419,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <p className="text-[10px] font-black text-slate-400 pl-1">대분류</p>
-                      <SearchableSelect 
+                      <SearchableSelect
                         options={majorOptions}
                         value={deepMajor}
                         onChange={(v) => { setDeepMajor(v); setDeepMinor(''); }}
@@ -429,7 +429,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] font-black text-slate-400 pl-1">소분류</p>
-                      <SearchableSelect 
+                      <SearchableSelect
                         options={minorOptions}
                         value={deepMinor}
                         onChange={setDeepMinor}
@@ -487,8 +487,8 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
             <button
               onClick={analysisMode === 'basic' ? handlePredict : handleDeepPredict}
               disabled={
-                analysisMode === 'basic' 
-                  ? !canSubmit 
+                analysisMode === 'basic'
+                  ? !canSubmit
                   : (isDeepLoading || !currentDeepIndustry || !admCd)
               }
               className="w-full h-12 rounded-2xl text-[14px] font-black bg-indigo-900 text-white hover:bg-indigo-950 disabled:bg-slate-100 disabled:text-slate-300 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-3 shrink-0 mt-4"
@@ -596,7 +596,7 @@ export default function MarketPredSection({ storesData }: { storesData: any }) {
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="w-full space-y-4">
                 <div className="flex flex-col md:flex-row items-start gap-5">
-                    {/* 도넛 차트 (기본 분석과 완전히 동일) */}
+                  {/* 도넛 차트 (기본 분석과 완전히 동일) */}
                   <div className="relative w-40 h-40 shrink-0 flex flex-col items-center">
                     <svg className="w-full h-full -rotate-90">
                       <circle cx="80" cy="80" r="64" fill="transparent" stroke="#f1f5f9" strokeWidth="12" />
