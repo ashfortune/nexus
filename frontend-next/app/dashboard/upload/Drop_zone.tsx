@@ -85,7 +85,7 @@ const DropZone: React.FC<DropZoneProps> = ({ onUploadComplete }) => {
 
     try {
       const response = await api.post('/api/v1/ai/dashboard/upload-receipt', formData, {
-        baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || '',
+        baseUrl: process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000',
         headers: {} // Let browser handle boundary
       });
 

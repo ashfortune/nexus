@@ -80,7 +80,3 @@ __pycache__/
 
 redis-data/
 *.rdb
-
-*.sql
-!db/init/*.sql
-

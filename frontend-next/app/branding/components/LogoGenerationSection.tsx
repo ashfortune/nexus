@@ -3,7 +3,7 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 
-const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || '';
+const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
 const API_BASE_PATH = '/api/v1/ai/branding';
 
 interface Logo {

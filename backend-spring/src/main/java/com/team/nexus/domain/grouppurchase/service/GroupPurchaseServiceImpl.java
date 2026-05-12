@@ -70,10 +70,7 @@ public class GroupPurchaseServiceImpl implements GroupPurchaseService {
     @Override
     public List<GroupPurchaseResponseDto> searchGroupPurchases(String itemName, String region) {
         String searchItemName = (itemName != null && !itemName.trim().isEmpty()) ? itemName : null;
-        // 지역명 처리: "서울특별시" -> "서울", "경기도" -> "경기" 등 앞 두 글자로 유연한 검색 지원
-        String searchRegion = (region != null && !region.trim().isEmpty() && !region.equals("전체"))
-                ? region.substring(0, 2)
-                : null;
+        String searchRegion = (region != null && !region.trim().isEmpty()) ? region : null;
 
         return groupPurchaseRepository.searchGroupPurchases(searchItemName, searchRegion).stream()
                 .map(this::convertToDto)
@@ -98,7 +95,7 @@ public class GroupPurchaseServiceImpl implements GroupPurchaseService {
     @Transactional
     public void participate(UUID groupBuyId, UUID userId, GroupOrderRequestDto orderDto) {
         log.info("[Participate] Start - groupBuyId: {}, userId: {}", groupBuyId, userId);
-
+        
         try {
             if (groupOrderRepository.existsByGroupPurchaseIdAndUserId(groupBuyId, userId)) {
                 log.warn("[Participate] Already participated: userId={}, groupBuyId={}", userId, groupBuyId);
@@ -152,9 +149,8 @@ public class GroupPurchaseServiceImpl implements GroupPurchaseService {
     @Override
     @Transactional
     public void confirmPayment(UUID groupBuyId, UUID userId, PaymentConfirmRequestDto confirmDto) {
-        log.info("[Confirm Payment] Start: groupBuyId={}, userId={}, paymentKey={}", groupBuyId, userId,
-                confirmDto.getPaymentKey());
-
+        log.info("[Confirm Payment] Start: groupBuyId={}, userId={}, paymentKey={}", groupBuyId, userId, confirmDto.getPaymentKey());
+        
         if (confirmDto.getPaymentKey() != null && confirmDto.getPaymentKey().startsWith("MOCK_")) {
             log.info("[Confirm Payment] Processing MOCK payment");
             GroupOrderRequestDto orderDto = new GroupOrderRequestDto();
@@ -186,8 +182,7 @@ public class GroupPurchaseServiceImpl implements GroupPurchaseService {
             }
 
             String method = response.get("method") != null ? response.get("method").toString() : "UNKNOWN";
-            String pgTid = response.get("paymentKey") != null ? response.get("paymentKey").toString()
-                    : confirmDto.getPaymentKey();
+            String pgTid = response.get("paymentKey") != null ? response.get("paymentKey").toString() : confirmDto.getPaymentKey();
 
             String pgProvider = "TOSS";
             if ("카드".equals(method)) {

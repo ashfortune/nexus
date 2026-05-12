@@ -1,9 +1,6 @@
 import { useAuthStore } from '@/store/useAuthStore';
 
-const isServer = typeof window === 'undefined';
-const DEFAULT_BASE_URL = isServer 
-  ? 'http://nexus-spring:8080' 
-  : (process.env.NEXT_PUBLIC_API_URL || '');
+const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string>;
@@ -28,25 +25,8 @@ async function request(path: string, options: RequestOptions = {}) {
   }
 
   // URL 생성
-  let url: URL;
-  try {
-    if (path.startsWith('http')) {
-      url = new URL(path);
-    } else {
-      const base = baseUrl || DEFAULT_BASE_URL;
-      if (base) {
-        // base가 있으면 base를 기준으로 path 결합
-        url = new URL(path.startsWith('/') ? path : `/${path}`, base);
-      } else {
-        // base가 없으면 현재 웹사이트 주소(window.location.origin) 기준
-        const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
-        url = new URL(path.startsWith('/') ? path : `/${path}`, origin);
-      }
-    }
-  } catch (error) {
-    console.error('URL 생성 실패:', path, 'Base:', baseUrl || DEFAULT_BASE_URL);
-    throw new Error(`잘못된 API 경로입니다: ${path}`);
-  }
+  const base = baseUrl || DEFAULT_BASE_URL;
+  const url = path.startsWith('http') ? new URL(path) : new URL(`${base}${path}`);
 
   if (params) {
     Object.keys(params).forEach(key =>

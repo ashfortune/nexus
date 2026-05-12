@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useState, useRef, useEffect } from 'react';
 
-const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || '';
+const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
 const API_BASE_PATH = '/api/v1/ai/branding';
 
 interface Message {
@@ -55,7 +55,7 @@ export default function InterviewSection({
 
     const initProject = async () => {
       try {
-        const response = await api.post(`${API_BASE_PATH}`, {
+        const response = await api.post(`${API_BASE_PATH}/`, {
           industryId: '550e8400-e29b-41d4-a716-446655440000', // 초기 기본값
           title: '새로운 창업 프로젝트',
           userId: user?.id,
