@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { 
-  ArrowLeft, 
-  User, 
-  Clock, 
-  Eye, 
+import {
+  ArrowLeft,
+  User,
+  Clock,
+  Eye,
   MessageSquare,
   ThumbsUp,
   Share2,
@@ -69,7 +69,7 @@ export default function BoardDetailPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Comments State
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentContent, setCommentContent] = useState("");
@@ -101,7 +101,7 @@ export default function BoardDetailPage() {
       const response = await api.get(`/api/v1/board/${id}${silent ? "?silent=true" : ""}`);
       if (!response.ok) throw new Error(`Server returned ${response.status}`);
       const result = await response.json();
-      
+
       if (result.status === "success") {
         setPost(result.data);
         setEditTitle(result.data.title);
@@ -140,7 +140,7 @@ export default function BoardDetailPage() {
       console.error("Failed to fetch comments:", error);
     }
   };
-  
+
   const fetchLikeStatus = async (id: string) => {
     try {
       const response = await api.get(`/api/v1/board/like/${id}/status`);
@@ -302,14 +302,14 @@ export default function BoardDetailPage() {
       <div className="max-w-5xl mx-auto">
         {/* Navigation & Header */}
         <div className="flex items-center justify-between mb-10">
-          <button 
+          <button
             onClick={() => router.push("/board")}
             className="flex items-center gap-2 text-zinc-500 hover:text-black transition-all group font-black text-xs uppercase tracking-widest"
           >
             <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
             Back to Community
           </button>
-          
+
           <div className="flex items-center gap-3">
             <button className="nexus-glass p-3 rounded-2xl text-zinc-400 hover:text-black transition-all active:scale-90">
               <Share2 className="w-5 h-5" />
@@ -333,7 +333,7 @@ export default function BoardDetailPage() {
               </div>
 
               {isEditing ? (
-                <input 
+                <input
                   type="text"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
@@ -367,12 +367,12 @@ export default function BoardDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button 
+                  <button
                     onClick={handleLike}
                     className={cn(
                       "flex items-center gap-2.5 px-8 py-4 rounded-2xl font-black text-sm transition-all active:scale-95 shadow-xl",
-                      isLiked 
-                        ? "bg-black text-white shadow-black/20" 
+                      isLiked
+                        ? "bg-black text-white shadow-black/20"
                         : "nexus-glass text-zinc-500 hover:bg-zinc-50"
                     )}
                   >
@@ -387,7 +387,7 @@ export default function BoardDetailPage() {
             {/* Content Body */}
             <div className="prose prose-zinc max-w-none">
               {isEditing ? (
-                <textarea 
+                <textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   className="w-full min-h-[400px] p-8 bg-zinc-50 rounded-[2.5rem] border-2 border-zinc-50 focus:bg-white focus:border-[var(--nexus-primary)]/10 outline-none transition-all font-medium text-lg leading-relaxed text-zinc-800 resize-none"
@@ -402,10 +402,10 @@ export default function BoardDetailPage() {
                 <div className="space-y-8 mb-16">
                   {post.imageUrls.map((url, idx) => (
                     <div key={idx} className="rounded-[3rem] overflow-hidden shadow-2xl shadow-black/5 ring-8 ring-zinc-50">
-                      <img 
-                        src={url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${url}`} 
-                        alt={`Post ${idx}`} 
-                        className="w-full h-auto object-cover" 
+                      <img
+                        src={url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${url}`}
+                        alt={`Post ${idx}`}
+                        className="w-full h-auto object-cover"
                       />
                     </div>
                   ))}
@@ -425,7 +425,7 @@ export default function BoardDetailPage() {
                   {isEditing ? (
                     <>
                       <button onClick={() => setIsEditing(false)} className="px-6 py-3 font-black text-sm text-zinc-400 hover:text-black">CANCEL</button>
-                      <button 
+                      <button
                         onClick={handleUpdatePost}
                         disabled={isSubmitting}
                         className="px-10 py-4 bg-black text-white rounded-2xl font-black text-sm active:scale-95 transition-all shadow-xl shadow-black/20"
@@ -435,13 +435,13 @@ export default function BoardDetailPage() {
                     </>
                   ) : (
                     <>
-                      <button 
+                      <button
                         onClick={() => setIsEditing(true)}
                         className="p-4 rounded-2xl nexus-glass text-zinc-400 hover:text-black transition-all hover:bg-white active:scale-90"
                       >
                         <Edit2 className="w-5 h-5" />
                       </button>
-                      <button 
+                      <button
                         onClick={handleDeletePost}
                         className="p-4 rounded-2xl nexus-glass text-zinc-400 hover:text-red-500 transition-all hover:bg-white active:scale-90"
                       >
@@ -469,13 +469,13 @@ export default function BoardDetailPage() {
 
           <div className="nexus-card bg-white p-6 md:p-10 mb-10 shadow-2xl shadow-black/5">
             <div className="relative group">
-              <textarea 
+              <textarea
                 value={commentContent}
                 onChange={(e) => setCommentContent(e.target.value)}
                 placeholder="어떤 생각을 가지고 계신가요? 사장님의 의견을 들려주세요."
                 className="w-full min-h-[160px] p-8 bg-zinc-50 rounded-[2.5rem] border-2 border-transparent focus:bg-white focus:border-[var(--nexus-primary)]/10 outline-none transition-all font-medium text-lg leading-relaxed text-zinc-800 resize-none"
               />
-              <button 
+              <button
                 onClick={() => handleCommentSubmit()}
                 disabled={isSubmitting || !commentContent.trim()}
                 className="absolute right-6 bottom-6 flex items-center gap-3 bg-black text-white px-8 py-4 rounded-2xl font-black text-sm active:scale-95 transition-all shadow-xl shadow-black/10 disabled:opacity-20 disabled:grayscale"
@@ -490,7 +490,7 @@ export default function BoardDetailPage() {
             <div className="divide-y divide-zinc-50">
               {comments.length > 0 ? (
                 comments.map((comment) => (
-                  <CommentItem 
+                  <CommentItem
                     key={comment.id}
                     comment={comment}
                     onReport={handleReportComment}
@@ -525,7 +525,7 @@ export default function BoardDetailPage() {
         <section className="space-y-10">
           <div className="flex items-center justify-between ml-4">
             <h3 className="text-2xl font-black text-zinc-900 tracking-tighter">MORE DISCUSSIONS</h3>
-            <button 
+            <button
               onClick={() => router.push("/board")}
               className="text-[10px] font-black text-zinc-400 hover:text-black uppercase tracking-[0.2em] transition-colors"
             >
@@ -546,8 +546,8 @@ export default function BoardDetailPage() {
               </thead>
               <tbody className="divide-y divide-zinc-50">
                 {posts.map((p, index) => (
-                  <tr 
-                    key={p.id} 
+                  <tr
+                    key={p.id}
                     onClick={() => {
                       if (p.id !== post.id) {
                         router.push(`/board/detail/${p.id}`);
@@ -593,7 +593,7 @@ export default function BoardDetailPage() {
 
           {/* Pagination */}
           <div className="flex items-center justify-center gap-4">
-            <button 
+            <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 0}
               className="w-12 h-12 flex items-center justify-center nexus-glass rounded-2xl text-zinc-400 hover:text-black hover:bg-white transition-all disabled:opacity-20"
@@ -605,7 +605,7 @@ export default function BoardDetailPage() {
               <span className="text-zinc-200 text-xs font-black">/</span>
               <span className="text-sm font-medium text-zinc-400">{posts.length > 0 ? totalPages : 0}</span>
             </div>
-            <button 
+            <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages - 1}
               className="w-12 h-12 flex items-center justify-center nexus-glass rounded-2xl text-zinc-400 hover:text-black hover:bg-white transition-all disabled:opacity-20"
@@ -619,15 +619,15 @@ export default function BoardDetailPage() {
   );
 }
 
-function CommentItem({ 
-  comment, 
-  onReport, 
-  onReply, 
-  replyTargetId, 
-  replyContent, 
-  onReplyContentChange, 
-  onReplySubmit, 
-  onDelete, 
+function CommentItem({
+  comment,
+  onReport,
+  onReply,
+  replyTargetId,
+  replyContent,
+  onReplyContentChange,
+  onReplySubmit,
+  onDelete,
   isSubmitting,
   formatDate,
   isChild = false,
@@ -672,7 +672,7 @@ function CommentItem({
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white flex items-center justify-center border border-zinc-100 shrink-0 shadow-sm">
             <User className="w-5 h-5 md:w-6 md:h-6 text-zinc-400" />
           </div>
-          
+
           <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -683,11 +683,11 @@ function CommentItem({
                 </div>
                 <div className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{formatDate(comment.createdAt)}</div>
               </div>
-              
+
               <div className="flex items-center gap-4">
                 {!isDeleted && !isMine && (
-                  <button 
-                    onClick={() => onReport(comment.id)} 
+                  <button
+                    onClick={() => onReport(comment.id)}
                     className="flex items-center gap-1.5 text-[10px] font-black text-zinc-300 hover:text-red-500 transition-all uppercase tracking-widest group/report"
                   >
                     <Flag className="w-3.5 h-3.5 transition-transform group-hover/report:scale-110" />
@@ -696,7 +696,7 @@ function CommentItem({
                 )}
                 {isMine && !isDeleted && (
                   <div className="flex items-center gap-4">
-                    <button 
+                    <button
                       onClick={() => {
                         onSetEditingCommentId(comment.id);
                         onSetEditCommentContent(comment.content);
@@ -706,8 +706,8 @@ function CommentItem({
                       <Edit2 className="w-3.5 h-3.5" />
                       Edit
                     </button>
-                    <button 
-                      onClick={() => onDelete(comment.id)} 
+                    <button
+                      onClick={() => onDelete(comment.id)}
                       className="flex items-center gap-1.5 text-[10px] font-black text-zinc-300 hover:text-red-500 transition-colors uppercase tracking-widest"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -720,7 +720,7 @@ function CommentItem({
 
             {editingCommentId === comment.id ? (
               <div className="space-y-4">
-                <textarea 
+                <textarea
                   value={editCommentContent}
                   onChange={(e) => onSetEditCommentContent(e.target.value)}
                   className="w-full p-6 bg-white rounded-2xl border-2 border-zinc-100 focus:border-[var(--nexus-primary)]/10 outline-none transition-all font-medium text-base text-zinc-800 resize-none shadow-inner"
@@ -732,16 +732,16 @@ function CommentItem({
               </div>
             ) : (
               <p className={cn(
-                "text-[15px] md:text-[16px] font-medium leading-relaxed whitespace-pre-wrap", 
+                "text-[15px] md:text-[16px] font-medium leading-relaxed whitespace-pre-wrap",
                 isDeleted ? "text-zinc-300 italic" : "text-zinc-700"
               )}>
-                {isDeleted ? "신고 누적으로 삭제된 댓글입니다." : comment.content}
+                {comment.content}
               </p>
             )}
 
             {!isDeleted && (
               <div className="flex items-center gap-6 pt-2">
-                <button 
+                <button
                   onClick={() => onReply(replyTargetId === comment.id ? null : comment.id)}
                   className="flex items-center gap-2 text-[10px] font-black text-[var(--nexus-primary)] uppercase tracking-widest hover:opacity-70 transition-opacity"
                 >
@@ -757,13 +757,13 @@ function CommentItem({
         {replyTargetId === comment.id && (
           <div className="mt-8 pl-12 md:pl-16">
             <div className="relative group">
-              <textarea 
+              <textarea
                 value={replyContent}
                 onChange={(e) => onReplyContentChange(e.target.value)}
                 placeholder="따뜻한 답글을 남겨주세요..."
                 className="w-full min-h-[120px] p-6 bg-white rounded-[2rem] border-2 border-zinc-100 focus:border-[var(--nexus-primary)]/10 outline-none transition-all font-medium text-base text-zinc-800 resize-none shadow-xl shadow-black/[0.02]"
               />
-              <button 
+              <button
                 onClick={() => onReplySubmit(comment.id)}
                 disabled={isSubmitting || !replyContent.trim()}
                 className="absolute right-4 bottom-4 bg-black text-white px-6 py-3 rounded-xl font-black text-xs active:scale-95 transition-all shadow-xl shadow-black/10 disabled:opacity-20"
@@ -779,7 +779,7 @@ function CommentItem({
       {comment.children && comment.children.length > 0 && (
         <div className={cn("pb-2", !isChild && "ml-8 md:ml-16")}>
           {comment.children.map((child: any) => (
-            <CommentItem 
+            <CommentItem
               key={child.id}
               comment={child}
               onReport={onReport}
