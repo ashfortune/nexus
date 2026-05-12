@@ -429,3 +429,32 @@ CREATE TABLE expert_match_requests (
     match_reason TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+---------------------------------------
+-- 10. 업종 전환 및 설비 데이터 (Industry Change)
+---------------------------------------
+
+CREATE TABLE IF NOT EXISTS equipment (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) UNIQUE NOT NULL,
+    category VARCHAR(50)
+);
+
+CREATE TABLE IF NOT EXISTS restaurant_types (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) UNIQUE NOT NULL,
+    building_use_code VARCHAR(20),
+    kosis_category VARCHAR(100),
+    survival_rate_1y FLOAT,
+    survival_rate_3y FLOAT,
+    survival_rate_5y FLOAT
+);
+
+CREATE TABLE IF NOT EXISTS restaurant_equipment_map (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    restaurant_type_id UUID REFERENCES restaurant_types(id) ON DELETE CASCADE,
+    equipment_id UUID REFERENCES equipment(id) ON DELETE CASCADE,
+    is_required BOOLEAN DEFAULT TRUE,
+    weight FLOAT DEFAULT 1.0,
+    UNIQUE(restaurant_type_id, equipment_id)
+);

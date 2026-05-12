@@ -149,7 +149,8 @@ async def predictWithTimesFM(df: pd.DataFrame) -> Dict[str, Any]:
     nextDate = df["date"].iloc[-1] + datetime.timedelta(days=1)
 
     return {
-        "forecastValue": forecastValue,
+        "forecastValue": int(forecast[0]),  # 내일 하루 예측치 (단일 정수)
+        "forecast_values": [int(v) for v in forecast],  # 365일 전체 예측 배열 (리스트)
         "nextDate": nextDate.strftime("%Y-%m-%d"),
         "method": "TimesFM 2.5 (AI Foundation Model) - Local CPU",
         "nextMonthForecast": nextMonthForecast
