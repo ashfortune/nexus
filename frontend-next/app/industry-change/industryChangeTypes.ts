@@ -23,6 +23,12 @@ export interface RecommendRequest {
     top_n?: number;
 }
 
+export interface MatchedEquipment {
+    equipment_id: string;
+    equipment_name: string;
+    category: string;
+}
+
 export interface RestaurantTypeResult {
     restaurant_type_id: string;
     restaurant_type_name: string;
@@ -32,6 +38,7 @@ export interface RestaurantTypeResult {
     knn: number;
     similarity: number;
     final_score: number;
+    matched_equipment: MatchedEquipment[];
 }
 
 export interface RecommendResponse {

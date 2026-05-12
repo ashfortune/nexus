@@ -16,6 +16,17 @@ export default function EquipmentSearch({ onSelect, excludeIds }: Props) {
   const [results, setResults] = useState<EquipmentSearchResult[]>([]);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -44,33 +55,49 @@ export default function EquipmentSearch({ onSelect, excludeIds }: Props) {
   };
 
   return (
-    <div className="relative flex flex-col gap-2">
-      <Label htmlFor="equipment-search">추가 설비 검색</Label>
+    <div ref={containerRef} className="relative flex flex-col gap-2">
+      <Label className="text-sm font-semibold" style={{ color: "var(--nexus-on-bg)" }}>
+        추가 설비 검색
+      </Label>
       <Input
-        id="equipment-search"
         type="text"
         placeholder="설비명을 입력하세요 (예: 육절기)"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         autoComplete="off"
+        className="h-11 rounded-xl text-sm"
+        style={{
+          background: "var(--nexus-surface-lowest)",
+          border: "1.5px solid var(--nexus-outline-variant)",
+          color: "var(--nexus-on-bg)",
+        }}
       />
       {open && (
         <ul
-          className="absolute top-full mt-1 w-full rounded-xl overflow-hidden shadow-md z-10 animate-in fade-in slide-in-from-top-2"
+          className="absolute top-full mt-1 w-full rounded-xl overflow-hidden shadow-lg z-50"
           style={{
             background: "var(--nexus-surface-lowest)",
-            border: "1px solid var(--nexus-outline-variant)",
+            border: "1.5px solid var(--nexus-outline-variant)",
           }}
         >
           {results.map((eq) => (
             <li
               key={eq.equipment_id}
-              onClick={() => handleSelect(eq)}
-              className="flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer hover:opacity-80 transition-opacity"
-              style={{ color: "var(--nexus-on-bg)" }}
+              onMouseDown={() => handleSelect(eq)}
+              className="flex items-center justify-between px-4 py-3 text-sm cursor-pointer transition-colors hover:bg-opacity-80"
+              style={{
+                color: "var(--nexus-on-bg)",
+                borderBottom: "0.5px solid var(--nexus-outline-variant)",
+              }}
             >
-              <span>{eq.equipment_name}</span>
-              <span className="text-xs" style={{ color: "var(--nexus-outline)" }}>
+              <span className="font-medium">{eq.equipment_name}</span>
+              <span
+                className="text-xs px-2 py-0.5 rounded-full"
+                style={{
+                  background: "var(--nexus-surface-container)",
+                  color: "var(--nexus-outline)",
+                }}
+              >
                 {eq.category}
               </span>
             </li>

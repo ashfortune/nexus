@@ -14,12 +14,9 @@ async def search_equipment(q: str = ""):
     if not q:
         return []
 
-    matches = await redis_client.zrangebylex(
-        AUTOCOMPLETE_KEY,
-        f"[{q}",
-        f"[{q}\xff",
-        0, 10
-    )
+    all_names = await redis_client.zrange(AUTOCOMPLETE_KEY, 0, -1)
+    matches = [n for n in all_names if q in n][:10]
+
     if not matches:
         return []
 
@@ -28,9 +25,9 @@ async def search_equipment(q: str = ""):
         detail = await redis_client.hgetall(f"equipment:detail:{name}")
         if detail:
             results.append({
-                "equipment_id":   detail.get("id"),
+                "equipment_id": detail.get("id"),
                 "equipment_name": name,
-                "category":       detail.get("category"),
+                "category": detail.get("category"),
             })
     return results
 

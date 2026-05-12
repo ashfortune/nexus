@@ -12,6 +12,11 @@ class RecommendRequest(BaseModel):
     equipment_ids: list[UUID]
     top_n: int = 10
 
+class MatchedEquipment(BaseModel):
+    equipment_id: str
+    equipment_name: str
+    category: str
+
 
 class RestaurantTypeResult(BaseModel):
     restaurant_type_id:   str
@@ -22,6 +27,7 @@ class RestaurantTypeResult(BaseModel):
     knn:                  float
     similarity:           float
     final_score:          float
+    matched_equipment:    list[MatchedEquipment]
 
 
 class RecommendResponse(BaseModel):
