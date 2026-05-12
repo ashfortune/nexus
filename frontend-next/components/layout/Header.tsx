@@ -32,6 +32,7 @@ const MENU_DATA: MenuItem[] = [
     subMenu: [
       { name: '창업 비용 시뮬레이션', href: '/simulation' },
       { name: '상권 분석', href: '/store-map' },
+      { name: '업종 전환 추천', href: '/industry-change' },
     ],
   },
   { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/subsidy', allowedRoles: [0, 1, 2], modes: ['BEFORE'] },
