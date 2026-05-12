@@ -86,70 +86,61 @@ async def predictWithStatsmodels(df: pd.DataFrame) -> tuple[pd.DataFrame, Dict[s
     predicted_vals = [None] * 30 + [int(v) for v in fitted_vals[30:]]
     df["predicted"] = predicted_vals
 
-    # 내일(미래 1일) 예측치 계산
-    forecast = model.forecast(1)
+    # 미래 30일 예측치 계산
+    forecast = model.forecast(30)
     forecast_val = int(forecast.iloc[0])
 
-    nextDate = df["date"].iloc[-1] + datetime.timedelta(days=1)
+    last_date = df["date"].iloc[-1]
+    future_dates = [last_date + datetime.timedelta(days=i) for i in range(1, 31)]
 
-    # 미래 1일 데이터만 추가 (그냥 내일 예측값만 주고)
-    future_dates = [nextDate]
-    future_df = pd.DataFrame({"date": future_dates, "predicted": [forecast_val]})
+    # 미래 30일 데이터 추가 (각 일자별 예측값 저장)
+    future_df = pd.DataFrame({
+        "date": future_dates,
+        "predicted": [int(v) for v in forecast]
+    })
     df = pd.concat([df, future_df], ignore_index=True)
+
+    nextDate = future_dates[0]
 
     return df, {
         "forecastValue": forecast_val,
         "nextDate": nextDate.strftime("%Y-%m-%d"),
         "method": "Exponential Smoothing (Statsmodels)",
-        "nextMonthForecast": forecast_val * 30  # 30일 이후는 내일 예측값에서 *30 한 값
+        "nextMonthForecast": sum(int(v) for v in forecast)  # 30일치 예측값의 총합
     }
 
 
 async def predictWithTimesFM(df: pd.DataFrame) -> Dict[str, Any]:
     """90일 이상 데이터: TimesFM (AI Foundation Model) 실모델 호출 (내일 정밀 예측용)"""
-    logger.info("=========================================")
-    logger.info("🚀 TimesFM 2.5 실모델 호출 및 분석을 시작합니다.")
-    logger.info(f"📊 입력 데이터 개수 (역사적 매출 데이터): {len(df)}일")
-    logger.info("=========================================")
-
     # CPU 전용 모드 및 환경 변수 설정
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     try:
-        logger.info(f"💾 {device} 장치에서 사전학습 모델 google/timesfm-2.5-200m-transformers 로드를 시도합니다...")
         # 최신 사전학습 모델 google/timesfm-2.5-200m-pytorch 로드
         tfm = TimesFm2_5ModelForPrediction.from_pretrained(
             "google/timesfm-2.5-200m-transformers",
             device_map=device
         )
         tfm = tfm.to(torch.float32).eval()
-        logger.info("✅ TimesFM 2.5 모델 로드 완료!")
         
-        target_col = 'actual'
+        target_col = "actual"
         context_len = 365
-        horizon = getattr(tfm.config, 'horizon_length', 32)
+        horizon = tfm.config.horizon_length
 
+        # 최근 context_len(최대 365일)만큼의 데이터만 슬라이싱하여 추론 입력(past_values)으로 전달합니다
         ts = df[target_col].values
-        
-        # 안전한 슬라이싱 처리
-        if len(ts) >= (context_len + horizon):
-            context = ts[-(context_len + horizon):-horizon]
-            ground_truth = ts[-horizon:]
-        else:
-            context = ts
-            ground_truth = ts[-min(len(ts), horizon):] if len(ts) > 0 else np.array([])
+        context = ts[-(context_len + horizon):-horizon]
 
-        past_values = [torch.tensor(df["actual"].values, dtype=torch.float32)]
         
-        logger.info(f"🔮 TimesFM 2.5 추론(Inference) 실행 중... 입력 past_values 길이: {len(past_values[0])}")
+        past_values = [torch.tensor(context, dtype=torch.float32, device=device)]
+        
         with torch.no_grad():
             outputs = tfm(past_values=past_values, forecast_lengths=1024)
         
         forecast = outputs.mean_predictions[0].cpu().numpy() 
-        logger.info(f"🎉 추론 성공! 예측 배열 크기 (Forecast Length): {len(forecast)}")
         
-        forecastValue = int(forecast[0])
         nextMonthForecast = int(np.sum(forecast[:30]))
+        forecastValue = [int(v) for v in forecast]  # 365일 전체 예측 배열 추출
 
     except (ImportError, Exception) as e:
         logger.warning(f"TimesFM 2.5 실모델 호출 실패 ({str(e)}).")
@@ -187,6 +178,7 @@ async def persistAnalysisResults(
     db.add(newPred)
     await db.flush()
 
+    future_idx = 0
     for _, row in df.iterrows():
         # date와 datetime 모두 대응 가능하도록 수정
         date_obj = row["date"]
@@ -203,10 +195,18 @@ async def persistAnalysisResults(
         ma_val = float(row["movingAverage"]) if pd.notna(row.get("movingAverage")) else None
         return_rate_val = float(row["returnRate"]) if pd.notna(row.get("returnRate")) else None
 
-        # 내일 날짜(actual_val이 None인 행)이고, 예측 방법이 TimesFM인 경우에만 timesfm_sales를 명시적으로 저장합니다.
-        is_tomorrow = (actual_val is None)
+        # 미래 날짜(actual_val이 None인 행)이고, 예측 방법이 TimesFM인 경우에 순차적으로 365일 예측값을 timesfm_sales에 저장합니다.
+        is_future = (actual_val is None)
         is_timesfm = "TimesFM" in pred.get("method", "")
-        timesfm_val = pred["forecastValue"] if (is_tomorrow and is_timesfm) else None
+        
+        timesfm_val = None
+        if is_future and is_timesfm:
+            forecast_list = pred.get("forecast_values", [])
+            if forecast_list and future_idx < len(forecast_list):
+                timesfm_val = forecast_list[future_idx]
+                future_idx += 1
+            elif future_idx == 0:
+                timesfm_val = pred.get("forecastValue")
 
         daily = DailyPrediction(
             id=uuid.uuid4(),
