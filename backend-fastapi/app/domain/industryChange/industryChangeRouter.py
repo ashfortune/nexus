@@ -89,3 +89,36 @@ async def recommend(
 ):
     """선택한 설비 ID 목록 → 전환 가능 업종 Top N 추천"""
     return await recommend_industry_change(db, body.equipment_ids, body.top_n)
+
+
+@router.post("/equipment/cache-sync")
+async def sync_equipment_cache(db: AsyncSession = Depends(get_db)):
+    """DB의 설비 데이터를 Redis 캐시(자동완성용)로 동기화"""
+    from sqlalchemy import text
+    try:
+        # 1. DB에서 모든 설비 데이터 가져오기
+        result = await db.execute(text("SELECT id, name, category FROM equipment"))
+        rows = result.fetchall()
+        
+        if not rows:
+            return {"status": "error", "message": "No equipment data found in DB"}
+
+        # 2. Redis 파이프라인으로 대량 데이터 입력
+        pipe = redis_client.pipeline()
+        pipe.delete(AUTOCOMPLETE_KEY)
+        
+        count = 0
+        for r in rows:
+            name = r.name
+            pipe.zadd(AUTOCOMPLETE_KEY, {name: 0})
+            pipe.hset(f"equipment:detail:{name}", mapping={
+                "id": str(r.id),
+                "category": r.category,
+            })
+            count += 1
+            
+        await pipe.execute()
+        return {"status": "success", "message": f"Synced {count} items to Redis cache"}
+        
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
