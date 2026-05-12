@@ -1,3 +1,4 @@
+import { api } from '@/lib/api';
 import StoreMapClient from './StoreMapClient';
 
 export const dynamic = 'force-dynamic';
@@ -9,16 +10,12 @@ export default async function StoreMapPage() {
   let initialRegions = [];
 
   try {
-    const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v1/sim/store-list', {
+    const res = await api.get('/api/v1/sim/store-list', {
       cache: 'no-store',
     });
-    if (res.ok) {
-      const data = await res.json();
-      initialIndustries = data.indust_cats || [];
-      initialRegions = data.reg_codes || [];
-    } else {
-      console.error('Backend store-list API returned status:', res.status);
-    }
+    const data = await res.json();
+    initialIndustries = data.indust_cats || [];
+    initialRegions = data.reg_codes || [];
   } catch (e) {
     console.error('Failed to fetch store-list in page.tsx:', e);
   }
