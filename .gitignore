@@ -82,3 +82,5 @@ redis-data/
 *.rdb
 
 *.sql
+!db/init/*.sql
+
