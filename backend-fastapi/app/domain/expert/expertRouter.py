@@ -18,8 +18,9 @@ async def match_experts(
     try:
         result = await expertService.match_expert_service(
             db,
+            str(request.user_id),
             request.request_content,
-            request.category_id
+            str(request.category_id) if request.category_id else None
         )
         return result
     except Exception as e:

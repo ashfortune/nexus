@@ -26,7 +26,7 @@ from app.domain.subsidy.subsidyRouter import start_scheduler as subsidy_start_sc
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 서버 시작 시 실행될 로직
-    print("🚀 Nexus API Server 시작 중...")
+    print("[Nexus API Server] Starting...")
 
     # 1. AI 임베딩 모델 프리로딩
     get_ai_client("gemini")
@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
     # 3. 지원금찾기 데이터 오전 3시 스케쥴 (필요 시 복구)
     subsidy_start_scheduler(get_db)
 
-    print("✨ 모든 초기화가 완료되었습니다. 서비스를 시작합니다.")
+    print("[Nexus API Server] All initializations completed. Service starting...")
     yield
     # 서버 종료 시 실행될 로직 (필요 시)
 

@@ -15,16 +15,13 @@ import {
 
 interface GraphProps {
   data: any[];
-  mode?: 'comparison' | 'trends';
 }
 
 /**
  * 차트 호버 시 디테일 정보 및 비교 GAP(오차액, 오차율)을 고해상도로 보여주는 커스텀 툴팁
  */
-const CustomTooltip = ({ active, payload, label, mode }: any) => {
+const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    const isComparison = mode === 'comparison';
-    
     return (
       <div className="bg-[var(--nexus-surface-lowest)]/95 border border-[var(--nexus-outline-variant)] rounded-2xl p-4 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
         <p className="text-[var(--nexus-outline)] text-xs font-semibold mb-2.5 flex items-center gap-1.5">
@@ -54,38 +51,42 @@ const CustomTooltip = ({ active, payload, label, mode }: any) => {
             );
           })}
 
-          {/* 오차액 및 오차 정확도 계산 (비교 탭 활성화 시 노출) */}
-          {isComparison && payload.length >= 1 && (
-            (() => {
-              const actualVal = payload.find((p: any) => p.dataKey === 'actual')?.value;
-              const predictedVal = payload.find((p: any) => p.dataKey === 'predicted')?.value;
-              
-              if (actualVal !== undefined && actualVal !== null && predictedVal !== undefined && predictedVal !== null) {
-                const diff = predictedVal - actualVal;
-                const errorPercent = actualVal !== 0 ? (diff / actualVal) * 100 : 0;
-                const absDiff = Math.abs(diff);
-                const isOver = diff > 0;
+          {/* 오차액 및 오차 정확도 계산 (예측치와 실제 매출이 존재할 시 자동 계산) */}
+          {(() => {
+            const actualVal = payload.find((p: any) => p.dataKey === 'actual')?.value;
+            const predictedVal = payload.find((p: any) => p.dataKey === 'predicted')?.value;
+            const timesfmVal = payload.find((p: any) => p.dataKey === 'timesfm')?.value;
+            
+            // TimesFM 예측값이 있으면 최우선으로 잡고, 없으면 Statsmodels 예측값을 사용
+            const predVal = timesfmVal !== undefined && timesfmVal !== null ? timesfmVal : predictedVal;
+            
+            if (actualVal !== undefined && actualVal !== null && predVal !== undefined && predVal !== null) {
+              const diff = predVal - actualVal;
+              const errorPercent = actualVal !== 0 ? (diff / actualVal) * 100 : 0;
+              const absDiff = Math.abs(diff);
+              const isOver = diff > 0;
 
-                return (
-                  <div className="border-t border-[var(--nexus-outline-variant)] mt-3 pt-2.5 flex flex-col gap-1.5 text-[11px]">
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-[var(--nexus-outline)] font-medium">예측 편차 (GAP)</span>
-                      <span className={`font-semibold ${isOver ? 'text-amber-500' : 'text-indigo-500'}`}>
-                        {isOver ? '+' : '-'} ₩ {absDiff.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-[var(--nexus-outline)] font-medium">예측 편차율</span>
-                      <span className={`font-semibold ${isOver ? 'text-amber-500' : 'text-indigo-500'}`}>
-                        {isOver ? '+' : ''}{errorPercent.toFixed(1)}%
-                      </span>
-                    </div>
+              return (
+                <div className="border-t border-[var(--nexus-outline-variant)] mt-3 pt-2.5 flex flex-col gap-1.5 text-[11px]">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-[var(--nexus-outline)] font-medium">
+                      {timesfmVal !== undefined && timesfmVal !== null ? 'AI 예측 편차 (GAP)' : '통계 예측 편차 (GAP)'}
+                    </span>
+                    <span className={`font-semibold ${isOver ? 'text-amber-500' : 'text-indigo-500'}`}>
+                      {isOver ? '+' : '-'} ₩ {absDiff.toLocaleString()}
+                    </span>
                   </div>
-                );
-              }
-              return null;
-            })()
-          )}
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-[var(--nexus-outline)] font-medium">예측 편차율</span>
+                    <span className={`font-semibold ${isOver ? 'text-amber-500' : 'text-indigo-500'}`}>
+                      {isOver ? '+' : ''}{errorPercent.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
     );
@@ -93,8 +94,7 @@ const CustomTooltip = ({ active, payload, label, mode }: any) => {
   return null;
 };
 
-const SalesAnalysisGraph: React.FC<GraphProps> = ({ data, mode = 'comparison' }) => {
-  const isComparison = mode === 'comparison';
+const SalesAnalysisGraph: React.FC<GraphProps> = ({ data }) => {
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -106,6 +106,7 @@ const SalesAnalysisGraph: React.FC<GraphProps> = ({ data, mode = 'comparison' })
     if (!data) return [];
     return data.map(item => ({
       ...item,
+      date: item.date || item.target_date || '',
       actual: item.actual !== null && item.actual !== undefined ? Number(item.actual) : null,
       predicted: item.predicted !== null && item.predicted !== undefined ? Number(item.predicted) : null,
       timesfm: item.timesfm !== null && item.timesfm !== undefined ? Number(item.timesfm) : null,
@@ -162,111 +163,105 @@ const SalesAnalysisGraph: React.FC<GraphProps> = ({ data, mode = 'comparison' })
             data={safeData} 
             margin={{ top: 30, right: 30, left: 40, bottom: 20 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--nexus-outline-variant)" opacity={0.3} vertical={false} />
             
             <XAxis
               dataKey="date"
-              stroke="#333"
+              stroke="var(--nexus-outline)"
               fontSize={11}
               tickLine={true}
               axisLine={true}
               dy={10}
-              tick={{ fill: '#333' }}
+              tick={{ fill: 'var(--nexus-on-bg)', opacity: 0.8 }}
             />
             
             <YAxis
               yAxisId="left"
-              stroke="#333"
+              stroke="var(--nexus-outline)"
               fontSize={11}
               tickLine={true}
               axisLine={true}
               width={60}
-              tick={{ fill: '#333' }}
+              tick={{ fill: 'var(--nexus-on-bg)', opacity: 0.8 }}
               tickFormatter={(value) => {
                 if (value >= 10000) return `${(value / 10000).toFixed(1)}만`;
                 return value.toLocaleString();
               }}
             />
 
-            {!isComparison && (
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                stroke="#10b981"
-                fontSize={11}
-                tickLine={true}
-                axisLine={true}
-              />
-            )}
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              stroke="#10b981"
+              fontSize={11}
+              tickLine={true}
+              axisLine={true}
+              tick={{ fill: '#10b981', opacity: 0.9 }}
+              tickFormatter={(value) => `${value}%`}
+            />
 
-            <Tooltip content={<CustomTooltip mode={mode} />} />
+            <Tooltip content={<CustomTooltip />} />
 
-            {isComparison ? (
-              <>
-                <Area
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="actual"
-                  name="실제 매출"
-                  stroke="#000000"
-                  strokeWidth={3}
-                  fill="#000000"
-                  fillOpacity={0.1}
-                  connectNulls={true}
-                />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="timesfm"
-                  name="예측점"
-                  stroke="#333"
-                  strokeWidth={0}
-                  dot={{ r: 8, fill: '#000', stroke: '#fff', strokeWidth: 2 }}
-                />
-              </>
-            ) : (
-              <>
-                <Area
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="actual"
-                  name="실제 매출"
-                  stroke="#000"
-                  strokeWidth={2}
-                  fill="#000"
-                  fillOpacity={0.1}
-                  connectNulls={true}
-                />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="predicted"
-                  name="통계 예측선"
-                  stroke="#333"
-                  strokeWidth={3}
-                  strokeDasharray="5 5"
-                  dot={false}
-                />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="movingAverage"
-                  name="이동평균"
-                  stroke="#666"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="returnRate"
-                  name="수익률(%)"
-                  stroke="#000"
-                  strokeWidth={2}
-                  dot={true}
-                />
-              </>
-            )}
+            {/* 실제 매출 영역 */}
+            <Area
+              yAxisId="left"
+              type="monotone"
+              dataKey="actual"
+              name="실제 매출"
+              stroke="var(--nexus-primary)"
+              strokeWidth={2}
+              fill="var(--nexus-primary)"
+              fillOpacity={0.08}
+              connectNulls={true}
+            />
+
+            {/* Statsmodels 통계 예측선 */}
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="predicted"
+              name="통계 예측선"
+              stroke="#f59e0b"
+              strokeWidth={3}
+              dot={false}
+              connectNulls={true}
+            />
+
+            {/* 7일 이동평균선 */}
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="movingAverage"
+              name="이동평균"
+              stroke="#ffc658"
+              strokeWidth={2}
+              dot={false}
+              connectNulls={true}
+            />
+
+            {/* TimesFM AI 예측선 (실선 및 강조점 구성) */}
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="timesfm"
+              name="AI 예측점"
+              stroke="#0ea5e9"
+              strokeWidth={3}
+              dot={{ r: 8, fill: '#0ea5e9', stroke: '#fff', strokeWidth: 2 }}
+              connectNulls={true}
+            />
+
+            {/* 일별 수익률 (우측 축 기준) */}
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="returnRate"
+              name="수익률(%)"
+              stroke="#10b981"
+              strokeWidth={2}
+              dot={false}
+              connectNulls={true}
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

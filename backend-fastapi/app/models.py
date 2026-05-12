@@ -471,6 +471,7 @@ class DailyPrediction(Base):
     target_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     pred_sales: Mapped[Optional[int]] = mapped_column(Integer)
     actual_sales: Mapped[Optional[int]] = mapped_column(Integer)
+    timesfm_sales: Mapped[Optional[int]] = mapped_column(Integer)
     moving_average: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION)
     return_rate: Mapped[Optional[float]] = mapped_column(DOUBLE_PRECISION)
 
@@ -717,7 +718,6 @@ class Expert(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     phone: Mapped[Optional[str]] = mapped_column(String(20))
-    email: Mapped[Optional[str]] = mapped_column(String(100))
     industry_category_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         ForeignKey("industry_categories.id")
     )
