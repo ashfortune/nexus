@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/store/useAuthStore';
 
-const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const isServer = typeof window === 'undefined';
+const DEFAULT_BASE_URL = (isServer ? (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL) : process.env.NEXT_PUBLIC_API_URL) || 'http://localhost:8080';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string>;
