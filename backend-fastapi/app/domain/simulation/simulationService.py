@@ -177,7 +177,7 @@ def _ensure_meters(cx: float | None, cy: float | None) -> tuple[float, float]:
 
 def _xgboost_covid_flags(open_date: date) -> tuple[float, float, float]:
     """
-    v14 노트북과 동일한 팬데믹 플래그 계산.
+    팬데믹 플래그 계산.
     Returns: (before_pandemic, during_pandemic, after_pandemic)
     """
     dt = pd.Timestamp(open_date)
@@ -199,10 +199,10 @@ def _build_xgboost_features(
     gov_code: int,
 ) -> pd.DataFrame:
     """
-    v14 노트북의 apply_target_features + 기본 피처 생성을 재현합니다.
+    모델의 apply_target_features + 기본 피처 생성을 재현합니다.
     반드시 FEATURE_ORDER(31개) 순서로 반환합니다.
     
-    피처 목록 (노트북 기준):
+    피처 목록:
       [개방자치단체코드, X_log, Y_log, Quarter,
        Month_sin, Month_cos, Day_sin, Day_cos,
        before_pandemic, during_pandemic, after_pandemic,
@@ -288,7 +288,7 @@ def _build_xgboost_features(
 async def predict_survival(
     db: AsyncSession, request: PredictionRequest
 ) -> PredictionResponse:
-    """v14 XGBoost 모델로 창업 생존 예측을 수행합니다."""
+    """XGBoost 모델로 창업 생존 예측을 수행합니다."""
     try:
         # ── 1. 모델 로드 (Lazy) ──────────────────────────────────────
         _load_xgboost_model()
@@ -494,20 +494,11 @@ def _nearest_trdar(cx: float, cy: float) -> dict:
     idx   = int(np.argmin(dists))
     return _cb_trdar_meta[idx], float(dists[idx])
 
-
-# simulationService.py 내 _build_cb_features 교체
-
 def _build_cb_features(
     cx: float, cy: float, gu: str, dong: str, industry: str, open_date: date
 ) -> pd.DataFrame:
     """
-    [CatBoost v10] prediction_v10_catboost_only.py의 전처리와 완전히 동일하게 구성.
-    
-    학습 코드 대비 주요 동일화 포인트:
-      - trdar_relm_ar_log: dist > DIST_THRESHOLD 시 0.0 (학습코드도 median fillna 후 log1p)
-        → metadata에 trdar_relm_ar_median 저장 권장, 없으면 0.0으로 fallback
-      - industry: _nfc 정규화 적용
-      - 모든 피처 순서는 _cb_feature_order(메타데이터)를 따름
+    모델 학습의 전처리와 동일하게 구성.
     """
     dt     = pd.Timestamp(open_date)
     year   = dt.year
@@ -515,6 +506,9 @@ def _build_cb_features(
 
     # ── 시간 피처 ──────────────────────────────────────────────
     open_year_offset = year - _cb_year_base   # YEAR_BASE=2000
+
+    _CB_TRAIN_MAX_YEAR_OFFSET = 21
+    open_year_offset = min(open_year_offset, _CB_TRAIN_MAX_YEAR_OFFSET)
 
     period = 0
     if dt >= _COVID_DATE:    # 2020-01-01
