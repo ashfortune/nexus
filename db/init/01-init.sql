@@ -132,7 +132,9 @@ CREATE TABLE checklist_steps (
     order_num SMALLINT NOT NULL,
     place VARCHAR(100) NOT NULL,
     task VARCHAR(300) NOT NULL,
-    estimated_days VARCHAR(50)
+    estimated_days VARCHAR(50),
+    survey_id UUID REFERENCES surveys(id),
+    required_answer BOOLEAN
 );
 
 CREATE TABLE checklist_progresses (
@@ -437,7 +439,8 @@ CREATE TABLE expert_match_requests (
 CREATE TABLE IF NOT EXISTS equipment (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
-    category VARCHAR(50)
+    category VARCHAR(50),
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS restaurant_types (
@@ -445,9 +448,10 @@ CREATE TABLE IF NOT EXISTS restaurant_types (
     name VARCHAR(100) UNIQUE NOT NULL,
     building_use_code VARCHAR(20),
     kosis_category VARCHAR(100),
-    survival_rate_1y FLOAT,
-    survival_rate_3y FLOAT,
-    survival_rate_5y FLOAT
+    survival_rate_1y NUMERIC(5,2),
+    survival_rate_3y NUMERIC(5,2),
+    survival_rate_5y NUMERIC(5,2),
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS restaurant_equipment_map (
@@ -455,6 +459,7 @@ CREATE TABLE IF NOT EXISTS restaurant_equipment_map (
     restaurant_type_id UUID REFERENCES restaurant_types(id) ON DELETE CASCADE,
     equipment_id UUID REFERENCES equipment(id) ON DELETE CASCADE,
     is_required BOOLEAN DEFAULT TRUE,
-    weight FLOAT DEFAULT 1.0,
+    weight NUMERIC(3,2) DEFAULT 1.0,
+    created_at TIMESTAMPTZ DEFAULT now(),
     UNIQUE(restaurant_type_id, equipment_id)
 );
