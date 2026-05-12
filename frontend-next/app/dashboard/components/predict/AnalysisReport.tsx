@@ -117,7 +117,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ data }) => {
         </div>
       </div>
 
-      <div className="nexus-card border border-[var(--nexus-outline-variant)] rounded-3xl p-8 shadow-xl">
+        <div className="nexus-card bg-[var(--nexus-surface-container-low)]/50 border border-[var(--nexus-outline-variant)] rounded-3xl p-8 shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div className="space-y-1">
             <div className="flex items-center gap-3">

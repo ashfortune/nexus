@@ -23,7 +23,7 @@ interface GraphProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[var(--nexus-surface-lowest)]/95 border border-[var(--nexus-outline-variant)] rounded-2xl p-4 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-[var(--nexus-surface-container-highest)]/95 border border-[var(--nexus-outline-variant)] rounded-2xl p-4 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
         <p className="text-[var(--nexus-outline)] text-xs font-semibold mb-2.5 flex items-center gap-1.5">
           <span>📅</span> {label}
         </p>
