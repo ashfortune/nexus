@@ -31,4 +31,7 @@ ruff
 timesfm
 jax
 torch
-transformers
+transformers @git+https://github.com/huggingface/transformers.git
+accelerate
+peft
+pyarrow

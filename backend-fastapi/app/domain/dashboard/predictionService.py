@@ -6,9 +6,11 @@ from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
+import torch
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from statsmodels.tsa.holtwinters import SimpleExpSmoothing
+from transformers import TimesFm2_5ModelForPrediction
 
 from app.models import DailyPrediction, Prediction
 
@@ -105,49 +107,49 @@ async def predictWithStatsmodels(df: pd.DataFrame) -> tuple[pd.DataFrame, Dict[s
 
 async def predictWithTimesFM(df: pd.DataFrame) -> Dict[str, Any]:
     """90일 이상 데이터: TimesFM (AI Foundation Model) 실모델 호출 (내일 정밀 예측용)"""
+    logger.info("=========================================")
+    logger.info("🚀 TimesFM 2.5 실모델 호출 및 분석을 시작합니다.")
+    logger.info(f"📊 입력 데이터 개수 (역사적 매출 데이터): {len(df)}일")
+    logger.info("=========================================")
+
     # CPU 전용 모드 및 환경 변수 설정
-    os.environ["JAX_PLATFORM_NAME"] = "cpu"
-    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     try:
-        import timesfm
-
+        logger.info(f"💾 {device} 장치에서 사전학습 모델 google/timesfm-2.5-200m-transformers 로드를 시도합니다...")
         # 최신 사전학습 모델 google/timesfm-2.5-200m-pytorch 로드
-        tfm = timesfm.TimesFM_2p5_200M_torch.from_pretrained(
-            "google/timesfm-2.5-200m-pytorch",
-            compile=True
+        tfm = TimesFm2_5ModelForPrediction.from_pretrained(
+            "google/timesfm-2.5-200m-transformers",
+            device_map=device
         )
+        tfm = tfm.to(torch.float32).eval()
+        logger.info("✅ TimesFM 2.5 모델 로드 완료!")
+        
+        target_col = 'actual'
+        context_len = 365
+        horizon = getattr(tfm.config, 'horizon_length', 32)
 
-        # ForecastConfig 컴파일 (기본 설정 구성)
-        tfm.compile(
-            timesfm.ForecastConfig(
-                max_context=1024,
-                max_horizon=256,
-                normalize_inputs=True,
-                use_continuous_quantile_head=True,
-                force_flip_invariance=True,
-                infer_is_positive=True,
-                fix_quantile_crossing=True,
-            )
-        )
+        ts = df[target_col].values
+        
+        # 안전한 슬라이싱 처리
+        if len(ts) >= (context_len + horizon):
+            context = ts[-(context_len + horizon):-horizon]
+            ground_truth = ts[-horizon:]
+        else:
+            context = ts
+            ground_truth = ts[-min(len(ts), horizon):] if len(ts) > 0 else np.array([])
 
-        # 데이터 준비: [B, T] 형태의 리스트 필요 (numpy 2D array로 변환 및 분리)
-        # X.shape[0]: Batch Size (독립 시계열 개수 = 1)
-        # X.shape[1]: Time Steps (과거 일별 실제 매출 시퀀스 길이 = N)
-        actual_data = df["actual"].values.tolist()
-        X = np.reshape(actual_data, (1, len(actual_data)))
-
-        # 예측 수행 (horizon을 90일로 잡고 정밀 연산 실행)
-        point_forecast, _ = tfm.forecast(
-            inputs=X,
-            horizon=90
-        )
-
-        # 결과 추출 (B=1, H=90)
-        forecast_values = point_forecast[0]
-        forecastValue = int(forecast_values[0])  # 내일 매출
-        # 30일 단순 누적 합산 (1일치 * 30이 아닌, TimesFM이 정밀하게 예측한 미래 30일치 총합으로 정합성 증대!)
-        nextMonthForecast = int(np.sum(forecast_values[:30]))
+        past_values = [torch.tensor(df["actual"].values, dtype=torch.float32)]
+        
+        logger.info(f"🔮 TimesFM 2.5 추론(Inference) 실행 중... 입력 past_values 길이: {len(past_values[0])}")
+        with torch.no_grad():
+            outputs = tfm(past_values=past_values, forecast_lengths=1024)
+        
+        forecast = outputs.mean_predictions[0].cpu().numpy() 
+        logger.info(f"🎉 추론 성공! 예측 배열 크기 (Forecast Length): {len(forecast)}")
+        
+        forecastValue = int(forecast[0])
+        nextMonthForecast = int(np.sum(forecast[:30]))
 
     except (ImportError, Exception) as e:
         logger.warning(f"TimesFM 2.5 실모델 호출 실패 ({str(e)}).")
