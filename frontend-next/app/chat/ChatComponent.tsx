@@ -422,7 +422,7 @@ const ChatComponent = () => {
 
   const handleDownload = async (url: string, fileName: string) => {
     try {
-      const response = await fetch(url);
+      const response = await api.get(url);
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');

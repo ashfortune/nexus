@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { api } from '@/lib/api';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Laptop, TrendingUp, Landmark, Scale, Palette, ArrowRight, CheckCircle, ChevronLeft, Search, Sparkles } from 'lucide-react';
@@ -42,18 +43,14 @@ export default function ExpertMatchPage() {
       // 실제 유저 ID 사용 (미로그인 시 null 처리되지만 AuthGuard가 보호함)
       const userId = user?.id || '00000000-0000-0000-0000-000000000001';
 
-      // FastAPI 직접 호출 (환경변수 우선 사용)
+      // FastAPI 호출 (공통 API 모듈 사용)
       const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
-      const response = await fetch(`${fastApiUrl}/api/v1/ai/experts/match`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await api.post(`/api/v1/ai/experts/match`, {
           user_id: userId,
           category_id: selectedCategory?.id || null,
           request_content: requestContent,
-        }),
+      }, {
+          baseUrl: fastApiUrl
       });
 
       if (response.ok) {
