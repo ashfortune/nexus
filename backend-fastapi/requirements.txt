@@ -31,3 +31,5 @@ pypdf
 ruff
 timesfm
 jax
+catboost
+joblib

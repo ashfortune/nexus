@@ -543,7 +543,7 @@ export default function StoreMapClient({ kakaoApiKey, initialIndustries, initial
                             동별 평균
                           </p>
                           <p className="text-3xl font-black text-slate-950 tracking-tight">
-                            {avg}개
+                            {avg}
                           </p>
                         </div>
                       </div>
