@@ -28,10 +28,11 @@ const MENU_DATA: MenuItem[] = [
     id: 'analysis',
     title: '창업 분석',
     hasSub: true,
-    modes: ['BEFORE'],
+    modes: ['BEFORE', 'AFTER'],
     subMenu: [
       { name: '창업 비용 시뮬레이션', href: '/simulation' },
       { name: '상권 분석 지도', href: '/store-map' },
+      { name: '업종 전환 추천', href: '/industry-change', allowedRoles: [0, 1, 2] },
     ],
   },
   { id: 'subsidy', title: '지원금 찾기', hasSub: false, href: '/subsidy', allowedRoles: [0, 1, 2], modes: ['BEFORE'] },
