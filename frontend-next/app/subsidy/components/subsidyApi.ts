@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 import type { SubsidyDetail, SubsidyFilterRequest, SubsidyListResponse } from './subsidyTypes';
 
-const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
+const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || '';
 
 export async function fetchSubsidies(payload: SubsidyFilterRequest) {
   const res = await api.post('/api/v1/ai/subsidy/recommend', payload, {
