@@ -62,16 +62,45 @@ public class SalesServiceImpl implements SalesService {
                         prediction.getBaseDate().toLocalDate().plusDays(1).toString() : "내일");
                     result.put("prediction", predInfo);
 
+                    // 1.5. 추가 분석 요약 메타데이터 매핑 (프론트엔드 심층 분석 코멘트 영역 연동)
+                    result.put("nextMonthForecast", prediction.getPredictedCost() != null ? prediction.getPredictedCost() * 30 : 0);
+                    result.put("analysisReport", String.format(
+                        "데이터베이스에 적재된 시계열 분석 결과 최신본입니다. 내일 예상 매출은 %,d원이며, 최근 7일 평균 대비 변동 추세는 %+.2f%%입니다.",
+                        prediction.getPredictedCost(),
+                        prediction.getReturnRate() != null ? prediction.getReturnRate() : 0.0
+                    ));
+
                     // 2. 그래프용 상세 데이터 조회
                     List<Map<String, Object>> analysisData = new ArrayList<>();
                     List<DailyPrediction> dailyList = dailyPredictionRepository.findAllByPredictionOrderByTargetDateAsc(prediction);
                     
+                    // 사용된 구체적인 AI/통계 모델 종류 분기 판별 및 매핑
+                    boolean wasTimesFmUsed = dailyList.stream().anyMatch(dp -> dp.getTimesfmSales() != null);
+                    long historicalDataSize = dailyList.stream().filter(dp -> dp.getActualSales() != null).count();
+                    String predictionMethod = "Exponential Smoothing (Statsmodels)";
+                    if (wasTimesFmUsed) {
+                        predictionMethod = "TimesFM 2.5 (AI Foundation Model) - Local CPU";
+                    } else if (historicalDataSize <= 30) {
+                        predictionMethod = "Simple Moving Average";
+                    }
+                    result.put("predictionMethod", predictionMethod);
+
                     for (DailyPrediction dp : dailyList) {
                         Map<String, Object> row = new java.util.HashMap<>();
-                        row.put("date", dp.getTargetDate().toLocalDate().toString());
+                        row.put("target_date", dp.getTargetDate().toLocalDate().toString());
+                        row.put("date", dp.getTargetDate().toLocalDate().toString()); // 프론트엔드 호환용 키 추가!
+
+                        // 하위 호환성 유지용 키
                         row.put("sales", dp.getActualSales());
                         row.put("predictedSales", dp.getPredSales());
+
+                        // 새 통합 싱글 그래프 표준 스키마 키 명세
+                        row.put("actual", dp.getActualSales());
+                        row.put("predicted", dp.getPredSales());
+                        row.put("timesfm", dp.getTimesfmSales());
                         row.put("movingAverage", dp.getMovingAverage());
+                        row.put("returnRate", dp.getReturnRate());
+
                         analysisData.add(row);
                     }
                     result.put("analysisData", analysisData);

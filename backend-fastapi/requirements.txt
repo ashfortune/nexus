@@ -30,7 +30,13 @@ pypdf
 ruff
 timesfm
 jax
+catboost
+joblib
 torch
 anthropic
 openpyxl
 redis
+transformers @git+https://github.com/huggingface/transformers.git
+accelerate
+peft
+pyarrow
