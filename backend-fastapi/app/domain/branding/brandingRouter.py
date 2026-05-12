@@ -9,7 +9,7 @@ from app.domain.branding import brandingSchema, brandingService
 router = APIRouter()
 
 
-@router.post("/", response_model=brandingSchema.BrandingResponse)
+@router.post("", response_model=brandingSchema.BrandingResponse)
 async def start_branding(
     request: brandingSchema.BrandingCreateRequest, db: AsyncSession = Depends(get_db)
 ):
