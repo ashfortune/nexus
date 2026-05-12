@@ -56,6 +56,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "https://nexus-changup.com",
+        "http://nexus-changup.com",
         "https://nexus-sigma-gilt.vercel.app",
         "https://nexus-g3li.onrender.com",
         os.getenv("FRONTEND_URL", "http://localhost:3000"),

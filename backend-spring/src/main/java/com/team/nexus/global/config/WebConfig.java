@@ -13,6 +13,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
+                        "https://nexus-changup.com",
                         "http://localhost:3000",
                         "http://127.0.0.1:3000",
                         "https://ashfortune-nexus-ai-api.hf.space",
