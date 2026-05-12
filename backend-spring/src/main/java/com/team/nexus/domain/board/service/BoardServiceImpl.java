@@ -44,7 +44,7 @@ public class BoardServiceImpl implements BoardService {
         String trimmedKeyword = (keyword != null) ? keyword.trim() : "";
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Board> boards;
-        
+
         if ("title".equals(type)) {
             boards = boardRepository.findFreeBoardByTitle(trimmedKeyword, pageable);
         } else if ("author".equals(type)) {
@@ -52,7 +52,7 @@ public class BoardServiceImpl implements BoardService {
         } else {
             boards = boardRepository.findFreeBoardByKeywordAll(trimmedKeyword, pageable);
         }
-        
+
         return boards.map(this::convertToDto);
     }
 
@@ -70,15 +70,16 @@ public class BoardServiceImpl implements BoardService {
         String trimmedKeyword = (keyword != null) ? keyword.trim() : "";
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Board> boards;
-        
+
         if ("title".equals(type)) {
-            boards = boardRepository.findByRegionNameAndTitleContainingOrderByCreatedAtDesc(region, trimmedKeyword, pageable);
+            boards = boardRepository.findByRegionNameAndTitleContainingOrderByCreatedAtDesc(region, trimmedKeyword,
+                    pageable);
         } else if ("author".equals(type)) {
             boards = boardRepository.findByRegionNameAndPublicUserNickname(region, trimmedKeyword, pageable);
         } else {
             boards = boardRepository.findByRegionNameAndKeywordAll(region, trimmedKeyword, pageable);
         }
-        
+
         return boards.map(this::convertToDto);
     }
 
@@ -92,7 +93,8 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<BoardResponseDto> searchIndustryPosts(UUID categoryId, String keyword, String type, int page, int size) {
+    public Page<BoardResponseDto> searchIndustryPosts(UUID categoryId, String keyword, String type, int page,
+            int size) {
         String trimmedKeyword = (keyword != null) ? keyword.trim() : "";
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return boardRepository.findByIndustryCategoryIdAndKeywordAll(categoryId, trimmedKeyword, pageable)
@@ -126,12 +128,12 @@ public class BoardServiceImpl implements BoardService {
     public BoardResponseDto getPostDetail(UUID id, boolean incrementView) {
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
-        
+
         if (incrementView) {
             // 조회수 증가
             board.setViewCount((board.getViewCount() == null ? 0 : board.getViewCount()) + 1);
         }
-        
+
         return convertToDto(board);
     }
 
@@ -139,7 +141,7 @@ public class BoardServiceImpl implements BoardService {
     @Transactional(readOnly = true)
     public Page<BoardResponseDto> getPopularPosts(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return boardRepository.findAllByLikeCountGreaterThanEqual(10, pageable)
+        return boardRepository.findFreeBoardPopular(10, pageable)
                 .map(this::convertToDto);
     }
 
@@ -161,8 +163,9 @@ public class BoardServiceImpl implements BoardService {
             }
         }
 
-        String primaryImageUrl = (requestDto.getImageUrls() != null && !requestDto.getImageUrls().isEmpty()) 
-                ? requestDto.getImageUrls().get(0) : null;
+        String primaryImageUrl = (requestDto.getImageUrls() != null && !requestDto.getImageUrls().isEmpty())
+                ? requestDto.getImageUrls().get(0)
+                : null;
 
         Board board = Board.builder()
                 .title(requestDto.getTitle())
@@ -174,12 +177,12 @@ public class BoardServiceImpl implements BoardService {
                 .viewCount(0)
                 .user(user)
                 .build();
-        
+
         if (requestDto.getIndustryCategoryId() != null && !requestDto.getIndustryCategoryId().isEmpty()) {
             industryCategoryRepository.findById(UUID.fromString(requestDto.getIndustryCategoryId()))
                     .ifPresent(board::setIndustryCategory);
         }
-        
+
         if (requestDto.getImageUrls() != null && !requestDto.getImageUrls().isEmpty()) {
             for (int i = 0; i < requestDto.getImageUrls().size(); i++) {
                 String url = requestDto.getImageUrls().get(i);
@@ -191,7 +194,7 @@ public class BoardServiceImpl implements BoardService {
                 board.getImages().add(boardImage);
             }
         }
-        
+
         boardRepository.save(board);
     }
 
@@ -200,14 +203,14 @@ public class BoardServiceImpl implements BoardService {
     public void deletePost(UUID id, String email) {
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
-        
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         if (!board.getUser().getId().equals(user.getId())) {
             throw new IllegalArgumentException("본인의 게시글만 삭제할 수 있습니다.");
         }
-        
+
         boardRepository.delete(board);
     }
 
@@ -231,7 +234,8 @@ public class BoardServiceImpl implements BoardService {
         board.setIsAnonymous(request.getIsAnonymous());
 
         if (request.getIndustryCategoryId() != null) {
-            com.team.nexus.global.entity.IndustryCategory industryCategory = industryCategoryRepository.findById(request.getIndustryCategoryId())
+            com.team.nexus.global.entity.IndustryCategory industryCategory = industryCategoryRepository
+                    .findById(request.getIndustryCategoryId())
                     .orElseThrow(() -> new IllegalArgumentException("해당 업종 카테고리가 존재하지 않습니다."));
             board.setIndustryCategory(industryCategory);
         }
@@ -261,12 +265,13 @@ public class BoardServiceImpl implements BoardService {
     public boolean toggleLike(UUID boardId, String email) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
-        
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        java.util.Optional<com.team.nexus.global.entity.BoardLike> likeOptional = boardLikeRepository.findByBoardIdAndUserId(boardId, user.getId());
-        
+        java.util.Optional<com.team.nexus.global.entity.BoardLike> likeOptional = boardLikeRepository
+                .findByBoardIdAndUserId(boardId, user.getId());
+
         if (likeOptional.isPresent()) {
             boardLikeRepository.delete(likeOptional.get());
             board.setLikeCount(Math.max(0, (board.getLikeCount() == null ? 0 : board.getLikeCount()) - 1));
@@ -285,11 +290,13 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional(readOnly = true)
     public boolean isLiked(UUID boardId, String email) {
-        if (email == null) return false;
-        
+        if (email == null)
+            return false;
+
         User user = userRepository.findByEmail(email).orElse(null);
-        if (user == null) return false;
-        
+        if (user == null)
+            return false;
+
         return boardLikeRepository.existsByBoardIdAndUserId(boardId, user.getId());
     }
 
@@ -299,12 +306,15 @@ public class BoardServiceImpl implements BoardService {
                 .title(board.getTitle())
                 .content(board.getContent())
                 .imageUrls(board.getImages().stream().map(BoardImage::getImageUrl).collect(Collectors.toList()))
-                .author(board.getIsAnonymous() ? "익명" : (board.getUser() != null ? board.getUser().getNickname() : "알 수 없음"))
+                .author(board.getIsAnonymous() ? "익명"
+                        : (board.getUser() != null ? board.getUser().getNickname() : "알 수 없음"))
                 .authorId(board.getUser() != null ? board.getUser().getId() : null)
                 .regionName(board.getRegionName())
                 .categoryName(board.getCategoryName())
-                .industryCategoryId(board.getIndustryCategory() != null ? board.getIndustryCategory().getId().toString() : null)
-                .industryCategoryName(board.getIndustryCategory() != null ? board.getIndustryCategory().getName() : null)
+                .industryCategoryId(
+                        board.getIndustryCategory() != null ? board.getIndustryCategory().getId().toString() : null)
+                .industryCategoryName(
+                        board.getIndustryCategory() != null ? board.getIndustryCategory().getName() : null)
                 .createdAt(board.getCreatedAt())
                 .viewCount(board.getViewCount() == null ? 0 : board.getViewCount())
                 .likeCount(board.getLikeCount() == null ? 0 : board.getLikeCount())
