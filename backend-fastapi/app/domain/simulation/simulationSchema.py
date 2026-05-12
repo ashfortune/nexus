@@ -1,5 +1,4 @@
 from datetime import date
-
 from pydantic import BaseModel
 
 
@@ -20,3 +19,10 @@ class PredictionResponse(BaseModel):
     message: str
     threshold: float
     factors: list[str]
+    # 추가 상세 지표
+    trdar_count: int | None = None
+    trdar_area_sum: float | None = None
+    trdar_area_mean: float | None = None
+    dist_to_trdar: float | None = None
+    type_diversity: int | None = None
+    trdar_type: str | None = None

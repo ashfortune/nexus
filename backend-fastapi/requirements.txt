@@ -30,6 +30,8 @@ pypdf
 ruff
 timesfm
 jax
+catboost
+joblib
 torch
 transformers @git+https://github.com/huggingface/transformers.git
 accelerate
