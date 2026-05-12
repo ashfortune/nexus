@@ -21,6 +21,7 @@ from app.domain.expert import expertRouter as expert
 from app.domain.simulation import simulationRouter as simulation
 from app.domain.subsidy import subsidyRouter as subsidy
 from app.domain.subsidy.subsidyRouter import start_scheduler as subsidy_start_scheduler
+from app.domain.industryChange.industryChangeRouter import router as industry_change_router
 
 
 @asynccontextmanager
@@ -91,7 +92,7 @@ app.include_router(dashboard.router, prefix="/api/v1/ai/dashboard", tags=["Ops &
 app.include_router(prediction.router, prefix="/api/v1/ai/prediction", tags=["Sales Prediction"])
 app.include_router(operation.router, prefix="/api/v1/ai/operation", tags=["RAG Operation"])
 app.include_router(subsidy.router, prefix="/api/v1/ai/subsidy", tags=["Subsidy Guide"])
-
+app.include_router(industry_change_router, prefix="/api/v1/ai/industry-change", tags=["Industry Change"])
 
 @app.get("/")
 async def root():
