@@ -66,6 +66,7 @@ services:
       - REDIS_URL=redis://nexus-redis:6379
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
       - STABILITY_API_KEY=${STABILITY_API_KEY}
       - KIPRIS_API_KEY=${KIPRIS_API_KEY}
       - SMES_API_TOKEN=${SMES_API_TOKEN}
@@ -132,6 +133,15 @@ services:
     volumes:
       - ./jenkins-data:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - nexus-network
+  nexus-ollama:
+    image: ollama/ollama:latest
+    container_name: nexus-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama-data:/root/.ollama
     networks:
       - nexus-network
     restart: always

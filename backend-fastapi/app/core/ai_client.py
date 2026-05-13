@@ -128,7 +128,7 @@ class GeminiClient(BaseAIClient):
 class OllamaClient(BaseAIClient):
     def __init__(self):
         self.base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-        self.model_name = "gemma:2b"
+        self.model_name = os.getenv("OLLAMA_MODEL", "gemma:2b")
 
     async def generate_response(
         self, system_instruction: str, chat_history: List[Dict[str, str]]
@@ -150,6 +150,38 @@ class OllamaClient(BaseAIClient):
     async def generate_image(self, prompt: str, output_path: str) -> str:
         # Ollama는 현재 표준 API로 이미지 생성을 지원하지 않음 (SD 연동 필요 시 별도 구현)
         raise NotImplementedError("Ollama does not support image generation natively.")
+
+
+class HybridAIClient(BaseAIClient):
+    """Google Gemini를 우선 사용하고, 실패(500 에러 등) 시 로컬 Ollama로 전환하는 클라이언트"""
+
+    def __init__(self):
+        self.primary = GeminiClient()
+        self.secondary = OllamaClient()
+
+    async def generate_response(
+        self, system_instruction: str, chat_history: List[Dict[str, str]]
+    ) -> str:
+        try:
+            # 주 모델(Gemini) 호출 시도
+            return await self.primary.generate_response(system_instruction, chat_history)
+        except Exception as e:
+            # 500 에러 등 발생 시 로컬 Ollama로 폴백
+            print(f"⚠️ [Hybrid AI] Primary(Gemini) 호출 실패: {str(e)[:100]}...")
+            print(f"🔄 [Hybrid AI] 로컬 Ollama({self.secondary.model_name})로 전환하여 재시도합니다.")
+            try:
+                return await self.secondary.generate_response(system_instruction, chat_history)
+            except Exception as ollama_err:
+                print(f"❌ [Hybrid AI] Ollama 폴백 호출도 실패했습니다: {ollama_err}")
+                raise e  # 원본 에러를 다시 던짐
+
+    async def generate_image(self, prompt: str, output_path: str) -> str:
+        # 이미지 생성은 현재 Gemini 또는 Stability에서만 지원하므로 Primary 그대로 사용
+        return await self.primary.generate_image(prompt, output_path)
+
+    async def embed_text(self, text: str) -> List[float]:
+        # 임베딩은 이미 GeminiClient에서 로컬 모델을 사용하고 있으므로 그대로 활용
+        return await self.primary.embed_text(text)
 
 
 class StableDiffusionClient(BaseAIClient):
@@ -229,7 +261,7 @@ class StableDiffusionClient(BaseAIClient):
 
 def get_ai_client(provider: str = "gemini") -> BaseAIClient:
     if provider == "gemini":
-        return GeminiClient()
+        return HybridAIClient()  # 기본 gemini 요청 시 하이브리드 클라이언트 반환
     elif provider == "ollama":
         return OllamaClient()
     elif provider == "stability":
