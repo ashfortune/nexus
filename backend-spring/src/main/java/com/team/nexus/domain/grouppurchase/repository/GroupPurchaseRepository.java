@@ -21,8 +21,8 @@ public interface GroupPurchaseRepository extends JpaRepository<GroupPurchase, UU
     List<GroupPurchase> findAllByEndDateBefore(LocalDateTime dateTime);
 
     @org.springframework.data.jpa.repository.Query("SELECT gp FROM GroupPurchase gp WHERE " +
-            "(:itemName IS NULL OR gp.itemName LIKE CONCAT('%', :itemName, '%')) AND " +
-            "(:region IS NULL OR gp.region LIKE CONCAT('%', :region, '%')) " +
+            "(CAST(:itemName AS string) IS NULL OR gp.itemName LIKE CONCAT('%', CAST(:itemName AS string), '%')) AND " +
+            "(CAST(:region AS string) IS NULL OR gp.region LIKE CONCAT('%', CAST(:region AS string), '%')) " +
             "ORDER BY CASE WHEN gp.endDate > CURRENT_TIMESTAMP AND gp.status = 'RECRUITING' THEN 0 ELSE 1 END ASC, " +
             "CASE WHEN gp.endDate > CURRENT_TIMESTAMP AND gp.status = 'RECRUITING' THEN gp.endDate END ASC, " +
             "gp.endDate DESC")
